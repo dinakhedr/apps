@@ -9,7 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Lato', sans-serif;
-            background: linear-gradient(135deg, #FFE8D4 0%, #FFD9B5 50%, #FFF0E0 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -18,17 +18,17 @@
         /* Header */
         .header {
             text-align: center;
-            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            background: linear-gradient(135deg, #6C63FF, #3F3D9E);
             padding: 30px 20px;
             border-radius: 30px;
             margin-bottom: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
         h1 { 
             font-size: 2.2rem; 
             margin-bottom: 8px; 
             color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
             font-weight: 900;
         }
         .sub { 
@@ -45,16 +45,16 @@
         
         /* Filter Tags Section */
         .filters-section {
-            background: white;
+            background: rgba(255,255,255,0.95);
             border-radius: 20px;
             padding: 18px 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         .filters-title {
             font-size: 0.85rem;
             font-weight: 700;
-            color: #666;
+            color: #4a4a8a;
             margin-bottom: 12px;
             letter-spacing: 0.5px;
         }
@@ -80,17 +80,40 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .filter-tag.active {
-            background: #FF6B6B;
+            background: #6C63FF;
             color: white;
-            box-shadow: 0 2px 8px rgba(255,107,107,0.3);
+            box-shadow: 0 2px 8px rgba(108,99,255,0.4);
         }
         .filter-tag.reset-btn {
             background: #e0e0e0;
             color: #444;
         }
         .filter-tag.reset-btn.active {
-            background: #555;
+            background: #3F3D9E;
             color: white;
+        }
+        
+        /* Refresh Button */
+        .refresh-wrapper {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .refresh-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #6C63FF, #3F3D9E);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            font-family: 'Lato', sans-serif;
+        }
+        .refresh-btn:hover { 
+            transform: scale(1.02); 
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
         }
         
         /* News Cards */
@@ -99,31 +122,31 @@
             border-radius: 18px;
             padding: 18px 22px;
             margin-bottom: 14px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transition: all 0.2s ease;
         }
         .news-card:hover { 
             transform: translateY(-3px); 
-            box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
         }
         .news-title {
             font-size: 1rem;
             font-weight: 400;
-            color: #2c3e50;
+            color: #1a1a2e;
             line-height: 1.5;
             margin-bottom: 12px;
         }
         .news-title a { 
-            color: #2c3e50; 
+            color: #1a1a2e; 
             text-decoration: none;
             font-weight: 400;
         }
         .news-title a:hover { 
-            color: #FF6B6B;
+            color: #6C63FF;
             text-decoration: underline;
         }
         
-        /* Meta row - platform name, timestamp, view button all inline */
+        /* Meta row */
         .news-meta {
             display: flex;
             flex-wrap: wrap;
@@ -166,33 +189,13 @@
             background: white;
             border-radius: 20px;
             color: #666;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             font-weight: 400;
-        }
-        
-        .refresh-btn {
-            display: block;
-            margin: 20px auto 10px;
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: all 0.2s;
-            font-family: 'Lato', sans-serif;
-        }
-        .refresh-btn:hover { 
-            transform: scale(1.02); 
-            box-shadow: 0 6px 18px rgba(0,0,0,0.2);
         }
         
         footer { 
             text-align: center; 
-            color: #c97e5a; 
+            color: rgba(255,255,255,0.7); 
             font-size: 0.7rem; 
             margin-top: 25px;
             font-weight: 300;
@@ -209,8 +212,8 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>🌙 Middle East News</h1>
-        <div class="sub">Live headlines from the region</div>
+        <h1>Middle East News</h1>
+        <div class="sub">Live headlines from Al Jazeera, BBC Arabic, BBC News & Reuters</div>
         <div class="last-updated">🕒 Last updated: <span id="timestamp">Loading...</span></div>
     </div>
     
@@ -223,19 +226,22 @@
         </div>
     </div>
     
+    <!-- Refresh Button -->
+    <div class="refresh-wrapper">
+        <button class="refresh-btn" onclick="fetchAllNews()">🔄 Refresh News</button>
+    </div>
+    
     <div id="news-container">
         <div class="loading">⏳ Fetching latest headlines...</div>
     </div>
     
-    <button class="refresh-btn" onclick="fetchAllNews()">🔄 Refresh News</button>
     <footer>✨ Auto‑refreshes every 60 seconds</footer>
 </div>
 
 <script>
-    // Middle East focused news sources with joyful colors
+    // Middle East focused news sources (Al-Masry Al-Youm removed - old feed)
     const sources = [
         { name: "Al Jazeera", color: "#E74C3C", bgLight: "#FDE8E8", url: "https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b135-bfdff8b8cab9" },
-        { name: "Al-Masry Al-Youm", color: "#F39C12", bgLight: "#FEF5E7", url: "https://www.almasryalyoum.com/rss/rssfeed" },
         { name: "BBC Arabic", color: "#3498DB", bgLight: "#E8F4FD", url: "http://www.bbc.co.uk/arabic/middleeast/index.xml" },
         { name: "BBC News", color: "#27AE60", bgLight: "#EAFAF1", url: "http://feeds.bbci.co.uk/news/world/middle_east/rss.xml" },
         { name: "Reuters", color: "#E67E22", bgLight: "#FDF2E9", url: "https://www.reutersagency.com/feed/?best-topics=reuters-middle-east&post_type=best" }
@@ -265,7 +271,6 @@
     function applyFilter(sourceName) {
         currentFilter = sourceName;
         
-        // Update active states on filter buttons
         document.querySelectorAll('.filter-tag').forEach(btn => {
             btn.classList.remove('active');
             if (btn.getAttribute('data-source') === sourceName) {
