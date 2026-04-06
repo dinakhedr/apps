@@ -524,7 +524,7 @@
 
         <!-- Pie Chart Card -->
         <div class="chart-card" id="chartCard" style="display: none;">
-            <h3>📈 Spending by Category</h3>
+            <h3>📈 This Month by Category</h3>
             <div class="chart-container">
                 <canvas id="categoryChart"></canvas>
             </div>
@@ -740,7 +740,7 @@
                 }
             });
             
-            // Build custom legend
+            // Build custom legend - show category icon only, no dollar bag
             const legendDiv = document.getElementById('chartLegend');
             legendDiv.innerHTML = categories.map((cat, idx) => `
                 <div class="legend-item">
