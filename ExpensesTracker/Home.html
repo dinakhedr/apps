@@ -405,7 +405,7 @@
             background: #ef4444;
         }
 
-        #loginContainer {
+        #loginContainer, #setupContainer {
             position: fixed;
             top: 0;
             left: 0;
@@ -420,7 +420,7 @@
             gap: 20px;
         }
 
-        .login-box {
+        .login-box, .setup-box {
             background: white;
             border-radius: 28px;
             padding: 40px 30px;
@@ -429,28 +429,55 @@
             margin: 20px;
         }
 
-        .login-box span {
+        .login-box span, .setup-box span {
             font-size: 64px;
             display: block;
             margin-bottom: 16px;
         }
 
-        .login-box h2 {
+        .login-box h2, .setup-box h2 {
             font-size: 24px;
             margin-bottom: 8px;
         }
 
-        .login-box p {
+        .login-box p, .setup-box p {
             color: #666;
             margin-bottom: 24px;
             font-size: 14px;
+            line-height: 1.5;
         }
 
-        .login-box small {
+        .login-box small, .setup-box small {
             font-size: 11px;
             color: #999;
             margin-top: 20px;
             display: block;
+        }
+
+        .create-folder-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            width: 100%;
+        }
+
+        .create-folder-btn:active {
+            transform: scale(0.97);
+        }
+
+        .info-text {
+            background: #f0f0f0;
+            padding: 12px;
+            border-radius: 16px;
+            margin: 16px 0;
+            font-size: 13px;
+            text-align: left;
         }
 
         .sync-status {
@@ -462,10 +489,10 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Google APIs Client Library -->
     <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
+    <!-- Login Screen -->
     <div id="loginContainer">
         <div class="login-box">
             <span>💰</span>
@@ -476,6 +503,23 @@
         </div>
     </div>
 
+    <!-- Setup Screen (After Login) -->
+    <div id="setupContainer" style="display: none;">
+        <div class="setup-box">
+            <span>📁</span>
+            <h2>Welcome!</h2>
+            <p>We'll create a folder in your Google Drive to store all your expenses.</p>
+            <div class="info-text">
+                📂 <strong>Folder name:</strong> Expense Tracker<br>
+                📊 <strong>Sheet name:</strong> My Expenses<br>
+                🔒 <strong>Privacy:</strong> Only you can access this data
+            </div>
+            <button class="create-folder-btn" id="createFolderBtn">📁 Create Folder & Continue</button>
+            <small>This folder will be created in your Google Drive.<br>You can delete it anytime.</small>
+        </div>
+    </div>
+
+    <!-- Main App -->
     <div class="container" id="mainApp" style="display: none;">
         <div class="header">
             <h1>💰 Expense Tracker</h1>
@@ -577,7 +621,6 @@
         let currentUserToken = null;
         let spreadsheetId = null;
         let folderId = null;
-        let gapiInitialized = false;
 
         const FOLDER_NAME = 'Expense Tracker';
         const SHEET_NAME = 'My Expenses';
@@ -620,110 +663,61 @@
             }
         }
 
-        // Initialize Google API client
-        function initGapi() {
-            gapi.load('client', async () => {
-                await gapi.client.init({
-                    apiKey: '',
-                    discoveryDocs: [
-                        'https://sheets.googleapis.com/$discovery/rest?version=v4',
-                        'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
-                    ]
-                });
-                gapiInitialized = true;
-                await setupUserDrive();
-            });
-        }
-
-        // Setup folder and sheet in user's drive
-        async function setupUserDrive() {
+        async function createFolderAndSheet() {
             try {
-                document.getElementById('syncStatus').textContent = '🔄 Setting up your Google Drive...';
+                document.getElementById('syncStatus').textContent = '🔄 Creating folder in Google Drive...';
+                showStatus('📁 Creating folder in your Google Drive...');
                 
-                // 1. Find or create folder
-                folderId = await findOrCreateFolder();
+                // Create folder
+                const fileMetadata = {
+                    name: FOLDER_NAME,
+                    mimeType: 'application/vnd.google-apps.folder'
+                };
+                const folderResponse = await gapi.client.drive.files.create({
+                    resource: fileMetadata,
+                    fields: 'id'
+                });
+                folderId = folderResponse.result.id;
                 
-                // 2. Find or create spreadsheet
-                spreadsheetId = await findOrCreateSpreadsheet();
+                document.getElementById('syncStatus').textContent = '📊 Creating spreadsheet...';
                 
-                // 3. Load data from sheet
-                await loadExpensesFromSheet();
+                // Create spreadsheet in folder
+                const sheetMetadata = {
+                    name: SHEET_NAME,
+                    mimeType: 'application/vnd.google-apps.spreadsheet',
+                    parents: [folderId]
+                };
+                const sheetResponse = await gapi.client.drive.files.create({
+                    resource: sheetMetadata,
+                    fields: 'id'
+                });
+                spreadsheetId = sheetResponse.result.id;
+                
+                // Add headers
+                await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Sheet1!A1:E1',
+                    valueInputOption: 'RAW',
+                    resource: {
+                        values: [['Date', 'Category', 'Amount', 'Notes', 'ID']]
+                    }
+                });
                 
                 document.getElementById('syncStatus').textContent = '✅ Synced to Google Drive';
-                showStatus('✅ Google Drive connected! Your data is backed up.');
+                showStatus('✅ Folder and sheet created successfully!');
+                
+                // Hide setup screen, show main app
+                document.getElementById('setupContainer').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
             } catch (error) {
                 console.error('Setup error:', error);
-                document.getElementById('syncStatus').textContent = '⚠️ Using local storage only';
-                showStatus('⚠️ Could not connect to Google Drive. Using local storage only.', true);
+                showStatus('❌ Failed to create folder. Please try again.', true);
+                document.getElementById('syncStatus').textContent = '⚠️ Setup failed. Try again.';
             }
         }
 
-        // Find or create folder in Google Drive
-        async function findOrCreateFolder() {
-            const query = `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
-            const response = await gapi.client.drive.files.list({
-                q: query,
-                spaces: 'drive',
-                fields: 'files(id, name)'
-            });
-            
-            const files = response.result.files;
-            if (files && files.length > 0) {
-                return files[0].id;
-            }
-            
-            // Create folder
-            const fileMetadata = {
-                name: FOLDER_NAME,
-                mimeType: 'application/vnd.google-apps.folder'
-            };
-            const createResponse = await gapi.client.drive.files.create({
-                resource: fileMetadata,
-                fields: 'id'
-            });
-            return createResponse.result.id;
-        }
-
-        // Find or create spreadsheet in folder
-        async function findOrCreateSpreadsheet() {
-            const query = `name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and '${folderId}' in parents and trashed=false`;
-            const response = await gapi.client.drive.files.list({
-                q: query,
-                spaces: 'drive',
-                fields: 'files(id, name)'
-            });
-            
-            const files = response.result.files;
-            if (files && files.length > 0) {
-                return files[0].id;
-            }
-            
-            // Create spreadsheet in folder
-            const fileMetadata = {
-                name: SHEET_NAME,
-                mimeType: 'application/vnd.google-apps.spreadsheet',
-                parents: [folderId]
-            };
-            const createResponse = await gapi.client.drive.files.create({
-                resource: fileMetadata,
-                fields: 'id'
-            });
-            
-            // Add headers
-            await gapi.client.sheets.spreadsheets.values.update({
-                spreadsheetId: createResponse.result.id,
-                range: 'Sheet1!A1:E1',
-                valueInputOption: 'RAW',
-                resource: {
-                    values: [['Date', 'Category', 'Amount', 'Notes', 'ID']]
-                }
-            });
-            
-            return createResponse.result.id;
-        }
-
-        // Load expenses from Google Sheet
-        async function loadExpensesFromSheet() {
+        async function loadExistingData() {
             if (!spreadsheetId) return;
             
             try {
@@ -743,7 +737,6 @@
                         timestamp: new Date().toISOString()
                     }));
                     
-                    // Merge with local expenses (keep newest)
                     const localIds = new Set(expenses.map(e => e.id));
                     const newExpenses = sheetExpenses.filter(e => !localIds.has(e.id));
                     expenses = [...newExpenses, ...expenses];
@@ -755,7 +748,6 @@
             }
         }
 
-        // Add expense to Google Sheet
         async function addExpenseToSheet(expense) {
             if (!spreadsheetId) return;
             
@@ -779,7 +771,6 @@
             }
         }
 
-        // Delete expense from Google Sheet
         async function deleteExpenseFromSheet(expenseId) {
             if (!spreadsheetId) return;
             
@@ -794,7 +785,7 @@
                     let rowIndex = -1;
                     for (let i = 0; i < rows.length; i++) {
                         if (rows[i][4] && parseInt(rows[i][4]) === expenseId) {
-                            rowIndex = i + 2; // +2 because 1-indexed and header row
+                            rowIndex = i + 2;
                             break;
                         }
                     }
@@ -983,8 +974,6 @@
                     const newNotes = prompt('Edit notes:', expense.notes);
                     if (newNotes !== null) expense.notes = newNotes;
                     saveExpensesToLocal();
-                    // Note: Update in sheet requires finding and updating row
-                    // For simplicity, delete and re-add
                     deleteExpenseFromSheet(id).then(() => {
                         addExpenseToSheet(expense);
                     });
@@ -1011,11 +1000,9 @@
             currentUserEmail = getUserEmailFromToken(token);
             
             document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('setupContainer').style.display = 'flex';
             
-            loadExpensesFromLocal();
-            
-            // Initialize GAPI with the token
+            // Initialize GAPI
             await new Promise((resolve) => {
                 gapi.load('client', resolve);
             });
@@ -1028,12 +1015,7 @@
                 ]
             });
             
-            // Set auth token
             gapi.client.setToken({ access_token: token });
-            
-            await setupUserDrive();
-            
-            showStatus(`✅ Logged in as ${currentUserEmail}`);
         }
 
         function logout() {
@@ -1044,6 +1026,7 @@
             folderId = null;
             expenses = [];
             document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('setupContainer').style.display = 'none';
             document.getElementById('mainApp').style.display = 'none';
             showStatus('👋 Logged out successfully');
         }
@@ -1055,9 +1038,8 @@
                 currentUserEmail = getUserEmailFromToken(token);
                 if (currentUserEmail) {
                     document.getElementById('loginContainer').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
-                    loadExpensesFromLocal();
-                    // Initialize GAPI after login
+                    document.getElementById('setupContainer').style.display = 'flex';
+                    
                     gapi.load('client', async () => {
                         await gapi.client.init({
                             apiKey: '',
@@ -1067,12 +1049,12 @@
                             ]
                         });
                         gapi.client.setToken({ access_token: token });
-                        await setupUserDrive();
                     });
                     return;
                 }
             }
             document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('setupContainer').style.display = 'none';
             document.getElementById('mainApp').style.display = 'none';
         }
 
@@ -1088,6 +1070,8 @@
                 document.getElementById('googleSignInButton'),
                 { theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular' }
             );
+            
+            document.getElementById('createFolderBtn').addEventListener('click', createFolderAndSheet);
         };
 
         document.getElementById('submitBtn').addEventListener('click', function(e) {
