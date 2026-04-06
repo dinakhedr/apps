@@ -60,10 +60,16 @@
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 8px 14px;
+            border-radius: 30px;
+            font-size: 14px;
             cursor: pointer;
+            font-weight: 500;
+        }
+
+        .logout-btn:active {
+            background: rgba(255,255,255,0.3);
+            transform: scale(0.97);
         }
 
         .form-card {
@@ -533,7 +539,7 @@
     <!-- Setup Screen (After Login - First Time Only) -->
     <div id="setupContainer" style="display: none;">
         <div class="setup-box">
-            <button class="setup-logout-btn" id="setupLogoutBtn" title="Logout">🚪</button>
+            <button class="setup-logout-btn" id="setupLogoutBtn" title="Logout">⏻</button>
             <span>📁</span>
             <h2>Welcome!</h2>
             <p>We will create a folder in your Google Drive to store all your expenses.</p>
@@ -553,7 +559,7 @@
         <div class="header">
             <h1>💰 Expense Tracker</h1>
             <p>Track your spending, stay in control</p>
-            <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
+            <button class="logout-btn" id="logoutBtn">⏻ Logout</button>
         </div>
 
         <div class="form-card">
@@ -1043,188 +1049,4 @@
             if (confirm('Delete this expense?')) {
                 expenses = expenses.filter(exp => exp.id !== id);
                 saveExpensesToLocal();
-                await deleteExpenseFromSheet(id);
-                renderAll();
-                showStatus('🗑️ Expense deleted from Google Drive');
-            }
-        }
-
-        function editExpense(id) {
-            const expense = expenses.find(exp => exp.id === id);
-            if (expense) {
-                const newAmount = prompt('Edit amount (EGP):', expense.amount);
-                if (newAmount !== null && !isNaN(newAmount) && parseFloat(newAmount) > 0) {
-                    expense.amount = parseFloat(newAmount);
-                    const newNotes = prompt('Edit notes:', expense.notes);
-                    if (newNotes !== null) expense.notes = newNotes;
-                    saveExpensesToLocal();
-                    deleteExpenseFromSheet(id).then(() => {
-                        addExpenseToSheet(expense);
-                    });
-                    renderAll();
-                    showStatus('✏️ Expense updated');
-                }
-            }
-        }
-
-        function renderAll() {
-            updateStats();
-            updatePieChart();
-            renderExpensesList();
-        }
-
-        function setDefaultDate() {
-            document.getElementById('date').value = new Date().toISOString().split('T')[0];
-        }
-
-        function logout() {
-            localStorage.removeItem('google_token');
-            localStorage.removeItem(`drive_setup_${currentUserEmail}`);
-            localStorage.removeItem(`spreadsheet_id_${currentUserEmail}`);
-            currentUserEmail = null;
-            currentAccessToken = null;
-            spreadsheetId = null;
-            folderId = null;
-            expenses = [];
-            document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('setupContainer').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-            showStatus('👋 Logged out successfully');
-        }
-
-        async function handleCredentialResponse(response) {
-            const token = response.credential;
-            localStorage.setItem('google_token', token);
-            currentUserEmail = getUserEmailFromToken(token);
-            
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('setupContainer').style.display = 'flex';
-            
-            await new Promise((resolve) => {
-                gapi.load('client', resolve);
-            });
-            
-            await gapi.client.init({
-                apiKey: '',
-                discoveryDocs: [
-                    'https://sheets.googleapis.com/$discovery/rest?version=v4',
-                    'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
-                ]
-            });
-            
-            const tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
-                scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
-                callback: async (tokenResponse) => {
-                    if (tokenResponse.access_token) {
-                        currentAccessToken = tokenResponse.access_token;
-                        gapi.client.setToken({ access_token: currentAccessToken });
-                        
-                        const setupDone = localStorage.getItem(`drive_setup_${currentUserEmail}`);
-                        const savedSheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
-                        
-                        if (setupDone === 'complete' && savedSheetId) {
-                            spreadsheetId = savedSheetId;
-                            document.getElementById('setupContainer').style.display = 'none';
-                            document.getElementById('mainApp').style.display = 'block';
-                            await loadExpensesFromSheet();
-                            showStatus(`✅ Welcome back, ${currentUserEmail}`);
-                        }
-                    }
-                }
-            });
-            
-            tokenClient.requestAccessToken();
-        }
-
-        function checkLogin() {
-            const token = localStorage.getItem('google_token');
-            if (token) {
-                currentUserEmail = getUserEmailFromToken(token);
-                if (currentUserEmail) {
-                    const setupDone = localStorage.getItem(`drive_setup_${currentUserEmail}`);
-                    const savedSheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
-                    
-                    if (setupDone === 'complete' && savedSheetId) {
-                        spreadsheetId = savedSheetId;
-                        document.getElementById('loginContainer').style.display = 'none';
-                        document.getElementById('setupContainer').style.display = 'none';
-                        document.getElementById('mainApp').style.display = 'block';
-                        
-                        gapi.load('client', async () => {
-                            await gapi.client.init({
-                                apiKey: '',
-                                discoveryDocs: [
-                                    'https://sheets.googleapis.com/$discovery/rest?version=v4',
-                                    'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
-                                ]
-                            });
-                            
-                            const tokenClient = google.accounts.oauth2.initTokenClient({
-                                client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
-                                scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
-                                callback: async (tokenResponse) => {
-                                    if (tokenResponse.access_token) {
-                                        currentAccessToken = tokenResponse.access_token;
-                                        gapi.client.setToken({ access_token: currentAccessToken });
-                                        await loadExpensesFromSheet();
-                                        showStatus(`✅ Welcome back, ${currentUserEmail}`);
-                                    }
-                                }
-                            });
-                            tokenClient.requestAccessToken();
-                        });
-                    } else {
-                        document.getElementById('loginContainer').style.display = 'none';
-                        document.getElementById('setupContainer').style.display = 'flex';
-                        document.getElementById('mainApp').style.display = 'none';
-                    }
-                    return;
-                }
-            }
-            document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('setupContainer').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-
-        window.onload = function() {
-            checkLogin();
-            setDefaultDate();
-            
-            google.accounts.id.initialize({
-                client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
-                callback: handleCredentialResponse
-            });
-            google.accounts.id.renderButton(
-                document.getElementById('googleSignInButton'),
-                { theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular' }
-            );
-            
-            document.getElementById('createFolderBtn').addEventListener('click', createFolderAndSheet);
-            document.getElementById('setupLogoutBtn').addEventListener('click', logout);
-        };
-
-        document.getElementById('submitBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const date = document.getElementById('date').value;
-            const category = document.getElementById('category').value;
-            const amount = document.getElementById('amount').value;
-            const notes = document.getElementById('notes').value;
-            
-            if (!date) return showStatus('❌ Please select a date', true);
-            if (!category) return showStatus('❌ Please select a category', true);
-            if (!amount || amount <= 0) return showStatus('❌ Please enter a valid amount', true);
-            
-            addExpense(date, category, amount, notes);
-            document.getElementById('category').value = '';
-            document.getElementById('amount').value = '';
-            document.getElementById('notes').value = '';
-            setDefaultDate();
-            document.getElementById('category').focus();
-        });
-        
-        document.getElementById('seeAllBtn').addEventListener('click', () => window.location.href = 'Expenses.html');
-        document.getElementById('logoutBtn').addEventListener('click', logout);
-    </script>
-</body>
-</html>
+                await deleteExpenseFromSheet
