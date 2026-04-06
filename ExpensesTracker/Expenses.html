@@ -204,10 +204,13 @@
         }
 
         .chart-card h3 {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
             color: #1a1a2e;
             margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .chart-container {
@@ -221,41 +224,51 @@
             height: auto;
         }
 
-        /* Category Group */
-        .category-group {
-            margin-bottom: 16px;
-            border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 12px;
-        }
-
-        .category-header {
+        .chart-legend {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+            justify-content: center;
         }
 
-        .category-name {
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        /* Category Group - Like Home page */
+        .category-group-card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+
+        .category-group-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-weight: 600;
-            font-size: 15px;
-            color: #1a1a2e;
-        }
-
-        .category-total {
-            font-weight: 700;
-            font-size: 15px;
-            color: #667eea;
         }
 
         .expense-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0 10px 40px;
-            border-bottom: none;
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0;
         }
 
         .expense-item:last-child {
@@ -270,17 +283,23 @@
         }
 
         .category-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 22px;
         }
 
         .expense-details {
             flex: 1;
+        }
+
+        .expense-category {
+            font-weight: 600;
+            font-size: 15px;
+            color: #1a1a2e;
         }
 
         .expense-date {
@@ -303,7 +322,7 @@
 
         .expense-amount {
             font-weight: 700;
-            font-size: 15px;
+            font-size: 16px;
             color: #1a1a2e;
         }
 
@@ -327,6 +346,23 @@
         }
 
         /* Day Group */
+        .day-group-card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+
+        .day-group-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .day-group {
             margin-bottom: 20px;
         }
@@ -362,10 +398,6 @@
             font-size: 48px;
             display: block;
             margin-bottom: 12px;
-        }
-
-        .empty-state p {
-            font-size: 14px;
         }
 
         /* Status Message */
@@ -460,10 +492,11 @@
                 <div class="chart-container">
                     <canvas id="categoryChart"></canvas>
                 </div>
+                <div id="chartLegend" class="chart-legend"></div>
             </div>
 
             <!-- Category Summary List -->
-            <div class="chart-card" id="categoryListCard">
+            <div class="category-group-card" id="categoryListCard">
                 <h3>📋 Breakdown by Category</h3>
                 <div id="categoryList"></div>
             </div>
@@ -471,14 +504,9 @@
 
         <!-- Tab 2: Expenses by Day -->
         <div id="bydayTab" class="tab-content">
-            <div class="expenses-card" style="background: white; border-radius: 28px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
-                <div id="bydayList">
-                    <div class="empty-state">
-                        <span>📭</span>
-                        <p>No expenses for this month</p>
-                        <p style="font-size: 12px; margin-top: 8px;">Add expenses from the main page</p>
-                    </div>
-                </div>
+            <div class="day-group-card">
+                <h3>📅 Daily Expenses</h3>
+                <div id="bydayList"></div>
             </div>
         </div>
     </div>
@@ -620,7 +648,7 @@
             return grouped;
         }
 
-        // Update pie chart with percentages ON the chart
+        // Update pie chart with percentages ON the chart and legend below
         function updatePieChart(expensesList) {
             const chartCard = document.getElementById('chartCard');
             const totals = {};
@@ -678,9 +706,18 @@
                     }
                 }
             });
+            
+            // Build legend below chart (without percentages)
+            const legendDiv = document.getElementById('chartLegend');
+            legendDiv.innerHTML = categories.map((cat, idx) => `
+                <div class="legend-item">
+                    <div class="legend-color" style="background: ${colors[idx]}"></div>
+                    <span>${cat}</span>
+                </div>
+            `).join('');
         }
 
-        // Render category summary list
+        // Render category summary list (like Home page format)
         function renderCategorySummary(expensesList) {
             const container = document.getElementById('categoryList');
             const grouped = groupByCategory(expensesList);
@@ -696,26 +733,27 @@
                 const catExpenses = grouped[cat];
                 const catTotal = calculateTotal(catExpenses);
                 
+                // Category header with total
                 html += `
-                    <div class="category-group">
-                        <div class="category-header">
-                            <div class="category-name">
-                                <div class="category-icon" style="background: ${getCategoryColor(cat)}; width: 32px; height: 32px; font-size: 18px;">
+                    <div style="margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #f0f0f0;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="category-icon" style="background: ${getCategoryColor(cat)}; width: 36px; height: 36px; font-size: 20px;">
                                     ${getCategoryIcon(cat)}
                                 </div>
-                                <span>${cat}</span>
+                                <span style="font-weight: 600; font-size: 16px; color: #1a1a2e;">${cat}</span>
                             </div>
-                            <div class="category-total">EGP ${catTotal.toFixed(2)}</div>
+                            <span style="font-weight: 700; font-size: 16px; color: #667eea;">EGP ${catTotal.toFixed(2)}</span>
                         </div>
                 `;
                 
+                // List each expense in this category (without date, like Home page but cleaner)
                 catExpenses.forEach(exp => {
                     html += `
-                        <div class="expense-item">
+                        <div class="expense-item" style="padding-left: 44px;">
                             <div class="expense-left">
                                 <div class="expense-details">
-                                    <div class="expense-date">📅 ${formatDate(exp.date)}</div>
-                                    ${exp.notes ? `<div class="expense-note">📝 ${exp.notes.substring(0, 30)}${exp.notes.length > 30 ? '...' : ''}</div>` : ''}
+                                    ${exp.notes ? `<div class="expense-note">📝 ${exp.notes.substring(0, 40)}${exp.notes.length > 40 ? '...' : ''}</div>` : '<div class="expense-note" style="color: #ccc;">— No notes —</div>'}
                                 </div>
                             </div>
                             <div class="expense-right">
