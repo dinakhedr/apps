@@ -632,6 +632,7 @@
         let currentAccessToken = null;
         let spreadsheetId = null;
         let folderId = null;
+        let gapiReady = false;
 
         const FOLDER_NAME = 'Expense Tracker';
         const SHEET_NAME = 'My Expenses';
@@ -675,9 +676,8 @@
         }
 
         async function findExistingFolder() {
-            const query = `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
             const response = await gapi.client.drive.files.list({
-                q: query,
+                q: `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
                 spaces: 'drive',
                 fields: 'files(id, name)'
             });
@@ -685,9 +685,8 @@
         }
 
         async function findExistingSpreadsheet() {
-            const query = `name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
             const response = await gapi.client.drive.files.list({
-                q: query,
+                q: `name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
                 spaces: 'drive',
                 fields: 'files(id, name)'
             });
@@ -699,16 +698,20 @@
             const errorDiv = document.getElementById('setupError');
             
             btn.disabled = true;
-            btn.textContent = '🔄 Creating...';
+            btn.textContent = 'Creating...';
             errorDiv.style.display = 'none';
             
             try {
+                // Check if gapi is ready
+                if (!gapi.client || !gapi.client.drive) {
+                    throw new Error('Google API not ready. Please refresh and try again.');
+                }
+                
                 // First check if folder already exists
                 let existingFolderId = await findExistingFolder();
                 let existingSheetId = await findExistingSpreadsheet();
                 
                 if (existingFolderId && existingSheetId) {
-                    // Already exists - just use them
                     folderId = existingFolderId;
                     spreadsheetId = existingSheetId;
                     localStorage.setItem(`drive_setup_${currentUserEmail}`, 'complete');
@@ -724,7 +727,7 @@
                 }
                 
                 // Create new folder
-                btn.textContent = '📁 Creating folder...';
+                btn.textContent = 'Creating folder...';
                 const folderMetadata = {
                     name: FOLDER_NAME,
                     mimeType: 'application/vnd.google-apps.folder'
@@ -736,7 +739,7 @@
                 folderId = folderResponse.result.id;
                 
                 // Create new spreadsheet
-                btn.textContent = '📊 Creating spreadsheet...';
+                btn.textContent = 'Creating spreadsheet...';
                 const sheetMetadata = {
                     name: SHEET_NAME,
                     mimeType: 'application/vnd.google-apps.spreadsheet',
@@ -768,15 +771,9 @@
                 
             } catch (err) {
                 console.error('Setup error:', err);
-                let errorMsg = 'Failed to create folder. ';
-                if (err.result) {
-                    errorMsg += err.result.error?.message || '';
-                } else {
-                    errorMsg += err.message || 'Please try again.';
-                }
-                errorDiv.textContent = errorMsg;
+                errorDiv.textContent = err.message || 'Failed to create folder. Please try again.';
                 errorDiv.style.display = 'block';
-                showStatus('❌ ' + errorMsg, true);
+                showStatus('❌ ' + (err.message || 'Setup failed'), true);
                 btn.disabled = false;
                 btn.textContent = 'Continue';
             }
@@ -1045,186 +1042,4 @@
             if (expense) {
                 const newAmount = prompt('Edit amount (EGP):', expense.amount);
                 if (newAmount !== null && !isNaN(newAmount) && parseFloat(newAmount) > 0) {
-                    expense.amount = parseFloat(newAmount);
-                    const newNotes = prompt('Edit notes:', expense.notes);
-                    if (newNotes !== null) expense.notes = newNotes;
-                    saveExpensesToLocal();
-                    deleteExpenseFromSheet(id).then(() => {
-                        addExpenseToSheet(expense);
-                    });
-                    renderAll();
-                    showStatus('✏️ Expense updated');
-                }
-            }
-        }
-
-        function renderAll() {
-            updateStats();
-            updatePieChart();
-            renderExpensesList();
-        }
-
-        function setDefaultDate() {
-            document.getElementById('date').value = new Date().toISOString().split('T')[0];
-        }
-
-        async function handleCredentialResponse(response) {
-            const token = response.credential;
-            localStorage.setItem('google_token', token);
-            currentUserEmail = getUserEmailFromToken(token);
-            
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('setupContainer').style.display = 'flex';
-            
-            // Load GAPI
-            await new Promise((resolve) => {
-                gapi.load('client', resolve);
-            });
-            
-            await gapi.client.init({
-                apiKey: '',
-                discoveryDocs: [
-                    'https://sheets.googleapis.com/$discovery/rest?version=v4',
-                    'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
-                ]
-            });
-            
-            // Request access token with proper scopes
-            const tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
-                scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
-                callback: async (tokenResponse) => {
-                    if (tokenResponse.access_token) {
-                        currentAccessToken = tokenResponse.access_token;
-                        gapi.client.setToken({ access_token: currentAccessToken });
-                        
-                        // Check if user already has setup
-                        const setupDone = localStorage.getItem(`drive_setup_${currentUserEmail}`);
-                        const savedSheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
-                        
-                        if (setupDone === 'complete' && savedSheetId) {
-                            spreadsheetId = savedSheetId;
-                            document.getElementById('setupContainer').style.display = 'none';
-                            document.getElementById('mainApp').style.display = 'block';
-                            await loadExpensesFromSheet();
-                            showStatus(`✅ Welcome back, ${currentUserEmail}`);
-                        }
-                    } else if (tokenResponse.error) {
-                        console.error('Token error:', tokenResponse);
-                        document.getElementById('setupError').textContent = 'Permission denied. Please allow access to continue.';
-                        document.getElementById('setupError').style.display = 'block';
-                        document.getElementById('loginContainer').style.display = 'flex';
-                        document.getElementById('setupContainer').style.display = 'none';
-                    }
-                }
-            });
-            
-            tokenClient.requestAccessToken();
-        }
-
-        function logout() {
-            localStorage.removeItem('google_token');
-            localStorage.removeItem(`drive_setup_${currentUserEmail}`);
-            localStorage.removeItem(`spreadsheet_id_${currentUserEmail}`);
-            currentUserEmail = null;
-            currentAccessToken = null;
-            spreadsheetId = null;
-            folderId = null;
-            expenses = [];
-            document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('setupContainer').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-            showStatus('👋 Logged out successfully');
-        }
-
-        function checkLogin() {
-            const token = localStorage.getItem('google_token');
-            if (token) {
-                currentUserEmail = getUserEmailFromToken(token);
-                if (currentUserEmail) {
-                    const setupDone = localStorage.getItem(`drive_setup_${currentUserEmail}`);
-                    const savedSheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
-                    
-                    if (setupDone === 'complete' && savedSheetId) {
-                        spreadsheetId = savedSheetId;
-                        document.getElementById('loginContainer').style.display = 'none';
-                        document.getElementById('setupContainer').style.display = 'none';
-                        document.getElementById('mainApp').style.display = 'block';
-                        
-                        gapi.load('client', async () => {
-                            await gapi.client.init({
-                                apiKey: '',
-                                discoveryDocs: [
-                                    'https://sheets.googleapis.com/$discovery/rest?version=v4',
-                                    'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
-                                ]
-                            });
-                            
-                            // Need to refresh token for returning user
-                            const tokenClient = google.accounts.oauth2.initTokenClient({
-                                client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
-                                scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
-                                callback: async (tokenResponse) => {
-                                    if (tokenResponse.access_token) {
-                                        currentAccessToken = tokenResponse.access_token;
-                                        gapi.client.setToken({ access_token: currentAccessToken });
-                                        await loadExpensesFromSheet();
-                                        showStatus(`✅ Welcome back, ${currentUserEmail}`);
-                                    }
-                                }
-                            });
-                            tokenClient.requestAccessToken();
-                        });
-                    } else {
-                        document.getElementById('loginContainer').style.display = 'none';
-                        document.getElementById('setupContainer').style.display = 'flex';
-                        document.getElementById('mainApp').style.display = 'none';
-                    }
-                    return;
-                }
-            }
-            document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('setupContainer').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-
-        window.onload = function() {
-            checkLogin();
-            setDefaultDate();
-            
-            google.accounts.id.initialize({
-                client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
-                callback: handleCredentialResponse
-            });
-            google.accounts.id.renderButton(
-                document.getElementById('googleSignInButton'),
-                { theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular' }
-            );
-            
-            document.getElementById('createFolderBtn').addEventListener('click', createFolderAndSheet);
-        };
-
-        document.getElementById('submitBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const date = document.getElementById('date').value;
-            const category = document.getElementById('category').value;
-            const amount = document.getElementById('amount').value;
-            const notes = document.getElementById('notes').value;
-            
-            if (!date) return showStatus('❌ Please select a date', true);
-            if (!category) return showStatus('❌ Please select a category', true);
-            if (!amount || amount <= 0) return showStatus('❌ Please enter a valid amount', true);
-            
-            addExpense(date, category, amount, notes);
-            document.getElementById('category').value = '';
-            document.getElementById('amount').value = '';
-            document.getElementById('notes').value = '';
-            setDefaultDate();
-            document.getElementById('category').focus();
-        });
-        
-        document.getElementById('seeAllBtn').addEventListener('click', () => window.location.href = 'Expenses.html');
-        document.getElementById('logoutBtn').addEventListener('click', logout);
-    </script>
-</body>
-</html>
+                    expense.amount = parseFloat
