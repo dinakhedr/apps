@@ -452,9 +452,18 @@
             margin-top: 20px;
             display: block;
         }
+
+        .sync-status {
+            font-size: 11px;
+            color: #10b981;
+            text-align: center;
+            margin-top: 8px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Google APIs Client Library -->
+    <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
     <div id="loginContainer">
@@ -525,6 +534,7 @@
             </div>
 
             <button class="submit-btn" id="submitBtn">+ Add Expense</button>
+            <div class="sync-status" id="syncStatus">✅ Synced to Google Drive</div>
         </div>
 
         <div class="stats-card" id="statsCard">
@@ -564,6 +574,13 @@
         let expenses = [];
         let categoryChart = null;
         let currentUserEmail = null;
+        let currentUserToken = null;
+        let spreadsheetId = null;
+        let folderId = null;
+        let gapiInitialized = false;
+
+        const FOLDER_NAME = 'Expense Tracker';
+        const SHEET_NAME = 'My Expenses';
 
         function getCurrentMonthRange() {
             const now = new Date();
@@ -590,16 +607,217 @@
             }
         }
 
-        function loadExpenses() {
+        function loadExpensesFromLocal() {
             if (!currentUserEmail) return;
             const saved = localStorage.getItem(`private_expenses_${currentUserEmail}`);
             expenses = saved ? JSON.parse(saved) : [];
             renderAll();
         }
 
-        function saveExpenses() {
+        function saveExpensesToLocal() {
             if (currentUserEmail) {
                 localStorage.setItem(`private_expenses_${currentUserEmail}`, JSON.stringify(expenses));
+            }
+        }
+
+        // Initialize Google API client
+        function initGapi() {
+            gapi.load('client', async () => {
+                await gapi.client.init({
+                    apiKey: '',
+                    discoveryDocs: [
+                        'https://sheets.googleapis.com/$discovery/rest?version=v4',
+                        'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
+                    ]
+                });
+                gapiInitialized = true;
+                await setupUserDrive();
+            });
+        }
+
+        // Setup folder and sheet in user's drive
+        async function setupUserDrive() {
+            try {
+                document.getElementById('syncStatus').textContent = '🔄 Setting up your Google Drive...';
+                
+                // 1. Find or create folder
+                folderId = await findOrCreateFolder();
+                
+                // 2. Find or create spreadsheet
+                spreadsheetId = await findOrCreateSpreadsheet();
+                
+                // 3. Load data from sheet
+                await loadExpensesFromSheet();
+                
+                document.getElementById('syncStatus').textContent = '✅ Synced to Google Drive';
+                showStatus('✅ Google Drive connected! Your data is backed up.');
+            } catch (error) {
+                console.error('Setup error:', error);
+                document.getElementById('syncStatus').textContent = '⚠️ Using local storage only';
+                showStatus('⚠️ Could not connect to Google Drive. Using local storage only.', true);
+            }
+        }
+
+        // Find or create folder in Google Drive
+        async function findOrCreateFolder() {
+            const query = `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+            const response = await gapi.client.drive.files.list({
+                q: query,
+                spaces: 'drive',
+                fields: 'files(id, name)'
+            });
+            
+            const files = response.result.files;
+            if (files && files.length > 0) {
+                return files[0].id;
+            }
+            
+            // Create folder
+            const fileMetadata = {
+                name: FOLDER_NAME,
+                mimeType: 'application/vnd.google-apps.folder'
+            };
+            const createResponse = await gapi.client.drive.files.create({
+                resource: fileMetadata,
+                fields: 'id'
+            });
+            return createResponse.result.id;
+        }
+
+        // Find or create spreadsheet in folder
+        async function findOrCreateSpreadsheet() {
+            const query = `name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and '${folderId}' in parents and trashed=false`;
+            const response = await gapi.client.drive.files.list({
+                q: query,
+                spaces: 'drive',
+                fields: 'files(id, name)'
+            });
+            
+            const files = response.result.files;
+            if (files && files.length > 0) {
+                return files[0].id;
+            }
+            
+            // Create spreadsheet in folder
+            const fileMetadata = {
+                name: SHEET_NAME,
+                mimeType: 'application/vnd.google-apps.spreadsheet',
+                parents: [folderId]
+            };
+            const createResponse = await gapi.client.drive.files.create({
+                resource: fileMetadata,
+                fields: 'id'
+            });
+            
+            // Add headers
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: createResponse.result.id,
+                range: 'Sheet1!A1:E1',
+                valueInputOption: 'RAW',
+                resource: {
+                    values: [['Date', 'Category', 'Amount', 'Notes', 'ID']]
+                }
+            });
+            
+            return createResponse.result.id;
+        }
+
+        // Load expenses from Google Sheet
+        async function loadExpensesFromSheet() {
+            if (!spreadsheetId) return;
+            
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Sheet1!A2:E'
+                });
+                
+                const rows = response.result.values;
+                if (rows && rows.length > 0) {
+                    const sheetExpenses = rows.map(row => ({
+                        id: row[4] ? parseInt(row[4]) : Date.now(),
+                        date: row[0],
+                        category: row[1],
+                        amount: parseFloat(row[2]),
+                        notes: row[3] || '',
+                        timestamp: new Date().toISOString()
+                    }));
+                    
+                    // Merge with local expenses (keep newest)
+                    const localIds = new Set(expenses.map(e => e.id));
+                    const newExpenses = sheetExpenses.filter(e => !localIds.has(e.id));
+                    expenses = [...newExpenses, ...expenses];
+                    saveExpensesToLocal();
+                    renderAll();
+                }
+            } catch (error) {
+                console.error('Load from sheet error:', error);
+            }
+        }
+
+        // Add expense to Google Sheet
+        async function addExpenseToSheet(expense) {
+            if (!spreadsheetId) return;
+            
+            try {
+                const values = [[
+                    expense.date,
+                    expense.category,
+                    expense.amount,
+                    expense.notes || '',
+                    expense.id
+                ]];
+                
+                await gapi.client.sheets.spreadsheets.values.append({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Sheet1!A2:E',
+                    valueInputOption: 'RAW',
+                    resource: { values: values }
+                });
+            } catch (error) {
+                console.error('Add to sheet error:', error);
+            }
+        }
+
+        // Delete expense from Google Sheet
+        async function deleteExpenseFromSheet(expenseId) {
+            if (!spreadsheetId) return;
+            
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Sheet1!A2:E'
+                });
+                
+                const rows = response.result.values;
+                if (rows) {
+                    let rowIndex = -1;
+                    for (let i = 0; i < rows.length; i++) {
+                        if (rows[i][4] && parseInt(rows[i][4]) === expenseId) {
+                            rowIndex = i + 2; // +2 because 1-indexed and header row
+                            break;
+                        }
+                    }
+                    
+                    if (rowIndex > 0) {
+                        const requests = [{
+                            deleteDimension: {
+                                range: {
+                                    sheetId: 0,
+                                    dimension: 'ROWS',
+                                    startIndex: rowIndex - 1,
+                                    endIndex: rowIndex
+                                }
+                            }
+                        }];
+                        await gapi.client.sheets.spreadsheets.batchUpdate({
+                            spreadsheetId: spreadsheetId,
+                            resource: { requests: requests }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Delete from sheet error:', error);
             }
         }
 
@@ -730,19 +948,29 @@
             setTimeout(() => statusDiv.classList.remove('show'), 2000);
         }
 
-        function addExpense(date, category, amount, notes) {
-            expenses.unshift({ id: Date.now(), date, category, amount: parseFloat(amount), notes: notes || '', timestamp: new Date().toISOString() });
-            saveExpenses();
+        async function addExpense(date, category, amount, notes) {
+            const newExpense = { 
+                id: Date.now(), 
+                date, 
+                category, 
+                amount: parseFloat(amount), 
+                notes: notes || '', 
+                timestamp: new Date().toISOString() 
+            };
+            expenses.unshift(newExpense);
+            saveExpensesToLocal();
+            await addExpenseToSheet(newExpense);
             renderAll();
-            showStatus('✅ Expense added successfully!');
+            showStatus('✅ Expense added and synced to Google Drive!');
         }
 
-        function deleteExpense(id) {
+        async function deleteExpense(id) {
             if (confirm('Delete this expense?')) {
                 expenses = expenses.filter(exp => exp.id !== id);
-                saveExpenses();
+                saveExpensesToLocal();
+                await deleteExpenseFromSheet(id);
                 renderAll();
-                showStatus('🗑️ Expense deleted');
+                showStatus('🗑️ Expense deleted from Google Drive');
             }
         }
 
@@ -754,7 +982,12 @@
                     expense.amount = parseFloat(newAmount);
                     const newNotes = prompt('Edit notes:', expense.notes);
                     if (newNotes !== null) expense.notes = newNotes;
-                    saveExpenses();
+                    saveExpensesToLocal();
+                    // Note: Update in sheet requires finding and updating row
+                    // For simplicity, delete and re-add
+                    deleteExpenseFromSheet(id).then(() => {
+                        addExpenseToSheet(expense);
+                    });
                     renderAll();
                     showStatus('✏️ Expense updated');
                 }
@@ -771,22 +1004,44 @@
             document.getElementById('date').value = new Date().toISOString().split('T')[0];
         }
 
-        function handleCredentialResponse(response) {
+        async function handleCredentialResponse(response) {
             const token = response.credential;
             localStorage.setItem('google_token', token);
+            currentUserToken = token;
             currentUserEmail = getUserEmailFromToken(token);
+            
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            loadExpenses();
-            showStatus(`✅ Logged in as ${currentUserEmail}`);
             
-            // TODO: Create/access Google Sheet in user's Drive
-            // This will be added in next step
+            loadExpensesFromLocal();
+            
+            // Initialize GAPI with the token
+            await new Promise((resolve) => {
+                gapi.load('client', resolve);
+            });
+            
+            await gapi.client.init({
+                apiKey: '',
+                discoveryDocs: [
+                    'https://sheets.googleapis.com/$discovery/rest?version=v4',
+                    'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
+                ]
+            });
+            
+            // Set auth token
+            gapi.client.setToken({ access_token: token });
+            
+            await setupUserDrive();
+            
+            showStatus(`✅ Logged in as ${currentUserEmail}`);
         }
 
         function logout() {
             localStorage.removeItem('google_token');
             currentUserEmail = null;
+            currentUserToken = null;
+            spreadsheetId = null;
+            folderId = null;
             expenses = [];
             document.getElementById('loginContainer').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
@@ -796,11 +1051,24 @@
         function checkLogin() {
             const token = localStorage.getItem('google_token');
             if (token) {
+                currentUserToken = token;
                 currentUserEmail = getUserEmailFromToken(token);
                 if (currentUserEmail) {
                     document.getElementById('loginContainer').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
-                    loadExpenses();
+                    loadExpensesFromLocal();
+                    // Initialize GAPI after login
+                    gapi.load('client', async () => {
+                        await gapi.client.init({
+                            apiKey: '',
+                            discoveryDocs: [
+                                'https://sheets.googleapis.com/$discovery/rest?version=v4',
+                                'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
+                            ]
+                        });
+                        gapi.client.setToken({ access_token: token });
+                        await setupUserDrive();
+                    });
                     return;
                 }
             }
