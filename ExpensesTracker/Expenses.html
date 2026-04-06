@@ -118,6 +118,45 @@
             border-color: #667eea;
         }
 
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn:active {
+            transform: scale(0.97);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         /* Stats Card */
         .stats-card {
             background: white;
@@ -155,32 +194,68 @@
             margin-top: 4px;
         }
 
-        /* Expenses Card */
-        .expenses-card {
+        /* Chart Card */
+        .chart-card {
             background: white;
             border-radius: 28px;
             padding: 20px;
+            margin-bottom: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.15);
         }
 
-        .expenses-header {
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .expenses-header h3 {
-            font-size: 18px;
+        .chart-card h3 {
+            font-size: 16px;
             font-weight: 600;
             color: #1a1a2e;
+            margin-bottom: 16px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 220px;
+            margin: 10px 0;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Category Group */
+        .category-group {
+            margin-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 12px;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .category-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            color: #1a1a2e;
+        }
+
+        .category-total {
+            font-weight: 700;
+            font-size: 15px;
+            color: #667eea;
         }
 
         .expense-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 10px 0 10px 40px;
+            border-bottom: none;
         }
 
         .expense-item:last-child {
@@ -195,23 +270,17 @@
         }
 
         .category-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 20px;
         }
 
         .expense-details {
             flex: 1;
-        }
-
-        .expense-category {
-            font-weight: 600;
-            font-size: 15px;
-            color: #1a1a2e;
         }
 
         .expense-date {
@@ -234,7 +303,7 @@
 
         .expense-amount {
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
             color: #1a1a2e;
         }
 
@@ -255,6 +324,32 @@
         .delete-btn:active {
             background: #ffe5e5;
             color: #ff4757;
+        }
+
+        /* Day Group */
+        .day-group {
+            margin-bottom: 20px;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e8e8ed;
+        }
+
+        .day-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #667eea;
+        }
+
+        .day-total {
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
         }
 
         .empty-state {
@@ -302,6 +397,7 @@
             background: #ef4444;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -341,25 +437,47 @@
             </div>
         </div>
 
-        <!-- Stats Card -->
-        <div class="stats-card" id="statsCard" style="display: none;">
-            <div class="stats-row">
-                <span class="stats-label">Total Spent</span>
-                <span class="stats-total" id="totalAmount">EGP 0</span>
-            </div>
-            <div class="expense-count" id="expenseCount">0 expenses</div>
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="summary">📊 Summary</button>
+            <button class="tab-btn" data-tab="byday">📅 Expenses by Day</button>
         </div>
 
-        <!-- Expenses Card -->
-        <div class="expenses-card">
-            <div class="expenses-header">
-                <h3>📋 Expenses by Day</h3>
+        <!-- Tab 1: Summary -->
+        <div id="summaryTab" class="tab-content active">
+            <!-- Stats Card -->
+            <div class="stats-card" id="statsCard">
+                <div class="stats-row">
+                    <span class="stats-label">Total Spent</span>
+                    <span class="stats-total" id="totalAmount">EGP 0</span>
+                </div>
+                <div class="expense-count" id="expenseCount">0 expenses</div>
             </div>
-            <div id="expensesList">
-                <div class="empty-state">
-                    <span>📭</span>
-                    <p>No expenses for this month</p>
-                    <p style="font-size: 12px; margin-top: 8px;">Add expenses from the main page</p>
+
+            <!-- Pie Chart Card -->
+            <div class="chart-card" id="chartCard" style="display: none;">
+                <h3>📈 Spending by Category</h3>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Category Summary List -->
+            <div class="chart-card" id="categoryListCard">
+                <h3>📋 Breakdown by Category</h3>
+                <div id="categoryList"></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Expenses by Day -->
+        <div id="bydayTab" class="tab-content">
+            <div class="expenses-card" style="background: white; border-radius: 28px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                <div id="bydayList">
+                    <div class="empty-state">
+                        <span>📭</span>
+                        <p>No expenses for this month</p>
+                        <p style="font-size: 12px; margin-top: 8px;">Add expenses from the main page</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -368,10 +486,8 @@
     <div class="status" id="statusMsg"></div>
 
     <script>
-        // Load expenses from localStorage
         let expenses = [];
-        let currentYear = new Date().getFullYear();
-        let currentMonth = new Date().getMonth();
+        let categoryChart = null;
 
         // Get icon for category
         function getCategoryIcon(category) {
@@ -425,54 +541,208 @@
             return colors[category] || '#f0f0f0';
         }
 
+        // Get chart color
+        function getChartColor(category, index) {
+            const chartColors = {
+                'Car Repairs': '#e57373',
+                'Cafe': '#81c784',
+                'Clothes': '#d4a574',
+                'Entertainment': '#b39ddb',
+                'Electronics': '#7986cb',
+                'Games': '#b39ddb',
+                'Gym': '#f4c542',
+                'Health': '#f48fb1',
+                'Home Repairs': '#e57373',
+                'Internet': '#4fc3f7',
+                'Personal Care': '#f48fb1',
+                'Pets': '#d4a574',
+                'Petrol': '#e57373',
+                'Ride Hailing': '#f4c542',
+                'Smoking': '#9e9e9e',
+                'Subscriptions': '#64b5f6',
+                'Supermarket': '#ffb74d',
+                'Travel': '#4fc3f7',
+                'Utilities': '#f4c542'
+            };
+            return chartColors[category] || `hsl(${index * 30}, 70%, 60%)`;
+        }
+
         // Load expenses from localStorage
         function loadExpenses() {
             const saved = localStorage.getItem('private_expenses');
             if (saved) {
                 expenses = JSON.parse(saved);
             }
-            renderExpenses();
+            renderAll();
         }
 
-        // Save expenses to localStorage
+        // Save expenses
         function saveExpenses() {
             localStorage.setItem('private_expenses', JSON.stringify(expenses));
-            renderExpenses();
+            renderAll();
         }
 
-        // Format date for display
+        // Format date
         function formatDate(dateString) {
             const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
-        // Get day number from date
+        // Get day number
         function getDayNumber(dateString) {
             return new Date(dateString).getDate();
         }
 
-        // Filter expenses by selected month and year
+        // Get filtered expenses
         function getFilteredExpenses() {
             const year = parseInt(document.getElementById('yearSelect').value);
             const month = parseInt(document.getElementById('monthSelect').value);
-            
             return expenses.filter(exp => {
                 const expDate = new Date(exp.date);
                 return expDate.getFullYear() === year && expDate.getMonth() === month;
             });
         }
 
-        // Sort expenses by day (ascending)
-        function sortExpensesByDay(expensesList) {
-            return [...expensesList].sort((a, b) => {
-                const dayA = getDayNumber(a.date);
-                const dayB = getDayNumber(b.date);
-                return dayA - dayB;
+        // Calculate total
+        function calculateTotal(expensesList) {
+            return expensesList.reduce((sum, exp) => sum + exp.amount, 0);
+        }
+
+        // Group by category
+        function groupByCategory(expensesList) {
+            const grouped = {};
+            expensesList.forEach(exp => {
+                if (!grouped[exp.category]) {
+                    grouped[exp.category] = [];
+                }
+                grouped[exp.category].push(exp);
+            });
+            return grouped;
+        }
+
+        // Update pie chart with percentages ON the chart
+        function updatePieChart(expensesList) {
+            const chartCard = document.getElementById('chartCard');
+            const totals = {};
+            expensesList.forEach(exp => {
+                totals[exp.category] = (totals[exp.category] || 0) + exp.amount;
+            });
+            
+            const categories = Object.keys(totals);
+            
+            if (categories.length === 0) {
+                chartCard.style.display = 'none';
+                return;
+            }
+            
+            chartCard.style.display = 'block';
+            
+            const amounts = categories.map(cat => totals[cat]);
+            const totalAmount = amounts.reduce((a, b) => a + b, 0);
+            const colors = categories.map((cat, idx) => getChartColor(cat, idx));
+            
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+            
+            categoryChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        data: amounts,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: 'white'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label;
+                                    const value = context.raw;
+                                    const percentage = ((value / totalAmount) * 100).toFixed(1);
+                                    return `${label}: EGP ${value.toFixed(2)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
 
-        // Group expenses by day
-        function groupExpensesByDay(expensesList) {
+        // Render category summary list
+        function renderCategorySummary(expensesList) {
+            const container = document.getElementById('categoryList');
+            const grouped = groupByCategory(expensesList);
+            const categories = Object.keys(grouped).sort();
+            
+            if (categories.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px;"><span>📭</span><p>No expenses for this month</p></div>';
+                return;
+            }
+            
+            let html = '';
+            categories.forEach(cat => {
+                const catExpenses = grouped[cat];
+                const catTotal = calculateTotal(catExpenses);
+                
+                html += `
+                    <div class="category-group">
+                        <div class="category-header">
+                            <div class="category-name">
+                                <div class="category-icon" style="background: ${getCategoryColor(cat)}; width: 32px; height: 32px; font-size: 18px;">
+                                    ${getCategoryIcon(cat)}
+                                </div>
+                                <span>${cat}</span>
+                            </div>
+                            <div class="category-total">EGP ${catTotal.toFixed(2)}</div>
+                        </div>
+                `;
+                
+                catExpenses.forEach(exp => {
+                    html += `
+                        <div class="expense-item">
+                            <div class="expense-left">
+                                <div class="expense-details">
+                                    <div class="expense-date">📅 ${formatDate(exp.date)}</div>
+                                    ${exp.notes ? `<div class="expense-note">📝 ${exp.notes.substring(0, 30)}${exp.notes.length > 30 ? '...' : ''}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="expense-right">
+                                <div class="expense-amount">EGP ${exp.amount.toFixed(2)}</div>
+                                <button class="action-btn edit-btn" onclick="editExpense(${exp.id})">✏️</button>
+                                <button class="action-btn delete-btn" onclick="deleteExpense(${exp.id})">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Render expenses by day
+        function renderByDay(expensesList) {
+            const container = document.getElementById('bydayList');
+            
+            if (expensesList.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span>📭</span><p>No expenses for this month</p><p style="font-size: 12px; margin-top: 8px;">Add expenses from the main page</p></div>';
+                return;
+            }
+            
+            // Group by day
             const grouped = {};
             expensesList.forEach(exp => {
                 const day = getDayNumber(exp.date);
@@ -481,37 +751,70 @@
                 }
                 grouped[day].push(exp);
             });
-            return grouped;
-        }
-
-        // Calculate total for filtered expenses
-        function calculateTotal(expensesList) {
-            return expensesList.reduce((sum, exp) => sum + exp.amount, 0);
+            
+            const days = Object.keys(grouped).sort((a, b) => parseInt(a) - parseInt(b));
+            
+            let html = '';
+            days.forEach(day => {
+                const dayExpenses = grouped[day];
+                const dayTotal = calculateTotal(dayExpenses);
+                
+                html += `
+                    <div class="day-group">
+                        <div class="day-header">
+                            <span class="day-title">📅 Day ${day}</span>
+                            <span class="day-total">Total: EGP ${dayTotal.toFixed(2)}</span>
+                        </div>
+                `;
+                
+                dayExpenses.forEach(exp => {
+                    html += `
+                        <div class="expense-item" style="padding-left: 0;">
+                            <div class="expense-left">
+                                <div class="category-icon" style="background: ${getCategoryColor(exp.category)};">
+                                    ${getCategoryIcon(exp.category)}
+                                </div>
+                                <div class="expense-details">
+                                    <div class="expense-category">${exp.category}</div>
+                                    ${exp.notes ? `<div class="expense-note">📝 ${exp.notes.substring(0, 30)}${exp.notes.length > 30 ? '...' : ''}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="expense-right">
+                                <div class="expense-amount">EGP ${exp.amount.toFixed(2)}</div>
+                                <button class="action-btn edit-btn" onclick="editExpense(${exp.id})">✏️</button>
+                                <button class="action-btn delete-btn" onclick="deleteExpense(${exp.id})">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            });
+            
+            container.innerHTML = html;
         }
 
         // Update stats
-        function updateStats() {
-            const filtered = getFilteredExpenses();
-            const total = calculateTotal(filtered);
+        function updateStats(expensesList) {
+            const total = calculateTotal(expensesList);
             const statsCard = document.getElementById('statsCard');
             
-            if (filtered.length === 0) {
+            if (expensesList.length === 0) {
                 statsCard.style.display = 'none';
             } else {
                 statsCard.style.display = 'block';
                 document.getElementById('totalAmount').textContent = `EGP ${total.toFixed(2)}`;
-                document.getElementById('expenseCount').textContent = `${filtered.length} ${filtered.length === 1 ? 'expense' : 'expenses'}`;
+                document.getElementById('expenseCount').textContent = `${expensesList.length} ${expensesList.length === 1 ? 'expense' : 'expenses'}`;
             }
         }
 
-        // Show status message
-        function showStatus(message, isError = false) {
-            const statusDiv = document.getElementById('statusMsg');
-            statusDiv.textContent = message;
-            statusDiv.className = `status show ${isError ? 'error' : 'success'}`;
-            setTimeout(() => {
-                statusDiv.classList.remove('show');
-            }, 2000);
+        // Render everything
+        function renderAll() {
+            const filtered = getFilteredExpenses();
+            updateStats(filtered);
+            updatePieChart(filtered);
+            renderCategorySummary(filtered);
+            renderByDay(filtered);
         }
 
         // Delete expense
@@ -540,73 +843,20 @@
             }
         }
 
-        // Render expenses list grouped by day
-        function renderExpenses() {
-            const expensesDiv = document.getElementById('expensesList');
-            const filtered = getFilteredExpenses();
-            const sorted = sortExpensesByDay(filtered);
-            const grouped = groupExpensesByDay(sorted);
-            const days = Object.keys(grouped).sort((a, b) => parseInt(a) - parseInt(b));
-            
-            updateStats();
-            
-            if (days.length === 0) {
-                expensesDiv.innerHTML = `
-                    <div class="empty-state">
-                        <span>📭</span>
-                        <p>No expenses for this month</p>
-                        <p style="font-size: 12px; margin-top: 8px;">Add expenses from the main page</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            let html = '';
-            
-            days.forEach(day => {
-                const dayExpenses = grouped[day];
-                const dayTotal = calculateTotal(dayExpenses);
-                
-                html += `
-                    <div style="margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e8e8ed;">
-                            <span style="font-weight: 600; font-size: 16px; color: #667eea;">📅 Day ${day}</span>
-                            <span style="font-size: 13px; font-weight: 500; color: #666;">Total: EGP ${dayTotal.toFixed(2)}</span>
-                        </div>
-                `;
-                
-                dayExpenses.forEach(exp => {
-                    html += `
-                        <div class="expense-item">
-                            <div class="expense-left">
-                                <div class="category-icon" style="background: ${getCategoryColor(exp.category)};">
-                                    ${getCategoryIcon(exp.category)}
-                                </div>
-                                <div class="expense-details">
-                                    <div class="expense-category">${exp.category}</div>
-                                    ${exp.notes ? `<div class="expense-note">📝 ${exp.notes.substring(0, 30)}${exp.notes.length > 30 ? '...' : ''}</div>` : ''}
-                                </div>
-                            </div>
-                            <div class="expense-right">
-                                <div class="expense-amount">EGP ${exp.amount.toFixed(2)}</div>
-                                <button class="action-btn edit-btn" onclick="editExpense(${exp.id})">✏️</button>
-                                <button class="action-btn delete-btn" onclick="deleteExpense(${exp.id})">🗑️</button>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                html += `</div>`;
-            });
-            
-            expensesDiv.innerHTML = html;
+        // Show status
+        function showStatus(message, isError = false) {
+            const statusDiv = document.getElementById('statusMsg');
+            statusDiv.textContent = message;
+            statusDiv.className = `status show ${isError ? 'error' : 'success'}`;
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+            }, 2000);
         }
 
-        // Populate year dropdown (current year - 5 to current year + 1)
+        // Populate years
         function populateYears() {
             const yearSelect = document.getElementById('yearSelect');
             const currentYear = new Date().getFullYear();
-            
             for (let year = currentYear - 5; year <= currentYear + 1; year++) {
                 const option = document.createElement('option');
                 option.value = year;
@@ -618,24 +868,46 @@
             }
         }
 
-        // Set current month in dropdown
+        // Set current month
         function setCurrentMonth() {
-            const currentMonth = new Date().getMonth();
-            document.getElementById('monthSelect').value = currentMonth;
+            document.getElementById('monthSelect').value = new Date().getMonth();
         }
 
-        // Go back to main page
+        // Tab switching
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    document.getElementById('summaryTab').classList.remove('active');
+                    document.getElementById('bydayTab').classList.remove('active');
+                    
+                    if (tabId === 'summary') {
+                        document.getElementById('summaryTab').classList.add('active');
+                    } else {
+                        document.getElementById('bydayTab').classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // Go back
         function goBack() {
             window.location.href = 'Home.html';
         }
 
         // Event listeners
-        document.getElementById('monthSelect').addEventListener('change', renderExpenses);
-        document.getElementById('yearSelect').addEventListener('change', renderExpenses);
+        document.getElementById('monthSelect').addEventListener('change', renderAll);
+        document.getElementById('yearSelect').addEventListener('change', renderAll);
         
         // Initialize
         populateYears();
         setCurrentMonth();
+        setupTabs();
         loadExpenses();
     </script>
 </body>
