@@ -114,32 +114,13 @@
             font-family: inherit;
             background: #fafafc;
             transition: all 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
         }
 
-        /* Fix for iPhone date picker */
+        /* Date picker fix for iOS */
         input[type="date"] {
             -webkit-appearance: none;
             appearance: none;
             min-height: 50px;
-        }
-
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            background: transparent;
-            color: transparent;
-            cursor: pointer;
-            padding: 8px;
-            position: absolute;
-            right: 10px;
-        }
-
-        .date-wrapper {
-            position: relative;
-        }
-
-        .date-wrapper input {
-            width: 100%;
         }
 
         input:focus, select:focus, textarea:focus {
@@ -466,9 +447,7 @@
             
             <div class="form-group">
                 <label class="required">Date</label>
-                <div class="date-wrapper">
-                    <input type="date" id="date" required>
-                </div>
+                <input type="date" id="date" required>
             </div>
 
             <div class="form-group">
@@ -740,7 +719,7 @@
                 }
             });
             
-            // Build custom legend - text only, no category icon
+            // Build custom legend - text only
             const legendDiv = document.getElementById('chartLegend');
             legendDiv.innerHTML = categories.map((cat, idx) => `
                 <div class="legend-item">
