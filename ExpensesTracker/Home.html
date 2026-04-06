@@ -665,7 +665,7 @@
             return chartColors[category] || `hsl(${index * 30}, 70%, 60%)`;
         }
 
-        // Update pie chart
+        // Update pie chart with percentages on portions
         function updatePieChart() {
             const chartCard = document.getElementById('chartCard');
             const totals = getCategoryTotals();
@@ -679,6 +679,7 @@
             chartCard.style.display = 'block';
             
             const amounts = categories.map(cat => totals[cat]);
+            const totalAmount = amounts.reduce((a, b) => a + b, 0);
             const colors = categories.map((cat, idx) => getChartColor(cat, idx));
             
             const ctx = document.getElementById('categoryChart').getContext('2d');
@@ -709,8 +710,7 @@
                                 label: function(context) {
                                     const label = context.label;
                                     const value = context.raw;
-                                    const total = amounts.reduce((a, b) => a + b, 0);
-                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    const percentage = ((value / totalAmount) * 100).toFixed(1);
                                     return `${label}: EGP ${value.toFixed(2)} (${percentage}%)`;
                                 }
                             }
@@ -719,14 +719,17 @@
                 }
             });
             
-            // Build custom legend - text only
+            // Build custom legend
             const legendDiv = document.getElementById('chartLegend');
-            legendDiv.innerHTML = categories.map((cat, idx) => `
-                <div class="legend-item">
-                    <div class="legend-color" style="background: ${colors[idx]}"></div>
-                    <span>${cat}</span>
-                </div>
-            `).join('');
+            legendDiv.innerHTML = categories.map((cat, idx) => {
+                const percentage = ((totals[cat] / totalAmount) * 100).toFixed(1);
+                return `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: ${colors[idx]}"></div>
+                        <span>${cat} (${percentage}%)</span>
+                    </div>
+                `;
+            }).join('');
         }
 
         // Render expenses list (showing only last 5)
@@ -876,9 +879,9 @@
             document.getElementById('category').focus();
         });
         
-        // See All button
+        // See All button - navigate to Expenses.html
         document.getElementById('seeAllBtn').addEventListener('click', function() {
-            showStatus('📄 All expenses page coming soon!');
+            window.location.href = 'Expenses.html';
         });
         
         // Initialize
