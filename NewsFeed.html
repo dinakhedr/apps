@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Middle East News Feed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            font-family: 'Lato', sans-serif;
             background: linear-gradient(135deg, #FFE8D4 0%, #FFD9B5 50%, #FFF0E0 100%);
             min-height: 100vh;
             padding: 20px;
@@ -28,15 +29,18 @@
             margin-bottom: 8px; 
             color: white;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-weight: 900;
         }
         .sub { 
             font-size: 0.95rem; 
             color: rgba(255,255,255,0.9);
+            font-weight: 400;
         }
         .last-updated { 
             font-size: 0.8rem; 
             margin-top: 10px;
             color: rgba(255,255,255,0.85);
+            font-weight: 300;
         }
         
         /* Filter Tags Section */
@@ -49,7 +53,7 @@
         }
         .filters-title {
             font-size: 0.85rem;
-            font-weight: 600;
+            font-weight: 700;
             color: #666;
             margin-bottom: 12px;
             letter-spacing: 0.5px;
@@ -63,12 +67,13 @@
             padding: 8px 20px;
             border-radius: 40px;
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             border: none;
             background: #f0f0f0;
             color: #555;
+            font-family: 'Lato', sans-serif;
         }
         .filter-tag:hover {
             transform: translateY(-2px);
@@ -103,7 +108,7 @@
         }
         .news-title {
             font-size: 1rem;
-            font-weight: normal;
+            font-weight: 400;
             color: #2c3e50;
             line-height: 1.5;
             margin-bottom: 12px;
@@ -111,6 +116,7 @@
         .news-title a { 
             color: #2c3e50; 
             text-decoration: none;
+            font-weight: 400;
         }
         .news-title a:hover { 
             color: #FF6B6B;
@@ -128,24 +134,26 @@
             padding: 4px 14px;
             border-radius: 25px;
             font-size: 0.75rem;
-            font-weight: normal;
+            font-weight: 400;
             display: inline-block;
         }
         .timestamp {
             font-size: 0.7rem;
             color: #888;
+            font-weight: 300;
         }
         .view-btn {
             padding: 5px 16px;
             border-radius: 25px;
             font-size: 0.7rem;
-            font-weight: 500;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
             text-decoration: none;
             display: inline-block;
             color: white;
             border: none;
+            font-family: 'Lato', sans-serif;
         }
         .view-btn:hover {
             transform: scale(1.03);
@@ -159,6 +167,7 @@
             border-radius: 20px;
             color: #666;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            font-weight: 400;
         }
         
         .refresh-btn {
@@ -169,11 +178,12 @@
             color: white;
             border: none;
             border-radius: 50px;
-            font-weight: bold;
+            font-weight: 700;
             font-size: 0.9rem;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             transition: all 0.2s;
+            font-family: 'Lato', sans-serif;
         }
         .refresh-btn:hover { 
             transform: scale(1.02); 
@@ -185,6 +195,7 @@
             color: #c97e5a; 
             font-size: 0.7rem; 
             margin-top: 25px;
+            font-weight: 300;
         }
         
         @media (max-width: 600px) {
