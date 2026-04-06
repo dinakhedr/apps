@@ -694,21 +694,21 @@
             return response.result.files?.[0]?.id || null;
         }
 
-        async function setupUserDrive() {
+        async function createFolderAndSheet() {
             const btn = document.getElementById('createFolderBtn');
             const errorDiv = document.getElementById('setupError');
             
             btn.disabled = true;
-            btn.textContent = '🔄 Checking...';
+            btn.textContent = '🔄 Creating...';
             errorDiv.style.display = 'none';
             
             try {
-                // Check if folder already exists
+                // First check if folder already exists
                 let existingFolderId = await findExistingFolder();
                 let existingSheetId = await findExistingSpreadsheet();
                 
                 if (existingFolderId && existingSheetId) {
-                    // User already has setup complete
+                    // Already exists - just use them
                     folderId = existingFolderId;
                     spreadsheetId = existingSheetId;
                     localStorage.setItem(`drive_setup_${currentUserEmail}`, 'complete');
@@ -723,10 +723,8 @@
                     return;
                 }
                 
-                // First time user - need to create
-                btn.textContent = '🔄 Creating folder...';
-                
-                // Create folder
+                // Create new folder
+                btn.textContent = '📁 Creating folder...';
                 const folderMetadata = {
                     name: FOLDER_NAME,
                     mimeType: 'application/vnd.google-apps.folder'
@@ -737,9 +735,8 @@
                 });
                 folderId = folderResponse.result.id;
                 
-                btn.textContent = '🔄 Creating spreadsheet...';
-                
-                // Create spreadsheet in folder
+                // Create new spreadsheet
+                btn.textContent = '📊 Creating spreadsheet...';
                 const sheetMetadata = {
                     name: SHEET_NAME,
                     mimeType: 'application/vnd.google-apps.spreadsheet',
@@ -771,9 +768,15 @@
                 
             } catch (err) {
                 console.error('Setup error:', err);
-                errorDiv.textContent = 'Failed to create folder. Please try again.';
+                let errorMsg = 'Failed to create folder. ';
+                if (err.result) {
+                    errorMsg += err.result.error?.message || '';
+                } else {
+                    errorMsg += err.message || 'Please try again.';
+                }
+                errorDiv.textContent = errorMsg;
                 errorDiv.style.display = 'block';
-                showStatus('❌ Setup failed. Please try again.', true);
+                showStatus('❌ ' + errorMsg, true);
                 btn.disabled = false;
                 btn.textContent = '📁 Continue';
             }
@@ -781,7 +784,6 @@
 
         async function loadExpensesFromSheet() {
             if (!spreadsheetId) {
-                // Try to get from localStorage
                 spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
                 if (!spreadsheetId) return;
             }
@@ -1069,12 +1071,12 @@
         async function handleCredentialResponse(response) {
             const token = response.credential;
             localStorage.setItem('google_token', token);
-            currentAccessToken = token;
             currentUserEmail = getUserEmailFromToken(token);
             
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('setupContainer').style.display = 'flex';
             
+            // Load GAPI
             await new Promise((resolve) => {
                 gapi.load('client', resolve);
             });
@@ -1087,7 +1089,7 @@
                 ]
             });
             
-            // Need to get an access token with Drive/Sheets scopes
+            // Request access token with proper scopes
             const tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
                 scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
@@ -1106,11 +1108,13 @@
                             document.getElementById('mainApp').style.display = 'block';
                             await loadExpensesFromSheet();
                             showStatus(`✅ Welcome back, ${currentUserEmail}`);
-                        } else {
-                            // First time user - show setup screen
-                            document.getElementById('setupContainer').style.display = 'flex';
-                            document.getElementById('mainApp').style.display = 'none';
                         }
+                    } else if (tokenResponse.error) {
+                        console.error('Token error:', tokenResponse);
+                        document.getElementById('setupError').textContent = 'Permission denied. Please allow access to continue.';
+                        document.getElementById('setupError').style.display = 'block';
+                        document.getElementById('loginContainer').style.display = 'flex';
+                        document.getElementById('setupContainer').style.display = 'none';
                     }
                 }
             });
@@ -1136,7 +1140,6 @@
         function checkLogin() {
             const token = localStorage.getItem('google_token');
             if (token) {
-                currentAccessToken = token;
                 currentUserEmail = getUserEmailFromToken(token);
                 if (currentUserEmail) {
                     const setupDone = localStorage.getItem(`drive_setup_${currentUserEmail}`);
@@ -1156,8 +1159,21 @@
                                     'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
                                 ]
                             });
-                            gapi.client.setToken({ access_token: token });
-                            await loadExpensesFromSheet();
+                            
+                            // Need to refresh token for returning user
+                            const tokenClient = google.accounts.oauth2.initTokenClient({
+                                client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
+                                scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
+                                callback: async (tokenResponse) => {
+                                    if (tokenResponse.access_token) {
+                                        currentAccessToken = tokenResponse.access_token;
+                                        gapi.client.setToken({ access_token: currentAccessToken });
+                                        await loadExpensesFromSheet();
+                                        showStatus(`✅ Welcome back, ${currentUserEmail}`);
+                                    }
+                                }
+                            });
+                            tokenClient.requestAccessToken();
                         });
                     } else {
                         document.getElementById('loginContainer').style.display = 'none';
@@ -1185,7 +1201,7 @@
                 { theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular' }
             );
             
-            document.getElementById('createFolderBtn').addEventListener('click', setupUserDrive);
+            document.getElementById('createFolderBtn').addEventListener('click', createFolderAndSheet);
         };
 
         document.getElementById('submitBtn').addEventListener('click', function(e) {
