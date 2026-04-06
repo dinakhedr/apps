@@ -411,7 +411,8 @@
             background: #ef4444;
         }
 
-        #loginContainer, #setupContainer {
+        /* Screens */
+        #loginContainer, #setupContainer, #folderMissingContainer {
             position: fixed;
             top: 0;
             left: 0;
@@ -425,7 +426,7 @@
             flex-direction: column;
         }
 
-        .login-box, .setup-box {
+        .login-box, .setup-box, .folder-missing-box {
             background: white;
             border-radius: 28px;
             padding: 40px 30px;
@@ -435,7 +436,7 @@
             position: relative;
         }
 
-        .setup-logout-btn {
+        .setup-logout-btn, .folder-missing-logout-btn {
             position: absolute;
             top: 15px;
             right: 15px;
@@ -447,36 +448,36 @@
             padding: 5px;
         }
 
-        .setup-logout-btn:active {
+        .setup-logout-btn:active, .folder-missing-logout-btn:active {
             color: #ef4444;
         }
 
-        .login-box span, .setup-box span {
+        .login-box span, .setup-box span, .folder-missing-box span {
             font-size: 64px;
             display: block;
             margin-bottom: 16px;
         }
 
-        .login-box h2, .setup-box h2 {
+        .login-box h2, .setup-box h2, .folder-missing-box h2 {
             font-size: 24px;
             margin-bottom: 8px;
         }
 
-        .login-box p, .setup-box p {
+        .login-box p, .setup-box p, .folder-missing-box p {
             color: #666;
             margin-bottom: 24px;
             font-size: 14px;
             line-height: 1.5;
         }
 
-        .login-box small, .setup-box small {
+        .login-box small, .setup-box small, .folder-missing-box small {
             font-size: 11px;
             color: #999;
             margin-top: 20px;
             display: block;
         }
 
-        .create-folder-btn {
+        .create-folder-btn, .recreate-folder-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -489,17 +490,27 @@
             width: 100%;
         }
 
-        .create-folder-btn:active {
+        .create-folder-btn:active, .recreate-folder-btn:active {
             transform: scale(0.97);
         }
 
-        .create-folder-btn:disabled {
+        .create-folder-btn:disabled, .recreate-folder-btn:disabled {
             opacity: 0.6;
             transform: none;
         }
 
         .info-text {
             background: #f0f0f0;
+            padding: 12px;
+            border-radius: 16px;
+            margin: 16px 0;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .warning-text {
+            background: #fff3cd;
+            color: #856404;
             padding: 12px;
             border-radius: 16px;
             margin: 16px 0;
@@ -536,7 +547,7 @@
         </div>
     </div>
 
-    <!-- Setup Screen (After Login - First Time Only) -->
+    <!-- Setup Screen (First Time User) -->
     <div id="setupContainer" style="display: none;">
         <div class="setup-box">
             <button class="setup-logout-btn" id="setupLogoutBtn" title="Logout">⏻</button>
@@ -551,6 +562,24 @@
             <button class="create-folder-btn" id="createFolderBtn">Continue</button>
             <div id="setupError" class="error-text" style="display: none;"></div>
             <small>This folder will be created in your Google Drive. Please don't delete it.</small>
+        </div>
+    </div>
+
+    <!-- Folder Missing Screen (User deleted the folder) -->
+    <div id="folderMissingContainer" style="display: none;">
+        <div class="folder-missing-box">
+            <button class="folder-missing-logout-btn" id="folderMissingLogoutBtn" title="Logout">⏻</button>
+            <span>⚠️</span>
+            <h2>Folder Not Found</h2>
+            <p>We couldn't find the Expense Tracker folder in your Google Drive.</p>
+            <div class="warning-text">
+                📂 <strong>What happened?</strong><br>
+                The folder "Expense Tracker" or sheet "My Expenses" was deleted from your Google Drive.<br><br>
+                <strong>Solution:</strong> Click below to recreate the folder and sheet. Your existing expenses will be loaded from local storage.
+            </div>
+            <button class="recreate-folder-btn" id="recreateFolderBtn">Recreate Folder & Continue</button>
+            <div id="recreateError" class="error-text" style="display: none;"></div>
+            <small>Your existing expenses are safe in your phone's local storage.</small>
         </div>
     </div>
 
@@ -716,38 +745,28 @@
             return response.result.files?.[0]?.id || null;
         }
 
-        async function createFolderAndSheet() {
-            const btn = document.getElementById('createFolderBtn');
-            const errorDiv = document.getElementById('setupError');
+        async function checkFolderExists() {
+            const folder = await findExistingFolder();
+            const sheet = await findExistingSpreadsheet();
+            return folder !== null && sheet !== null;
+        }
+
+        async function createFolderAndSheet(isRecreate = false) {
+            const btn = document.getElementById(isRecreate ? 'recreateFolderBtn' : 'createFolderBtn');
+            const errorDiv = document.getElementById(isRecreate ? 'recreateError' : 'setupError');
             
-            btn.disabled = true;
-            btn.textContent = 'Creating...';
-            errorDiv.style.display = 'none';
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Creating...';
+            }
+            if (errorDiv) errorDiv.style.display = 'none';
             
             try {
                 if (!gapi.client || !gapi.client.drive) {
                     throw new Error('Google API not ready. Please refresh and try again.');
                 }
                 
-                let existingFolderId = await findExistingFolder();
-                let existingSheetId = await findExistingSpreadsheet();
-                
-                if (existingFolderId && existingSheetId) {
-                    folderId = existingFolderId;
-                    spreadsheetId = existingSheetId;
-                    localStorage.setItem(`drive_setup_${currentUserEmail}`, 'complete');
-                    localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
-                    
-                    document.getElementById('setupContainer').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
-                    document.getElementById('syncStatus').textContent = '✅ Synced to Google Drive';
-                    showStatus('✅ Connected to your existing Google Sheet!');
-                    
-                    await loadExpensesFromSheet();
-                    return;
-                }
-                
-                btn.textContent = 'Creating folder...';
+                // Create folder
                 const folderMetadata = {
                     name: FOLDER_NAME,
                     mimeType: 'application/vnd.google-apps.folder'
@@ -758,7 +777,7 @@
                 });
                 folderId = folderResponse.result.id;
                 
-                btn.textContent = 'Creating spreadsheet...';
+                // Create spreadsheet in folder
                 const sheetMetadata = {
                     name: SHEET_NAME,
                     mimeType: 'application/vnd.google-apps.spreadsheet',
@@ -770,6 +789,7 @@
                 });
                 spreadsheetId = sheetResponse.result.id;
                 
+                // Add headers
                 await gapi.client.sheets.spreadsheets.values.update({
                     spreadsheetId: spreadsheetId,
                     range: 'Sheet1!A1:E1',
@@ -779,9 +799,20 @@
                     }
                 });
                 
+                // Save to localStorage
                 localStorage.setItem(`drive_setup_${currentUserEmail}`, 'complete');
                 localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
                 
+                // If recreating, also sync existing local expenses to the new sheet
+                if (isRecreate && expenses.length > 0) {
+                    for (const expense of expenses) {
+                        await addExpenseToSheet(expense);
+                    }
+                    showStatus(`✅ Synced ${expenses.length} existing expenses to new sheet!`);
+                }
+                
+                // Hide appropriate screen and show main app
+                document.getElementById('folderMissingContainer').style.display = 'none';
                 document.getElementById('setupContainer').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
                 document.getElementById('syncStatus').textContent = '✅ Synced to Google Drive';
@@ -789,18 +820,22 @@
                 
             } catch (err) {
                 console.error('Setup error:', err);
-                errorDiv.textContent = err.message || 'Failed to create folder. Please try again.';
-                errorDiv.style.display = 'block';
+                if (errorDiv) {
+                    errorDiv.textContent = err.message || 'Failed to create folder. Please try again.';
+                    errorDiv.style.display = 'block';
+                }
                 showStatus('❌ ' + (err.message || 'Setup failed'), true);
-                btn.disabled = false;
-                btn.textContent = 'Continue';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = isRecreate ? 'Recreate Folder & Continue' : 'Continue';
+                }
             }
         }
 
         async function loadExpensesFromSheet() {
             if (!spreadsheetId) {
                 spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
-                if (!spreadsheetId) return;
+                if (!spreadsheetId) return false;
             }
             
             try {
@@ -819,13 +854,13 @@
                         notes: row[3] || '',
                         timestamp: new Date().toISOString()
                     }));
-                } else {
-                    expenses = [];
                 }
                 saveExpensesToLocal();
                 renderAll();
+                return true;
             } catch (error) {
                 console.error('Load from sheet error:', error);
+                return false;
             }
         }
 
@@ -1021,7 +1056,7 @@
             const statusDiv = document.getElementById('statusMsg');
             statusDiv.textContent = message;
             statusDiv.className = `status show ${isError ? 'error' : 'success'}`;
-            setTimeout(() => statusDiv.classList.remove('show'), 2000);
+            setTimeout(() => statusDiv.classList.remove('show'), 3000);
         }
 
         async function addExpense(date, category, amount, notes) {
@@ -1049,4 +1084,214 @@
             if (confirm('Delete this expense?')) {
                 expenses = expenses.filter(exp => exp.id !== id);
                 saveExpensesToLocal();
-                await deleteExpenseFromSheet
+                await deleteExpenseFromSheet(id);
+                renderAll();
+                showStatus('🗑️ Expense deleted from Google Drive');
+            }
+        }
+
+        function editExpense(id) {
+            const expense = expenses.find(exp => exp.id === id);
+            if (expense) {
+                const newAmount = prompt('Edit amount (EGP):', expense.amount);
+                if (newAmount !== null && !isNaN(newAmount) && parseFloat(newAmount) > 0) {
+                    expense.amount = parseFloat(newAmount);
+                    const newNotes = prompt('Edit notes:', expense.notes);
+                    if (newNotes !== null) expense.notes = newNotes;
+                    saveExpensesToLocal();
+                    deleteExpenseFromSheet(id).then(() => {
+                        addExpenseToSheet(expense);
+                    });
+                    renderAll();
+                    showStatus('✏️ Expense updated');
+                }
+            }
+        }
+
+        function renderAll() {
+            updateStats();
+            updatePieChart();
+            renderExpensesList();
+        }
+
+        function setDefaultDate() {
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        }
+
+        async function completeLoginAndSetup(tokenResponse) {
+            if (tokenResponse.access_token) {
+                currentAccessToken = tokenResponse.access_token;
+                gapi.client.setToken({ access_token: currentAccessToken });
+                
+                // Check if folder exists in Drive
+                const folderExists = await checkFolderExists();
+                
+                if (folderExists) {
+                    // Folder exists - get the IDs
+                    folderId = await findExistingFolder();
+                    spreadsheetId = await findExistingSpreadsheet();
+                    localStorage.setItem(`drive_setup_${currentUserEmail}`, 'complete');
+                    localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
+                    
+                    // Load expenses from sheet
+                    await loadExpensesFromSheet();
+                    
+                    // Show main app
+                    document.getElementById('setupContainer').style.display = 'none';
+                    document.getElementById('folderMissingContainer').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+                    showStatus(`✅ Welcome back, ${currentUserEmail}`);
+                } else {
+                    // Folder doesn't exist - check if this is a returning user or new
+                    const hadSetupBefore = localStorage.getItem(`drive_setup_${currentUserEmail}`);
+                    
+                    if (hadSetupBefore === 'complete') {
+                        // Returning user but folder deleted - show folder missing screen
+                        document.getElementById('setupContainer').style.display = 'none';
+                        document.getElementById('folderMissingContainer').style.display = 'flex';
+                        document.getElementById('mainApp').style.display = 'none';
+                        // Load local expenses first
+                        loadExpensesFromLocal();
+                    } else {
+                        // New user - show setup screen
+                        document.getElementById('setupContainer').style.display = 'flex';
+                        document.getElementById('folderMissingContainer').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        async function handleCredentialResponse(response) {
+            const token = response.credential;
+            localStorage.setItem('google_token', token);
+            currentUserEmail = getUserEmailFromToken(token);
+            
+            document.getElementById('loginContainer').style.display = 'none';
+            
+            // Load GAPI
+            await new Promise((resolve) => {
+                if (gapi.client && gapi.client.drive) {
+                    resolve();
+                } else {
+                    gapi.load('client', resolve);
+                }
+            });
+            
+            await gapi.client.init({
+                apiKey: '',
+                discoveryDocs: [
+                    'https://sheets.googleapis.com/$discovery/rest?version=v4',
+                    'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
+                ]
+            });
+            
+            // Request access token with proper scopes
+            const tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
+                scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
+                callback: completeLoginAndSetup
+            });
+            
+            tokenClient.requestAccessToken();
+        }
+
+        function logout() {
+            localStorage.removeItem('google_token');
+            localStorage.removeItem(`drive_setup_${currentUserEmail}`);
+            localStorage.removeItem(`spreadsheet_id_${currentUserEmail}`);
+            currentUserEmail = null;
+            currentAccessToken = null;
+            spreadsheetId = null;
+            folderId = null;
+            expenses = [];
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('setupContainer').style.display = 'none';
+            document.getElementById('folderMissingContainer').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'none';
+            showStatus('👋 Logged out successfully');
+        }
+
+        function checkLogin() {
+            const token = localStorage.getItem('google_token');
+            if (token) {
+                currentUserEmail = getUserEmailFromToken(token);
+                if (currentUserEmail) {
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('setupContainer').style.display = 'flex';
+                    document.getElementById('folderMissingContainer').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'none';
+                    
+                    // Initialize GAPI and check folder
+                    gapi.load('client', async () => {
+                        await gapi.client.init({
+                            apiKey: '',
+                            discoveryDocs: [
+                                'https://sheets.googleapis.com/$discovery/rest?version=v4',
+                                'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
+                            ]
+                        });
+                        
+                        // Request fresh token
+                        const tokenClient = google.accounts.oauth2.initTokenClient({
+                            client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
+                            scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
+                            callback: completeLoginAndSetup
+                        });
+                        tokenClient.requestAccessToken();
+                    });
+                    return;
+                }
+            }
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('setupContainer').style.display = 'none';
+            document.getElementById('folderMissingContainer').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+
+        window.onload = function() {
+            checkLogin();
+            setDefaultDate();
+            
+            const buttonContainer = document.getElementById('googleSignInButton');
+            if (buttonContainer) {
+                google.accounts.id.initialize({
+                    client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
+                    callback: handleCredentialResponse
+                });
+                google.accounts.id.renderButton(
+                    buttonContainer,
+                    { theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular' }
+                );
+            }
+            
+            document.getElementById('createFolderBtn').addEventListener('click', () => createFolderAndSheet(false));
+            document.getElementById('recreateFolderBtn').addEventListener('click', () => createFolderAndSheet(true));
+            document.getElementById('setupLogoutBtn').addEventListener('click', logout);
+            document.getElementById('folderMissingLogoutBtn').addEventListener('click', logout);
+        };
+
+        document.getElementById('submitBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const date = document.getElementById('date').value;
+            const category = document.getElementById('category').value;
+            const amount = document.getElementById('amount').value;
+            const notes = document.getElementById('notes').value;
+            
+            if (!date) return showStatus('❌ Please select a date', true);
+            if (!category) return showStatus('❌ Please select a category', true);
+            if (!amount || amount <= 0) return showStatus('❌ Please enter a valid amount', true);
+            
+            addExpense(date, category, amount, notes);
+            document.getElementById('category').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('notes').value = '';
+            setDefaultDate();
+            document.getElementById('category').focus();
+        });
+        
+        document.getElementById('seeAllBtn').addEventListener('click', () => window.location.href = 'Expenses.html');
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+    </script>
+</body>
+</html>
