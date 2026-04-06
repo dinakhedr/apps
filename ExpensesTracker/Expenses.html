@@ -34,7 +34,6 @@
             padding: 0 20px;
         }
 
-        /* Header */
         .header {
             display: flex;
             align-items: center;
@@ -61,12 +60,17 @@
             backdrop-filter: blur(10px);
         }
 
-        .back-btn:active {
-            background: rgba(255,255,255,0.3);
-            transform: scale(0.97);
+        .refresh-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-left: 8px;
         }
 
-        /* Filter Card */
         .filter-card {
             background: white;
             border-radius: 28px;
@@ -113,12 +117,6 @@
             cursor: pointer;
         }
 
-        .filter-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        /* Tabs */
         .tabs {
             display: flex;
             gap: 8px;
@@ -135,7 +133,6 @@
             font-weight: 600;
             color: white;
             cursor: pointer;
-            transition: all 0.2s;
             backdrop-filter: blur(10px);
         }
 
@@ -143,10 +140,6 @@
             background: white;
             color: #667eea;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .tab-btn:active {
-            transform: scale(0.97);
         }
 
         .tab-content {
@@ -157,7 +150,6 @@
             display: block;
         }
 
-        /* Stats Card */
         .stats-card {
             background: white;
             border-radius: 28px;
@@ -194,7 +186,6 @@
             margin-top: 4px;
         }
 
-        /* Chart Card */
         .chart-card {
             background: white;
             border-radius: 28px;
@@ -208,9 +199,6 @@
             font-weight: 600;
             color: #1a1a2e;
             margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .chart-container {
@@ -245,15 +233,14 @@
             border-radius: 3px;
         }
 
-        /* Category Summary Card */
-        .category-summary-card {
+        .category-summary-card, .day-group-card {
             background: white;
             border-radius: 28px;
             padding: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.15);
         }
 
-        .category-summary-card h3 {
+        .category-summary-card h3, .day-group-card h3 {
             font-size: 18px;
             font-weight: 600;
             color: #1a1a2e;
@@ -301,24 +288,6 @@
             font-weight: 700;
             font-size: 16px;
             color: #667eea;
-        }
-
-        /* Day Group Card */
-        .day-group-card {
-            background: white;
-            border-radius: 28px;
-            padding: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-        }
-
-        .day-group-card h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .day-group {
@@ -403,25 +372,6 @@
             color: #1a1a2e;
         }
 
-        .action-btn {
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 6px;
-            border-radius: 8px;
-            transition: background 0.2s;
-        }
-
-        .edit-btn:active {
-            background: #e8e8ed;
-        }
-
-        .delete-btn:active {
-            background: #ffe5e5;
-            color: #ff4757;
-        }
-
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -434,7 +384,6 @@
             margin-bottom: 12px;
         }
 
-        /* Status Message */
         .status {
             position: fixed;
             bottom: 20px;
@@ -462,17 +411,27 @@
         .status.error {
             background: #ef4444;
         }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>📋 All Expenses</h1>
-            <button class="back-btn" onclick="goBack()">← Back</button>
+            <div>
+                <button class="refresh-btn" id="refreshBtn">🔄 Sync</button>
+                <button class="back-btn" onclick="goBack()">← Back</button>
+            </div>
         </div>
 
-        <!-- Filter Card -->
         <div class="filter-card">
             <div class="filter-title">
                 <span>📅</span>
@@ -503,16 +462,13 @@
             </div>
         </div>
 
-        <!-- Tabs -->
         <div class="tabs">
             <button class="tab-btn active" data-tab="summary">📊 Summary</button>
             <button class="tab-btn" data-tab="byday">📅 Expenses by Day</button>
         </div>
 
-        <!-- Tab 1: Summary -->
         <div id="summaryTab" class="tab-content active">
-            <!-- Stats Card -->
-            <div class="stats-card" id="statsCard">
+            <div class="stats-card" id="statsCard" style="display: none;">
                 <div class="stats-row">
                     <span class="stats-label">Total Spent</span>
                     <span class="stats-total" id="totalAmount">EGP 0</span>
@@ -520,7 +476,6 @@
                 <div class="expense-count" id="expenseCount">0 expenses</div>
             </div>
 
-            <!-- Pie Chart Card -->
             <div class="chart-card" id="chartCard" style="display: none;">
                 <h3>📈 Spending by Category</h3>
                 <div class="chart-container">
@@ -529,14 +484,12 @@
                 <div id="chartLegend" class="chart-legend"></div>
             </div>
 
-            <!-- Category Summary List -->
             <div class="category-summary-card">
                 <h3>📋 Breakdown by Category</h3>
                 <div id="categoryList"></div>
             </div>
         </div>
 
-        <!-- Tab 2: Expenses by Day -->
         <div id="bydayTab" class="tab-content">
             <div class="day-group-card">
                 <h3>📅 Daily Expenses</h3>
@@ -550,113 +503,119 @@
     <script>
         let expenses = [];
         let categoryChart = null;
+        let currentUserEmail = null;
+        let spreadsheetId = null;
 
-        // Get icon for category
-        function getCategoryIcon(category) {
-            const icons = {
-                'Car Repairs': '🚗',
-                'Cafe': '☕',
-                'Clothes': '👕',
-                'Entertainment': '🎬',
-                'Electronics': '📱',
-                'Games': '🎮',
-                'Gym': '🏋️',
-                'Health': '💊',
-                'Home Repairs': '🛠️',
-                'Internet': '📶',
-                'Personal Care': '🧴',
-                'Pets': '🐾',
-                'Petrol': '⛽',
-                'Ride Hailing': '🚕',
-                'Smoking': '🚬',
-                'Subscriptions': '💻',
-                'Supermarket': '🛒',
-                'Travel': '✈️',
-                'Utilities': '⚡'
-            };
-            return icons[category] || '💰';
+        const FOLDER_NAME = 'Expense Tracker';
+        const SHEET_NAME = 'My Expenses';
+
+        function getUserEmailFromToken(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                const user = JSON.parse(jsonPayload);
+                return user.email;
+            } catch (e) {
+                return null;
+            }
         }
 
-        // Get background color for category icon
-        function getCategoryColor(category) {
-            const colors = {
-                'Car Repairs': '#ffd1d1',
-                'Cafe': '#d4e8d4',
-                'Clothes': '#e8d5b7',
-                'Entertainment': '#d4b8ff',
-                'Electronics': '#d4e8ff',
-                'Games': '#d4b8ff',
-                'Gym': '#ffe5b4',
-                'Health': '#ffccd9',
-                'Home Repairs': '#ffd1d1',
-                'Internet': '#cce0ff',
-                'Personal Care': '#ffccd9',
-                'Pets': '#e8d5b7',
-                'Petrol': '#ffd1d1',
-                'Ride Hailing': '#ffe5b4',
-                'Smoking': '#e0e0e0',
-                'Subscriptions': '#cce7ff',
-                'Supermarket': '#ffe0b5',
-                'Travel': '#d4e8ff',
-                'Utilities': '#ffe5b4'
-            };
-            return colors[category] || '#f0f0f0';
+        async function loadSheetData() {
+            const token = localStorage.getItem('google_token');
+            if (!token) {
+                showStatus('❌ Please sign in first', true);
+                setTimeout(() => goBack(), 1500);
+                return;
+            }
+
+            currentUserEmail = getUserEmailFromToken(token);
+            
+            showStatus('🔄 Loading data from Google Drive...');
+            
+            await new Promise((resolve) => {
+                if (gapi.client.sheets) {
+                    resolve();
+                } else {
+                    gapi.load('client', resolve);
+                }
+            });
+            
+            await gapi.client.init({
+                apiKey: '',
+                discoveryDocs: [
+                    'https://sheets.googleapis.com/$discovery/rest?version=v4',
+                    'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
+                ]
+            });
+            
+            gapi.client.setToken({ access_token: token });
+            
+            try {
+                // Find the spreadsheet
+                const query = `name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
+                const response = await gapi.client.drive.files.list({
+                    q: query,
+                    spaces: 'drive',
+                    fields: 'files(id, name, parents)'
+                });
+                
+                const files = response.result.files;
+                if (files && files.length > 0) {
+                    spreadsheetId = files[0].id;
+                    await loadExpensesFromSheet();
+                    showStatus('✅ Data loaded from Google Drive');
+                } else {
+                    showStatus('⚠️ No spreadsheet found. Please add expenses from Home page first.', true);
+                    expenses = [];
+                    renderAll();
+                }
+            } catch (error) {
+                console.error('Load error:', error);
+                showStatus('❌ Failed to load data. Please refresh and try again.', true);
+            }
         }
 
-        // Get chart color
-        function getChartColor(category, index) {
-            const chartColors = {
-                'Car Repairs': '#e57373',
-                'Cafe': '#81c784',
-                'Clothes': '#d4a574',
-                'Entertainment': '#b39ddb',
-                'Electronics': '#7986cb',
-                'Games': '#b39ddb',
-                'Gym': '#f4c542',
-                'Health': '#f48fb1',
-                'Home Repairs': '#e57373',
-                'Internet': '#4fc3f7',
-                'Personal Care': '#f48fb1',
-                'Pets': '#d4a574',
-                'Petrol': '#e57373',
-                'Ride Hailing': '#f4c542',
-                'Smoking': '#9e9e9e',
-                'Subscriptions': '#64b5f6',
-                'Supermarket': '#ffb74d',
-                'Travel': '#4fc3f7',
-                'Utilities': '#f4c542'
-            };
-            return chartColors[category] || `hsl(${index * 30}, 70%, 60%)`;
+        async function loadExpensesFromSheet() {
+            if (!spreadsheetId) return;
+            
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Sheet1!A2:E'
+                });
+                
+                const rows = response.result.values;
+                if (rows && rows.length > 0) {
+                    expenses = rows.map(row => ({
+                        id: row[4] ? parseInt(row[4]) : Date.now(),
+                        date: row[0],
+                        category: row[1],
+                        amount: parseFloat(row[2]),
+                        notes: row[3] || '',
+                        timestamp: new Date().toISOString()
+                    }));
+                } else {
+                    expenses = [];
+                }
+                renderAll();
+            } catch (error) {
+                console.error('Load from sheet error:', error);
+            }
         }
 
-        // Format date
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }
 
-        // Format day header (DD/MM/YYYY)
         function formatDayHeader(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }
 
-        // Load expenses
-        function loadExpenses() {
-            const saved = localStorage.getItem('private_expenses');
-            if (saved) {
-                expenses = JSON.parse(saved);
-            }
-            renderAll();
-        }
-
-        // Save expenses
-        function saveExpenses() {
-            localStorage.setItem('private_expenses', JSON.stringify(expenses));
-            renderAll();
-        }
-
-        // Get filtered expenses
         function getFilteredExpenses() {
             const year = parseInt(document.getElementById('yearSelect').value);
             const month = parseInt(document.getElementById('monthSelect').value);
@@ -666,12 +625,10 @@
             });
         }
 
-        // Calculate total
         function calculateTotal(expensesList) {
             return expensesList.reduce((sum, exp) => sum + exp.amount, 0);
         }
 
-        // Group by category for summary
         function getCategoryTotals(expensesList) {
             const totals = {};
             expensesList.forEach(exp => {
@@ -680,7 +637,43 @@
             return totals;
         }
 
-        // Update pie chart with percentages in legend
+        function getCategoryIcon(category) {
+            const icons = {
+                'Car Repairs': '🚗', 'Cafe': '☕', 'Clothes': '👕', 'Entertainment': '🎬',
+                'Electronics': '📱', 'Games': '🎮', 'Gym': '🏋️', 'Health': '💊',
+                'Home Repairs': '🛠️', 'Internet': '📶', 'Personal Care': '🧴', 'Pets': '🐾',
+                'Petrol': '⛽', 'Ride Hailing': '🚕', 'Smoking': '🚬', 'Subscriptions': '💻',
+                'Supermarket': '🛒', 'Travel': '✈️', 'Utilities': '⚡'
+            };
+            return icons[category] || '💰';
+        }
+
+        function getCategoryColor(category) {
+            const colors = {
+                'Car Repairs': '#ffd1d1', 'Cafe': '#d4e8d4', 'Clothes': '#e8d5b7',
+                'Entertainment': '#d4b8ff', 'Electronics': '#d4e8ff', 'Games': '#d4b8ff',
+                'Gym': '#ffe5b4', 'Health': '#ffccd9', 'Home Repairs': '#ffd1d1',
+                'Internet': '#cce0ff', 'Personal Care': '#ffccd9', 'Pets': '#e8d5b7',
+                'Petrol': '#ffd1d1', 'Ride Hailing': '#ffe5b4', 'Smoking': '#e0e0e0',
+                'Subscriptions': '#cce7ff', 'Supermarket': '#ffe0b5', 'Travel': '#d4e8ff',
+                'Utilities': '#ffe5b4'
+            };
+            return colors[category] || '#f0f0f0';
+        }
+
+        function getChartColor(category, index) {
+            const chartColors = {
+                'Car Repairs': '#e57373', 'Cafe': '#81c784', 'Clothes': '#d4a574',
+                'Entertainment': '#b39ddb', 'Electronics': '#7986cb', 'Games': '#b39ddb',
+                'Gym': '#f4c542', 'Health': '#f48fb1', 'Home Repairs': '#e57373',
+                'Internet': '#4fc3f7', 'Personal Care': '#f48fb1', 'Pets': '#d4a574',
+                'Petrol': '#e57373', 'Ride Hailing': '#f4c542', 'Smoking': '#9e9e9e',
+                'Subscriptions': '#64b5f6', 'Supermarket': '#ffb74d', 'Travel': '#4fc3f7',
+                'Utilities': '#f4c542'
+            };
+            return chartColors[category] || `hsl(${index * 30}, 70%, 60%)`;
+        }
+
         function updatePieChart(expensesList) {
             const chartCard = document.getElementById('chartCard');
             const totals = getCategoryTotals(expensesList);
@@ -692,70 +685,33 @@
             }
             
             chartCard.style.display = 'block';
-            
             const amounts = categories.map(cat => totals[cat]);
             const totalAmount = amounts.reduce((a, b) => a + b, 0);
             const colors = categories.map((cat, idx) => getChartColor(cat, idx));
-            
             const ctx = document.getElementById('categoryChart').getContext('2d');
             
-            if (categoryChart) {
-                categoryChart.destroy();
-            }
+            if (categoryChart) categoryChart.destroy();
             
             categoryChart = new Chart(ctx, {
                 type: 'pie',
-                data: {
-                    labels: categories,
-                    datasets: [{
-                        data: amounts,
-                        backgroundColor: colors,
-                        borderWidth: 2,
-                        borderColor: 'white'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label;
-                                    const value = context.raw;
-                                    const percentage = ((value / totalAmount) * 100).toFixed(1);
-                                    return `${label}: EGP ${value.toFixed(2)} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    }
-                }
+                data: { labels: categories, datasets: [{ data: amounts, backgroundColor: colors, borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
             });
             
-            // Build legend with percentages
             const legendDiv = document.getElementById('chartLegend');
             legendDiv.innerHTML = categories.map((cat, idx) => {
                 const percentage = ((totals[cat] / totalAmount) * 100).toFixed(1);
-                return `
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: ${colors[idx]}"></div>
-                        <span>${cat} (${percentage}%)</span>
-                    </div>
-                `;
+                return `<div class="legend-item"><div class="legend-color" style="background: ${colors[idx]}"></div><span>${cat} (${percentage}%)</span></div>`;
             }).join('');
         }
 
-        // Render category summary (one line per category)
         function renderCategorySummary(expensesList) {
             const container = document.getElementById('categoryList');
             const totals = getCategoryTotals(expensesList);
             const categories = Object.keys(totals).sort();
             
             if (categories.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="padding: 20px;"><span>📭</span><p>No expenses for this month</p></div>';
+                container.innerHTML = '<div class="empty-state"><span>📭</span><p>No expenses for this month</p></div>';
                 return;
             }
             
@@ -764,39 +720,31 @@
                 html += `
                     <div class="category-row">
                         <div class="category-left">
-                            <div class="category-icon-small" style="background: ${getCategoryColor(cat)};">
-                                ${getCategoryIcon(cat)}
-                            </div>
+                            <div class="category-icon-small" style="background: ${getCategoryColor(cat)};">${getCategoryIcon(cat)}</div>
                             <span class="category-name">${cat}</span>
                         </div>
                         <div class="category-amount">EGP ${totals[cat].toFixed(2)}</div>
                     </div>
                 `;
             });
-            
             container.innerHTML = html;
         }
 
-        // Render expenses by day with DD/MM/YYYY format
         function renderByDay(expensesList) {
             const container = document.getElementById('bydayList');
             
             if (expensesList.length === 0) {
-                container.innerHTML = '<div class="empty-state"><span>📭</span><p>No expenses for this month</p><p style="font-size: 12px; margin-top: 8px;">Add expenses from the main page</p></div>';
+                container.innerHTML = '<div class="empty-state"><span>📭</span><p>No expenses for this month</p></div>';
                 return;
             }
             
-            // Group by date string (YYYY-MM-DD)
             const grouped = {};
             expensesList.forEach(exp => {
                 const dateKey = exp.date;
-                if (!grouped[dateKey]) {
-                    grouped[dateKey] = [];
-                }
+                if (!grouped[dateKey]) grouped[dateKey] = [];
                 grouped[dateKey].push(exp);
             });
             
-            // Sort dates
             const sortedDates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
             
             let html = '';
@@ -817,30 +765,23 @@
                     html += `
                         <div class="expense-item">
                             <div class="expense-left">
-                                <div class="category-icon" style="background: ${getCategoryColor(exp.category)};">
-                                    ${getCategoryIcon(exp.category)}
-                                </div>
+                                <div class="category-icon" style="background: ${getCategoryColor(exp.category)};">${getCategoryIcon(exp.category)}</div>
                                 <div class="expense-details">
                                     <div class="expense-category">${exp.category}</div>
-                                    ${exp.notes ? `<div class="expense-note">📝 ${exp.notes.substring(0, 30)}${exp.notes.length > 30 ? '...' : ''}</div>` : ''}
+                                    ${exp.notes ? `<div class="expense-note">📝 ${exp.notes.substring(0, 30)}</div>` : ''}
                                 </div>
                             </div>
                             <div class="expense-right">
                                 <div class="expense-amount">EGP ${exp.amount.toFixed(2)}</div>
-                                <button class="action-btn edit-btn" onclick="editExpense(${exp.id})">✏️</button>
-                                <button class="action-btn delete-btn" onclick="deleteExpense(${exp.id})">🗑️</button>
                             </div>
                         </div>
                     `;
                 });
-                
                 html += `</div>`;
             });
-            
             container.innerHTML = html;
         }
 
-        // Update stats
         function updateStats(expensesList) {
             const total = calculateTotal(expensesList);
             const statsCard = document.getElementById('statsCard');
@@ -854,7 +795,6 @@
             }
         }
 
-        // Render everything
         function renderAll() {
             const filtered = getFilteredExpenses();
             updateStats(filtered);
@@ -863,43 +803,13 @@
             renderByDay(filtered);
         }
 
-        // Delete expense
-        function deleteExpense(id) {
-            if (confirm('Delete this expense?')) {
-                expenses = expenses.filter(exp => exp.id !== id);
-                saveExpenses();
-                showStatus('🗑️ Expense deleted');
-            }
-        }
-
-        // Edit expense
-        function editExpense(id) {
-            const expense = expenses.find(exp => exp.id === id);
-            if (expense) {
-                const newAmount = prompt('Edit amount (EGP):', expense.amount);
-                if (newAmount !== null && !isNaN(newAmount) && parseFloat(newAmount) > 0) {
-                    expense.amount = parseFloat(newAmount);
-                    const newNotes = prompt('Edit notes:', expense.notes);
-                    if (newNotes !== null) {
-                        expense.notes = newNotes;
-                    }
-                    saveExpenses();
-                    showStatus('✏️ Expense updated');
-                }
-            }
-        }
-
-        // Show status
         function showStatus(message, isError = false) {
             const statusDiv = document.getElementById('statusMsg');
             statusDiv.textContent = message;
             statusDiv.className = `status show ${isError ? 'error' : 'success'}`;
-            setTimeout(() => {
-                statusDiv.classList.remove('show');
-            }, 2000);
+            setTimeout(() => statusDiv.classList.remove('show'), 2000);
         }
 
-        // Populate years
         function populateYears() {
             const yearSelect = document.getElementById('yearSelect');
             const currentYear = new Date().getFullYear();
@@ -907,31 +817,24 @@
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = year;
-                if (year === currentYear) {
-                    option.selected = true;
-                }
+                if (year === currentYear) option.selected = true;
                 yearSelect.appendChild(option);
             }
         }
 
-        // Set current month
         function setCurrentMonth() {
             document.getElementById('monthSelect').value = new Date().getMonth();
         }
 
-        // Tab switching
         function setupTabs() {
             const tabs = document.querySelectorAll('.tab-btn');
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     const tabId = tab.getAttribute('data-tab');
-                    
                     tabs.forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
-                    
                     document.getElementById('summaryTab').classList.remove('active');
                     document.getElementById('bydayTab').classList.remove('active');
-                    
                     if (tabId === 'summary') {
                         document.getElementById('summaryTab').classList.add('active');
                     } else {
@@ -941,20 +844,25 @@
             });
         }
 
-        // Go back
+        async function refreshData() {
+            showStatus('🔄 Syncing from Google Drive...');
+            await loadExpensesFromSheet();
+            renderAll();
+            showStatus('✅ Data synced from Google Drive');
+        }
+
         function goBack() {
             window.location.href = 'Home.html';
         }
 
-        // Event listeners
         document.getElementById('monthSelect').addEventListener('change', renderAll);
         document.getElementById('yearSelect').addEventListener('change', renderAll);
-        
-        // Initialize
+        document.getElementById('refreshBtn').addEventListener('click', refreshData);
+
         populateYears();
         setCurrentMonth();
         setupTabs();
-        loadExpenses();
+        loadSheetData();
     </script>
 </body>
 </html>
