@@ -1,1297 +1,1253 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>💰 Expense Tracker</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 0;
-            padding-top: 60px;
-            padding-bottom: 40px;
-        }
-
-        @supports (padding-top: env(safe-area-inset-top)) {
-            body {
-                padding-top: calc(60px + env(safe-area-inset-top));
-            }
-        }
-
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-            position: relative;
-        }
-
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            color: white;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-
-        .header p {
-            color: rgba(255,255,255,0.9);
-            font-size: 14px;
-            margin-top: 4px;
-        }
-
-        .logout-btn {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 8px 14px;
-            border-radius: 30px;
-            font-size: 14px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .logout-btn:active {
-            background: rgba(255,255,255,0.3);
-            transform: scale(0.97);
-        }
-
-        .form-card {
-            background: white;
-            border-radius: 28px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-        }
-
-        .form-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .form-title span {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            width: 30px;
-            height: 30px;
-            border-radius: 10px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 16px;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #666;
-            margin-bottom: 6px;
-        }
-
-        .required:after {
-            content: "*";
-            color: #ff4757;
-            margin-left: 4px;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e8e8ed;
-            border-radius: 14px;
-            font-size: 16px;
-            font-family: inherit;
-            background: #fafafc;
-            transition: all 0.2s;
-        }
-
-        input[type="date"] {
-            -webkit-appearance: none;
-            appearance: none;
-            min-height: 50px;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
-
-        .amount-wrapper {
-            position: relative;
-        }
-
-        .amount-wrapper input {
-            padding-left: 50px;
-        }
-
-        .currency-symbol {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: 600;
-            color: #667eea;
-            font-size: 16px;
-            pointer-events: none;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .submit-btn:active {
-            transform: scale(0.97);
-        }
-
-        .stats-card {
-            background: white;
-            border-radius: 28px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-        }
-
-        .stats-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 8px;
-        }
-
-        .stats-header h3 {
-            font-size: 16px;
-            font-weight: 500;
-            color: #666;
-        }
-
-        .total-amount {
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .month-badge {
-            font-size: 13px;
-            color: #999;
-            margin-top: 4px;
-        }
-
-        .chart-card {
-            background: white;
-            border-radius: 28px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-        }
-
-        .chart-card h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 16px;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 200px;
-            margin: 10px 0;
-        }
-
-        canvas {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .chart-legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 16px;
-            justify-content: center;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-        }
-
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-        }
-
-        .expenses-card {
-            background: white;
-            border-radius: 28px;
-            padding: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-        }
-
-        .expenses-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .expenses-header h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a1a2e;
-        }
-
-        .see-all-btn {
-            background: none;
-            border: none;
-            color: #667eea;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 6px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-        }
-
-        .expense-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .expense-item:last-child {
-            border-bottom: none;
-        }
-
-        .expense-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-        }
-
-        .category-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-        }
-
-        .expense-details {
-            flex: 1;
-        }
-
-        .expense-category {
-            font-weight: 600;
-            font-size: 15px;
-            color: #1a1a2e;
-        }
-
-        .expense-date {
-            font-size: 12px;
-            color: #999;
-            margin-top: 2px;
-        }
-
-        .expense-note {
-            font-size: 12px;
-            color: #666;
-            margin-top: 2px;
-        }
-
-        .expense-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .expense-amount {
-            font-weight: 700;
-            font-size: 16px;
-            color: #1a1a2e;
-        }
-
-        .action-btn {
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 6px;
-            border-radius: 8px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-
-        .empty-state span {
-            font-size: 48px;
-            display: block;
-            margin-bottom: 12px;
-        }
-
-        .status {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: #1a1a2e;
-            color: white;
-            text-align: center;
-            padding: 12px;
-            border-radius: 30px;
-            font-size: 14px;
-            transform: translateY(100px);
-            transition: transform 0.3s;
-            z-index: 1000;
-        }
-
-        .status.show {
-            transform: translateY(0);
-        }
-
-        .status.success {
-            background: #10b981;
-        }
-
-        .status.error {
-            background: #ef4444;
-        }
-
-        /* Screens */
-        #loginContainer, #setupContainer, #folderMissingContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        .login-box, .setup-box, .folder-missing-box {
-            background: white;
-            border-radius: 28px;
-            padding: 40px 30px;
-            text-align: center;
-            width: 300px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .setup-logout-btn, .folder-missing-logout-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #999;
-            padding: 5px;
-        }
-
-        .setup-logout-btn:active, .folder-missing-logout-btn:active {
-            color: #ef4444;
-        }
-
-        .login-box span, .setup-box span, .folder-missing-box span {
-            font-size: 64px;
-            display: block;
-            margin-bottom: 16px;
-        }
-
-        .login-box h2, .setup-box h2, .folder-missing-box h2 {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-
-        .login-box p, .setup-box p, .folder-missing-box p {
-            color: #666;
-            margin-bottom: 24px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .login-box small, .setup-box small, .folder-missing-box small {
-            font-size: 11px;
-            color: #999;
-            margin-top: 20px;
-            display: block;
-        }
-
-        .create-folder-btn, .recreate-folder-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 30px;
-            padding: 14px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 16px;
-            width: 100%;
-        }
-
-        .create-folder-btn:active, .recreate-folder-btn:active {
-            transform: scale(0.97);
-        }
-
-        .create-folder-btn:disabled, .recreate-folder-btn:disabled {
-            opacity: 0.6;
-            transform: none;
-        }
-
-        .info-text {
-            background: #f0f0f0;
-            padding: 12px;
-            border-radius: 16px;
-            margin: 16px 0;
-            font-size: 13px;
-            text-align: left;
-        }
-
-        .warning-text {
-            background: #fff3cd;
-            color: #856404;
-            padding: 12px;
-            border-radius: 16px;
-            margin: 16px 0;
-            font-size: 13px;
-            text-align: left;
-        }
-
-        .sync-status {
-            font-size: 11px;
-            color: #10b981;
-            text-align: center;
-            margin-top: 8px;
-        }
-
-        .error-text {
-            color: #ef4444;
-            font-size: 12px;
-            margin-top: 12px;
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>💰 Expense Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="utils.js"></script>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brand:        #5b5ef4;
+      --brand-2:      #8b5cf6;
+      --brand-grad:   linear-gradient(135deg, #5b5ef4 0%, #8b5cf6 100%);
+      --surface:      #ffffff;
+      --surface-2:    #f5f5fa;
+      --border:       #e8e8f0;
+      --text:         #14142b;
+      --text-2:       #6e6e8a;
+      --text-3:       #a8a8c0;
+      --success:      #10b981;
+      --warning:      #f59e0b;
+      --danger:       #ef4444;
+      --radius-lg:    24px;
+      --radius-md:    16px;
+      --radius-sm:    10px;
+      --shadow:       0 8px 32px rgba(91,94,244,0.10);
+      --shadow-sm:    0 2px 10px rgba(0,0,0,0.06);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--brand-grad);
+      min-height: 100vh;
+      padding-top: 60px;
+      padding-bottom: 60px;
+    }
+    @supports (padding-top: env(safe-area-inset-top)) {
+      body { padding-top: calc(60px + env(safe-area-inset-top)); }
+    }
+
+    /* ── Layout ── */
+    .container { max-width: 520px; margin: 0 auto; padding: 0 18px; }
+
+    /* ── Header ── */
+    .header { text-align: center; margin-bottom: 28px; position: relative; }
+    .header h1 { font-family: 'Sora', sans-serif; font-size: 30px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .header p  { color: rgba(255,255,255,0.80); font-size: 13px; margin-top: 4px; }
+    .header-actions { position: absolute; top: 0; right: 0; display: flex; gap: 6px; }
+    .hdr-btn {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      padding: 7px 13px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s;
+    }
+    .hdr-btn:hover { background: rgba(255,255,255,0.28); }
+    .hdr-btn:active { transform: scale(0.96); }
+
+    /* ── Month comparison banner ── */
+    .month-compare {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 30px;
+      padding: 8px 18px;
+      margin: 0 auto 24px;
+      width: fit-content;
+      font-size: 13px;
+      color: rgba(255,255,255,0.95);
+      font-weight: 500;
+    }
+    .compare-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .compare-up   { background: rgba(239,68,68,0.25);   color: #fca5a5; }
+    .compare-down { background: rgba(16,185,129,0.25);  color: #6ee7b7; }
+    .compare-same { background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.7); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title-icon {
+      width: 28px; height: 28px;
+      border-radius: 9px;
+      background: var(--brand-grad);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+
+    /* ── Form ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; }
+    label {
+      font-size: 12px; font-weight: 600; color: var(--text-2);
+      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .required::after { content: " *"; color: var(--danger); }
+
+    input, select, textarea {
+      width: 100%; padding: 12px 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface-2);
+      color: var(--text);
+      transition: border-color 0.2s, background 0.2s;
+      -webkit-appearance: none; appearance: none;
+    }
+    input[type="date"] { min-height: 46px; }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--brand); background: #fff;
+    }
+    textarea { resize: vertical; min-height: 72px; }
+
+    .amount-wrap { position: relative; }
+    .amount-wrap input { padding-left: 48px; }
+    .currency-flag {
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      font-size: 18px; pointer-events: none;
+    }
+
+    .submit-btn {
+      width: 100%; padding: 14px;
+      background: var(--brand-grad);
+      color: #fff; border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 700;
+      font-family: 'Sora', sans-serif;
+      cursor: pointer; margin-top: 6px;
+      box-shadow: 0 4px 16px rgba(91,94,244,0.30);
+      transition: opacity 0.2s, transform 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .submit-btn:hover { opacity: 0.92; }
+    .submit-btn:active { transform: scale(0.97); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Sync status strip ── */
+    .sync-strip {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 11px; font-weight: 600; color: var(--success);
+      margin-top: 12px;
+    }
+    .sync-strip.warn { color: var(--warning); }
+
+    /* ── Stats ── */
+    .stats-card {
+      background: var(--brand-grad);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(91,94,244,0.25);
+    }
+    .stats-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.70); text-transform: uppercase; letter-spacing: 0.06em; }
+    .stats-total { font-family: 'Sora', sans-serif; font-size: 38px; font-weight: 800; color: #fff; line-height: 1.1; margin: 6px 0 4px; }
+    .stats-month { font-size: 13px; color: rgba(255,255,255,0.75); }
+
+    /* ── Chart ── */
+    .chart-container { position: relative; height: 190px; margin: 8px 0; }
+    canvas { max-width: 100%; }
+    .chart-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; justify-content: center; }
+    .legend-item  { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
+    .legend-dot   { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ── Budget indicator ── */
+    .budget-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .budget-row:last-child { border-bottom: none; }
+    .budget-cat  { display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); }
+    .budget-nums { font-size: 12px; color: var(--text-2); text-align: right; }
+    .budget-nums b { color: var(--text); }
+    .budget-bar-wrap { height: 4px; background: var(--border); border-radius: 4px; margin-top: 3px; overflow: hidden; }
+    .budget-bar { height: 100%; border-radius: 4px; transition: width 0.4s; }
+    .budget-bar.ok      { background: var(--success); }
+    .budget-bar.warning { background: var(--warning); }
+    .budget-bar.over    { background: var(--danger); }
+    .budget-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+    }
+    .budget-badge.ok      { background: #d1fae5; color: #065f46; }
+    .budget-badge.warning { background: #fef3c7; color: #92400e; }
+    .budget-badge.over    { background: #fee2e2; color: #991b1b; }
+
+    /* ── Budget settings ── */
+    .budget-settings-btn {
+      background: none; border: 1.5px solid var(--border);
+      color: var(--text-2); padding: 5px 12px;
+      border-radius: 20px; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+    }
+    .budget-settings-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+    /* ── Recent Expenses list ── */
+    .expenses-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .expenses-header h3 { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
+    .see-all-btn {
+      background: none; border: none;
+      color: var(--brand); font-size: 13px; font-weight: 600;
+      cursor: pointer; padding: 4px 10px; border-radius: 20px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .see-all-btn:hover { background: #ededff; }
+
+    /* ── Search bar ── */
+    .search-wrap { position: relative; margin-bottom: 14px; }
+    .search-wrap input { padding-left: 36px; font-size: 14px; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; }
+    .filter-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    .filter-chip {
+      padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      border: 1.5px solid var(--border); background: var(--surface-2);
+      color: var(--text-2); cursor: pointer; font-family: 'DM Sans', sans-serif;
+      white-space: nowrap; transition: all 0.15s;
+    }
+    .filter-chip:hover   { border-color: var(--brand); color: var(--brand); background: #ededff; }
+    .filter-chip.active  { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+    /* ── Expense item ── */
+    .expense-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+      animation: fadeUp 0.25s ease both;
+    }
+    .expense-item:last-child { border-bottom: none; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .cat-icon {
+      width: 42px; height: 42px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .exp-details { flex: 1; min-width: 0; }
+    .exp-cat  { font-weight: 600; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .exp-meta { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .exp-note { font-size: 11px; color: var(--text-2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .exp-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .exp-amount { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); }
+    .exp-actions { display: flex; gap: 4px; }
+    .action-btn {
+      background: none; border: none;
+      width: 28px; height: 28px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 14px; transition: background 0.15s;
+    }
+    .action-btn:hover { background: var(--surface-2); }
+
+    .empty-state { text-align: center; padding: 36px 20px; color: var(--text-3); }
+    .empty-state .empty-icon { font-size: 44px; margin-bottom: 10px; }
+    .empty-state p { font-size: 13px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--text); color: #fff;
+      padding: 11px 22px; border-radius: 30px;
+      font-size: 13px; font-weight: 600;
+      z-index: 9999; white-space: nowrap;
+      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+      pointer-events: none; max-width: 90vw;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error   { background: var(--danger); }
+
+    /* ── Full-screen Overlays ── */
+    .screen {
+      position: fixed; inset: 0;
+      background: var(--brand-grad);
+      z-index: 2000; display: flex;
+      align-items: center; justify-content: center;
+      flex-direction: column; padding: 20px;
+    }
+    .screen-box {
+      background: #fff; border-radius: 28px;
+      padding: 36px 28px; text-align: center;
+      width: 100%; max-width: 340px;
+      position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.20);
+    }
+    .screen-icon { font-size: 56px; margin-bottom: 14px; display: block; }
+    .screen-box h2 { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .screen-box p  { color: var(--text-2); font-size: 14px; line-height: 1.55; margin-bottom: 20px; }
+    .screen-box small { font-size: 11px; color: var(--text-3); display: block; margin-top: 16px; line-height: 1.5; }
+    .screen-logout-btn {
+      position: absolute; top: 14px; right: 14px;
+      background: none; border: none; font-size: 18px;
+      cursor: pointer; color: var(--text-3); padding: 6px;
+    }
+    .screen-logout-btn:hover { color: var(--danger); }
+    .info-box {
+      background: var(--surface-2); border-radius: 14px;
+      padding: 12px 14px; font-size: 13px;
+      text-align: left; line-height: 1.7; margin: 12px 0;
+      color: var(--text);
+    }
+    .warn-box {
+      background: #fffbeb; border: 1px solid #fde68a;
+      border-radius: 14px; padding: 12px 14px;
+      font-size: 13px; text-align: left; line-height: 1.7;
+      color: #92400e; margin: 12px 0;
+    }
+    .primary-btn {
+      width: 100%; padding: 14px;
+      background: var(--brand-grad); color: #fff; border: none;
+      border-radius: 14px; font-size: 15px; font-weight: 700;
+      cursor: pointer; margin-top: 8px; font-family: 'Sora', sans-serif;
+      box-shadow: 0 4px 16px rgba(91,94,244,0.30);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .primary-btn:hover { opacity: 0.90; }
+    .primary-btn:active { transform: scale(0.97); }
+    .primary-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .screen-error { color: var(--danger); font-size: 12px; margin-top: 10px; display: none; }
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.6s linear infinite; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Modal (Edit Expense / Budget Settings) ── */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 3000; display: flex; align-items: flex-end;
+      justify-content: center; opacity: 0;
+      transition: opacity 0.25s; pointer-events: none;
+    }
+    .modal-backdrop.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: #fff; border-radius: 28px 28px 0 0;
+      padding: 24px 20px 32px;
+      width: 100%; max-width: 520px;
+      transform: translateY(40px);
+      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+      max-height: 92vh; overflow-y: auto;
+    }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-handle {
+      width: 36px; height: 4px; background: var(--border);
+      border-radius: 4px; margin: 0 auto 18px;
+    }
+    .modal-title {
+      font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 800;
+      color: var(--text); margin-bottom: 20px;
+    }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-grid .full { grid-column: 1 / -1; }
+    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-cancel {
+      flex: 1; padding: 13px;
+      background: var(--surface-2); color: var(--text-2);
+      border: none; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-save {
+      flex: 2; padding: 13px;
+      background: var(--brand-grad); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      font-family: 'Sora', sans-serif;
+      box-shadow: 0 4px 14px rgba(91,94,244,0.28);
+    }
+    .btn-save:hover { opacity: 0.90; }
+
+    /* Budget modal specifics */
+    .budget-modal-row {
+      display: grid; grid-template-columns: 1fr auto;
+      align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .budget-modal-row:last-child { border-bottom: none; }
+    .budget-cat-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--text); }
+    .budget-input-wrap { position: relative; width: 110px; }
+    .budget-input-wrap input {
+      padding: 8px 10px 8px 28px; font-size: 13px;
+      border-radius: 8px; min-height: unset;
+    }
+    .budget-curr { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-3); pointer-events: none; }
+  </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div id="loginContainer">
-        <div class="login-box">
-            <span>💰</span>
-            <h2>Expense Tracker</h2>
-            <p>Sign in with Google to save your expenses to your own Google Sheet</p>
-            <div id="googleSignInButton"></div>
-            <small>Your data stays in YOUR Google Drive.<br>No one else can see it.</small>
-        </div>
+
+<!-- ── Loading Screen ── -->
+<div id="loadingScreen" class="screen">
+  <div class="screen-box">
+    <span class="screen-icon">🔄</span>
+    <h2>Loading…</h2>
+    <p>Connecting to your Google Drive</p>
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<!-- ── Login Screen ── -->
+<div id="loginScreen" class="screen" style="display:none">
+  <div class="screen-box">
+    <span class="screen-icon">💰</span>
+    <h2>Expense Tracker</h2>
+    <p>Sign in with Google to save expenses to your own private Google Sheet</p>
+    <div id="googleSignInButton"></div>
+    <small>Your data stays in <strong>your</strong> Google Drive.<br>No one else can access it.</small>
+  </div>
+</div>
+
+<!-- ── Setup Screen ── -->
+<div id="setupScreen" class="screen" style="display:none">
+  <div class="screen-box">
+    <button class="screen-logout-btn" id="setupLogoutBtn" title="Logout">⏻</button>
+    <span class="screen-icon">📁</span>
+    <h2>Welcome!</h2>
+    <p>We'll create a folder in your Google Drive to store all your expenses securely.</p>
+    <div class="info-box">📂 <b>Folder:</b> Expense Tracker<br>📊 <b>Sheet:</b> My Expenses<br>🔒 Only you can access this</div>
+    <button class="primary-btn" id="createFolderBtn">Get Started</button>
+    <div id="setupError" class="screen-error"></div>
+    <small>Please don't delete this folder from Google Drive.</small>
+  </div>
+</div>
+
+<!-- ── Folder Missing Screen ── -->
+<div id="folderMissingScreen" class="screen" style="display:none">
+  <div class="screen-box">
+    <button class="screen-logout-btn" id="folderMissingLogoutBtn" title="Logout">⏻</button>
+    <span class="screen-icon">⚠️</span>
+    <h2>Folder Not Found</h2>
+    <p>The <b>Expense Tracker</b> folder or sheet was deleted from your Google Drive.</p>
+    <div class="warn-box">Your previous expenses are safe in your device's local storage.<br><br><b>Click below</b> to recreate the folder — your data will be re-synced automatically.</div>
+    <button class="primary-btn" id="recreateFolderBtn">Recreate Folder &amp; Continue</button>
+    <div id="recreateError" class="screen-error"></div>
+  </div>
+</div>
+
+<!-- ── Main App ── -->
+<div class="container" id="mainApp" style="display:none">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>💰 Expense Tracker</h1>
+    <p id="userEmailDisplay">Track your spending</p>
+    <div class="header-actions">
+      <button class="hdr-btn" id="manualSyncBtn">🔄 Sync</button>
+      <button class="hdr-btn" id="logoutBtn">⏻</button>
     </div>
+  </div>
 
-    <!-- Setup Screen (First Time User) -->
-    <div id="setupContainer" style="display: none;">
-        <div class="setup-box">
-            <button class="setup-logout-btn" id="setupLogoutBtn" title="Logout">⏻</button>
-            <span>📁</span>
-            <h2>Welcome!</h2>
-            <p>We will create a folder in your Google Drive to store all your expenses.</p>
-            <div class="info-text">
-                📂 <strong>Folder name:</strong> Expense Tracker<br>
-                📊 <strong>Sheet name:</strong> My Expenses<br><br>
-                🔒 Only you can access this data
-            </div>
-            <button class="create-folder-btn" id="createFolderBtn">Continue</button>
-            <div id="setupError" class="error-text" style="display: none;"></div>
-            <small>This folder will be created in your Google Drive. Please don't delete it.</small>
+  <!-- Month comparison -->
+  <div class="month-compare" id="monthCompare" style="display:none">
+    <span id="compareText"></span>
+    <span class="compare-badge" id="compareBadge"></span>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-card">
+    <div class="stats-label">This Month Total</div>
+    <div class="stats-total" id="totalAmount">EGP 0.00</div>
+    <div class="stats-month" id="monthBadge"></div>
+  </div>
+
+  <!-- Add Expense -->
+  <div class="card">
+    <div class="card-title"><span class="card-title-icon">📝</span> Add New Expense</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="required">Date</label>
+        <input type="date" id="date" required>
+      </div>
+      <div class="form-group">
+        <label class="required">Category</label>
+        <select id="category" required>
+          <option value="" disabled selected>Select…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="required">Amount (EGP)</label>
+        <div class="amount-wrap">
+          <span class="currency-flag">🇪🇬</span>
+          <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" inputmode="decimal" required>
         </div>
+      </div>
+      <div class="form-group">
+        <label>Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="notes" placeholder="e.g. lunch with team">
+      </div>
     </div>
+    <button class="submit-btn" id="submitBtn">+ Add Expense</button>
+    <div class="sync-strip" id="syncStatus">✅ Synced to Google Drive</div>
+  </div>
 
-    <!-- Folder Missing Screen (User deleted the folder) -->
-    <div id="folderMissingContainer" style="display: none;">
-        <div class="folder-missing-box">
-            <button class="folder-missing-logout-btn" id="folderMissingLogoutBtn" title="Logout">⏻</button>
-            <span>⚠️</span>
-            <h2>Folder Not Found</h2>
-            <p>We couldn't find the Expense Tracker folder in your Google Drive.</p>
-            <div class="warning-text">
-                📂 <strong>What happened?</strong><br>
-                The folder "Expense Tracker" or sheet "My Expenses" was deleted from your Google Drive.<br><br>
-                <strong>Solution:</strong> Click below to recreate the folder and sheet. Your existing expenses will be loaded from local storage.
-            </div>
-            <button class="recreate-folder-btn" id="recreateFolderBtn">Recreate Folder & Continue</button>
-            <div id="recreateError" class="error-text" style="display: none;"></div>
-            <small>Your existing expenses are safe in your phone's local storage.</small>
-        </div>
+  <!-- Chart -->
+  <div class="card" id="chartCard" style="display:none">
+    <div class="card-title"><span class="card-title-icon">📈</span> This Month by Category</div>
+    <div class="chart-container">
+      <canvas id="categoryChart"></canvas>
     </div>
+    <div id="chartLegend" class="chart-legend"></div>
+  </div>
 
-    <!-- Main App -->
-    <div class="container" id="mainApp" style="display: none;">
-        <div class="header">
-            <h1>💰 Expense Tracker</h1>
-            <p>Track your spending, stay in control</p>
-            <button class="logout-btn" id="logoutBtn">⏻ Logout</button>
-        </div>
-
-        <div class="form-card">
-            <div class="form-title">
-                <span>📝</span>
-                Add New Expense
-            </div>
-            
-            <div class="form-group">
-                <label class="required">Date</label>
-                <input type="date" id="date" required>
-            </div>
-
-            <div class="form-group">
-                <label class="required">Category</label>
-                <select id="category" required>
-                    <option value="" disabled selected>Select a category</option>
-                    <option value="Car Repairs">🚗 Car Repairs</option>
-                    <option value="Cafe">☕ Cafe</option>
-                    <option value="Clothes">👕 Clothes</option>
-                    <option value="Entertainment">🎬 Entertainment</option>
-                    <option value="Electronics">📱 Electronics</option>
-                    <option value="Games">🎮 Games</option>
-                    <option value="Gym">🏋️ Gym</option>
-                    <option value="Health">💊 Health</option>
-                    <option value="Home Repairs">🛠️ Home Repairs</option>
-                    <option value="Internet">📶 Internet</option>
-                    <option value="Personal Care">🧴 Personal Care</option>
-                    <option value="Pets">🐾 Pets</option>
-                    <option value="Petrol">⛽ Petrol</option>
-                    <option value="Ride Hailing">🚕 Ride Hailing</option>
-                    <option value="Smoking">🚬 Smoking</option>
-                    <option value="Subscriptions">💻 Subscriptions</option>
-                    <option value="Supermarket">🛒 Supermarket</option>
-                    <option value="Travel">✈️ Travel</option>
-                    <option value="Utilities">⚡ Utilities</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="required">Amount (EGP)</label>
-                <div class="amount-wrapper">
-                    <span class="currency-symbol">🇪🇬</span>
-                    <input type="number" id="amount" placeholder="0.00" step="0.01" min="0" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Notes (Optional)</label>
-                <textarea id="notes" placeholder="Add a note..."></textarea>
-            </div>
-
-            <button class="submit-btn" id="submitBtn">+ Add Expense</button>
-            <div class="sync-status" id="syncStatus">✅ Synced to Google Drive</div>
-        </div>
-
-        <div class="stats-card" id="statsCard">
-            <div class="stats-header">
-                <h3>📊 This Month Total</h3>
-            </div>
-            <div class="total-amount" id="totalAmount">EGP 0</div>
-            <div class="month-badge" id="monthBadge"></div>
-        </div>
-
-        <div class="chart-card" id="chartCard" style="display: none;">
-            <h3>📈 This Month by Category</h3>
-            <div class="chart-container">
-                <canvas id="categoryChart"></canvas>
-            </div>
-            <div id="chartLegend" class="chart-legend"></div>
-        </div>
-
-        <div class="expenses-card">
-            <div class="expenses-header">
-                <h3>📋 Recent Expenses</h3>
-                <button class="see-all-btn" id="seeAllBtn">See All →</button>
-            </div>
-            <div id="expensesList">
-                <div class="empty-state">
-                    <span>📭</span>
-                    <p>No expenses yet</p>
-                    <p style="font-size: 12px; margin-top: 8px;">Add your first expense above</p>
-                </div>
-            </div>
-        </div>
+  <!-- Budget Overview -->
+  <div class="card" id="budgetCard" style="display:none">
+    <div class="card-title" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px"><span class="card-title-icon">🎯</span> Budget Overview</div>
+      <button class="budget-settings-btn" id="openBudgetBtn">⚙ Set Budgets</button>
     </div>
+    <div id="budgetList"></div>
+  </div>
 
-    <div class="status" id="statusMsg"></div>
+  <!-- Recent Expenses -->
+  <div class="card" style="margin-bottom:0">
+    <div class="expenses-header">
+      <h3>📋 Recent Expenses</h3>
+      <button class="see-all-btn" id="seeAllBtn">See All →</button>
+    </div>
+    <!-- Search -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="homeSearch" placeholder="Search expenses…">
+    </div>
+    <!-- Category filter chips -->
+    <div class="filter-row" id="homeCategoryFilter">
+      <button class="filter-chip active" data-cat="">All</button>
+    </div>
+    <div id="expensesList"></div>
+  </div>
 
-    <script>
-        let expenses = [];
-        let categoryChart = null;
-        let currentUserEmail = null;
-        let currentAccessToken = null;
-        let spreadsheetId = null;
-        let folderId = null;
+</div><!-- /mainApp -->
 
-        const FOLDER_NAME = 'Expense Tracker';
-        const SHEET_NAME = 'My Expenses';
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
 
-        function getCurrentMonthRange() {
-            const now = new Date();
-            return { month: now.toLocaleString('default', { month: 'long', year: 'numeric' }) };
-        }
+<!-- ── Edit Expense Modal ── -->
+<div class="modal-backdrop" id="editModalBackdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Edit Expense</div>
+    <input type="hidden" id="editId">
+    <div class="modal-grid">
+      <div class="form-group">
+        <label class="required">Date</label>
+        <input type="date" id="editDate" required>
+      </div>
+      <div class="form-group">
+        <label class="required">Category</label>
+        <select id="editCategory" required></select>
+      </div>
+      <div class="form-group">
+        <label class="required">Amount (EGP)</label>
+        <div class="amount-wrap">
+          <span class="currency-flag">🇪🇬</span>
+          <input type="number" id="editAmount" placeholder="0.00" step="0.01" min="0.01" inputmode="decimal" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <input type="text" id="editNotes" placeholder="optional">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="editCancelBtn">Cancel</button>
+      <button class="btn-save" id="editSaveBtn">Save Changes</button>
+    </div>
+  </div>
+</div>
 
-        function isInCurrentMonth(expenseDate) {
-            const now = new Date();
-            const expense = new Date(expenseDate);
-            return expense.getMonth() === now.getMonth() && expense.getFullYear() === now.getFullYear();
-        }
+<!-- ── Budget Settings Modal ── -->
+<div class="modal-backdrop" id="budgetModalBackdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🎯 Set Monthly Budgets</div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px">Leave blank to set no limit for a category.</p>
+    <div id="budgetModalList"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="budgetCancelBtn">Cancel</button>
+      <button class="btn-save" id="budgetSaveBtn">Save Budgets</button>
+    </div>
+  </div>
+</div>
 
-        function getUserEmailFromToken(token) {
-            try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                const user = JSON.parse(jsonPayload);
-                return user.email;
-            } catch (e) {
-                return null;
-            }
-        }
+<script>
+// ── State ─────────────────────────────────────────────────
+let expenses = [];
+let categoryChart = null;
+let currentUserEmail = null;
+let currentAccessToken = null;
+let spreadsheetId = null;
+let folderId = null;
+let budgets = {};           // { category: limitEGP }
+let homeActiveCategory = '';
+let homeSearchQuery = '';
 
-        function loadExpensesFromLocal() {
-            if (!currentUserEmail) return;
-            const saved = localStorage.getItem(`private_expenses_${currentUserEmail}`);
-            expenses = saved ? JSON.parse(saved) : [];
-            renderAll();
-        }
+// ── Populate selects ─────────────────────────────────────
+function buildCategorySelects() {
+  const opts = CATEGORIES.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
+  document.getElementById('category').innerHTML     = '<option value="" disabled selected>Select…</option>' + opts;
+  document.getElementById('editCategory').innerHTML = opts;
+}
 
-        function saveExpensesToLocal() {
-            if (currentUserEmail) {
-                localStorage.setItem(`private_expenses_${currentUserEmail}`, JSON.stringify(expenses));
-            }
-        }
+function buildCategoryFilterChips() {
+  const row = document.getElementById('homeCategoryFilter');
+  row.innerHTML = '<button class="filter-chip active" data-cat="">All</button>';
+  CATEGORIES.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip';
+    btn.dataset.cat = c.value;
+    btn.textContent = c.icon + ' ' + c.value;
+    row.appendChild(btn);
+  });
+  row.addEventListener('click', e => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    homeActiveCategory = chip.dataset.cat;
+    row.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+    chip.classList.add('active');
+    renderExpensesList();
+  });
+}
 
-        async function findExistingFolder() {
-            const response = await gapi.client.drive.files.list({
-                q: `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-                spaces: 'drive',
-                fields: 'files(id, name)'
-            });
-            return response.result.files?.[0]?.id || null;
-        }
+// ── Local storage ─────────────────────────────────────────
+function saveLocal() {
+  if (!currentUserEmail) return;
+  localStorage.setItem(`expenses_${currentUserEmail}`, JSON.stringify(expenses));
+  localStorage.setItem(`budgets_${currentUserEmail}`,  JSON.stringify(budgets));
+}
+function loadBudgets() {
+  if (!currentUserEmail) return;
+  const b = localStorage.getItem(`budgets_${currentUserEmail}`);
+  budgets = b ? JSON.parse(b) : {};
+}
 
-        async function findExistingSpreadsheet() {
-            const response = await gapi.client.drive.files.list({
-                q: `name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
-                spaces: 'drive',
-                fields: 'files(id, name)'
-            });
-            return response.result.files?.[0]?.id || null;
-        }
+// ── Toast ─────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
 
-        async function checkFolderExists() {
-            const folder = await findExistingFolder();
-            const sheet = await findExistingSpreadsheet();
-            return folder !== null && sheet !== null;
-        }
+// ── Date helpers (from utils.js) ──────────────────────────
+function isInCurrentMonth(dateStr) {
+  const now = new Date();
+  const d   = parseLocalDate(dateStr);
+  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+}
+function isInPrevMonth(dateStr) {
+  const d   = parseLocalDate(dateStr);
+  const now = new Date();
+  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return d.getMonth() === prev.getMonth() && d.getFullYear() === prev.getFullYear();
+}
+function todayStr() { return new Date().toISOString().split('T')[0]; }
 
-        async function createFolderAndSheet(isRecreate = false) {
-            const btn = document.getElementById(isRecreate ? 'recreateFolderBtn' : 'createFolderBtn');
-            const errorDiv = document.getElementById(isRecreate ? 'recreateError' : 'setupError');
-            
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = 'Creating...';
-            }
-            if (errorDiv) errorDiv.style.display = 'none';
-            
-            try {
-                if (!gapi.client || !gapi.client.drive) {
-                    throw new Error('Google API not ready. Please refresh and try again.');
-                }
-                
-                // Create folder
-                const folderMetadata = {
-                    name: FOLDER_NAME,
-                    mimeType: 'application/vnd.google-apps.folder'
-                };
-                const folderResponse = await gapi.client.drive.files.create({
-                    resource: folderMetadata,
-                    fields: 'id'
-                });
-                folderId = folderResponse.result.id;
-                
-                // Create spreadsheet in folder
-                const sheetMetadata = {
-                    name: SHEET_NAME,
-                    mimeType: 'application/vnd.google-apps.spreadsheet',
-                    parents: [folderId]
-                };
-                const sheetResponse = await gapi.client.drive.files.create({
-                    resource: sheetMetadata,
-                    fields: 'id'
-                });
-                spreadsheetId = sheetResponse.result.id;
-                
-                // Add headers
-                await gapi.client.sheets.spreadsheets.values.update({
-                    spreadsheetId: spreadsheetId,
-                    range: 'Sheet1!A1:E1',
-                    valueInputOption: 'RAW',
-                    resource: {
-                        values: [['Date', 'Category', 'Amount', 'Notes', 'ID']]
-                    }
-                });
-                
-                // Save to localStorage
-                localStorage.setItem(`drive_setup_${currentUserEmail}`, 'complete');
-                localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
-                
-                // If recreating, also sync existing local expenses to the new sheet
-                if (isRecreate && expenses.length > 0) {
-                    for (const expense of expenses) {
-                        await addExpenseToSheet(expense);
-                    }
-                    showStatus(`✅ Synced ${expenses.length} existing expenses to new sheet!`);
-                }
-                
-                // Hide appropriate screen and show main app
-                document.getElementById('folderMissingContainer').style.display = 'none';
-                document.getElementById('setupContainer').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                document.getElementById('syncStatus').textContent = '✅ Synced to Google Drive';
-                showStatus('✅ Folder and sheet created successfully!');
-                
-            } catch (err) {
-                console.error('Setup error:', err);
-                if (errorDiv) {
-                    errorDiv.textContent = err.message || 'Failed to create folder. Please try again.';
-                    errorDiv.style.display = 'block';
-                }
-                showStatus('❌ ' + (err.message || 'Setup failed'), true);
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = isRecreate ? 'Recreate Folder & Continue' : 'Continue';
-                }
-            }
-        }
+// ── Month comparison ──────────────────────────────────────
+function updateMonthCompare() {
+  const thisTotal = expenses.filter(e => isInCurrentMonth(e.date)).reduce((s,e) => s + e.amount, 0);
+  const prevTotal = expenses.filter(e => isInPrevMonth(e.date)).reduce((s,e) => s + e.amount, 0);
+  const el   = document.getElementById('monthCompare');
+  const text = document.getElementById('compareText');
+  const badge= document.getElementById('compareBadge');
+  if (prevTotal === 0) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  const diff = thisTotal - prevTotal;
+  const pct  = Math.abs((diff / prevTotal) * 100).toFixed(0);
+  const sign = diff > 0 ? '▲' : diff < 0 ? '▼' : '';
+  text.textContent = 'vs last month';
+  if (diff > 0) {
+    badge.textContent = `${sign} ${pct}%`;
+    badge.className   = 'compare-badge compare-up';
+  } else if (diff < 0) {
+    badge.textContent = `${sign} ${pct}%`;
+    badge.className   = 'compare-badge compare-down';
+  } else {
+    badge.textContent = 'No change';
+    badge.className   = 'compare-badge compare-same';
+  }
+}
 
-        async function loadExpensesFromSheet() {
-            if (!spreadsheetId) {
-                spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
-                if (!spreadsheetId) return false;
-            }
-            
-            try {
-                const response = await gapi.client.sheets.spreadsheets.values.get({
-                    spreadsheetId: spreadsheetId,
-                    range: 'Sheet1!A2:E'
-                });
-                
-                const rows = response.result.values;
-                if (rows && rows.length > 0) {
-                    expenses = rows.map(row => ({
-                        id: row[4] ? parseInt(row[4]) : Date.now(),
-                        date: row[0],
-                        category: row[1],
-                        amount: parseFloat(row[2]),
-                        notes: row[3] || '',
-                        timestamp: new Date().toISOString()
-                    }));
-                }
-                saveExpensesToLocal();
-                renderAll();
-                return true;
-            } catch (error) {
-                console.error('Load from sheet error:', error);
-                return false;
-            }
-        }
+// ── Stats ─────────────────────────────────────────────────
+function updateStats() {
+  const total = expenses.filter(e => isInCurrentMonth(e.date)).reduce((s,e) => s + e.amount, 0);
+  document.getElementById('totalAmount').textContent = `EGP ${total.toFixed(2)}`;
+  document.getElementById('monthBadge').textContent  = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+  updateMonthCompare();
+}
 
-        async function addExpenseToSheet(expense) {
-            if (!spreadsheetId) return false;
-            
-            try {
-                const values = [[
-                    expense.date,
-                    expense.category,
-                    expense.amount,
-                    expense.notes || '',
-                    expense.id
-                ]];
-                
-                await gapi.client.sheets.spreadsheets.values.append({
-                    spreadsheetId: spreadsheetId,
-                    range: 'Sheet1!A2:E',
-                    valueInputOption: 'RAW',
-                    resource: { values: values }
-                });
-                return true;
-            } catch (error) {
-                console.error('Add to sheet error:', error);
-                return false;
-            }
-        }
+// ── Pie chart ─────────────────────────────────────────────
+function updatePieChart() {
+  const card   = document.getElementById('chartCard');
+  const totals = {};
+  expenses.filter(e => isInCurrentMonth(e.date)).forEach(e => {
+    totals[e.category] = (totals[e.category] || 0) + e.amount;
+  });
+  const cats = Object.keys(totals);
+  if (!cats.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
 
-        async function deleteExpenseFromSheet(expenseId) {
-            if (!spreadsheetId) return false;
-            
-            try {
-                const response = await gapi.client.sheets.spreadsheets.values.get({
-                    spreadsheetId: spreadsheetId,
-                    range: 'Sheet1!A2:E'
-                });
-                
-                const rows = response.result.values;
-                if (rows) {
-                    let rowIndex = -1;
-                    for (let i = 0; i < rows.length; i++) {
-                        if (rows[i][4] && parseInt(rows[i][4]) === expenseId) {
-                            rowIndex = i + 2;
-                            break;
-                        }
-                    }
-                    
-                    if (rowIndex > 0) {
-                        const requests = [{
-                            deleteDimension: {
-                                range: {
-                                    sheetId: 0,
-                                    dimension: 'ROWS',
-                                    startIndex: rowIndex - 1,
-                                    endIndex: rowIndex
-                                }
-                            }
-                        }];
-                        await gapi.client.sheets.spreadsheets.batchUpdate({
-                            spreadsheetId: spreadsheetId,
-                            resource: { requests: requests }
-                        });
-                        return true;
-                    }
-                }
-            } catch (error) {
-                console.error('Delete from sheet error:', error);
-            }
-            return false;
-        }
+  const total  = cats.reduce((s, c) => s + totals[c], 0);
+  const colors = cats.map(c => getChartColor(c));
+  const ctx    = document.getElementById('categoryChart').getContext('2d');
+  if (categoryChart) categoryChart.destroy();
+  categoryChart = new Chart(ctx, {
+    type: 'pie',
+    data: { labels: cats, datasets: [{ data: cats.map(c => totals[c]), backgroundColor: colors, borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
+  });
+  document.getElementById('chartLegend').innerHTML = cats.map((c, i) => {
+    const pct = ((totals[c] / total) * 100).toFixed(1);
+    return `<div class="legend-item"><div class="legend-dot" style="background:${colors[i]}"></div><span>${c} (${pct}%)</span></div>`;
+  }).join('');
+}
 
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
+// ── Budget overview ───────────────────────────────────────
+function updateBudgetOverview() {
+  const card   = document.getElementById('budgetCard');
+  const cats   = Object.keys(budgets).filter(c => budgets[c] > 0);
+  if (!cats.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
 
-        function getCurrentMonthTotal() {
-            return expenses.filter(exp => isInCurrentMonth(exp.date)).reduce((sum, exp) => sum + exp.amount, 0);
-        }
+  const spent = {};
+  expenses.filter(e => isInCurrentMonth(e.date)).forEach(e => {
+    spent[e.category] = (spent[e.category] || 0) + e.amount;
+  });
 
-        function getCategoryTotals() {
-            const totals = {};
-            expenses.forEach(exp => {
-                if (isInCurrentMonth(exp.date)) {
-                    totals[exp.category] = (totals[exp.category] || 0) + exp.amount;
-                }
-            });
-            return totals;
-        }
+  document.getElementById('budgetList').innerHTML = cats.map(cat => {
+    const limit   = budgets[cat];
+    const use     = spent[cat] || 0;
+    const pct     = Math.min((use / limit) * 100, 100).toFixed(0);
+    const status  = use >= limit ? 'over' : use >= limit * 0.8 ? 'warning' : 'ok';
+    const label   = use >= limit ? 'Over budget!' : use >= limit * 0.8 ? 'Near limit' : 'On track';
+    return `
+      <div class="budget-row">
+        <div>
+          <div class="budget-cat">
+            <div class="cat-icon" style="background:${getCategoryColor(cat)};width:30px;height:30px;font-size:15px;border-radius:9px">${getCategoryIcon(cat)}</div>
+            ${cat}
+            <span class="budget-badge ${status}">${label}</span>
+          </div>
+          <div class="budget-bar-wrap" style="margin-top:6px">
+            <div class="budget-bar ${status}" style="width:${pct}%"></div>
+          </div>
+        </div>
+        <div class="budget-nums"><b>EGP ${use.toFixed(0)}</b><br>of ${limit.toFixed(0)}</div>
+      </div>`;
+  }).join('');
+}
 
-        function getCategoryIcon(category) {
-            const icons = {
-                'Car Repairs': '🚗', 'Cafe': '☕', 'Clothes': '👕', 'Entertainment': '🎬',
-                'Electronics': '📱', 'Games': '🎮', 'Gym': '🏋️', 'Health': '💊',
-                'Home Repairs': '🛠️', 'Internet': '📶', 'Personal Care': '🧴', 'Pets': '🐾',
-                'Petrol': '⛽', 'Ride Hailing': '🚕', 'Smoking': '🚬', 'Subscriptions': '💻',
-                'Supermarket': '🛒', 'Travel': '✈️', 'Utilities': '⚡'
-            };
-            return icons[category] || '💰';
-        }
+// ── Expense list ──────────────────────────────────────────
+function getFilteredHomeExpenses() {
+  return expenses
+    .slice(0, 30)
+    .filter(e => {
+      const matchCat    = !homeActiveCategory || e.category === homeActiveCategory;
+      const matchSearch = !homeSearchQuery ||
+        e.category.toLowerCase().includes(homeSearchQuery) ||
+        (e.notes || '').toLowerCase().includes(homeSearchQuery);
+      return matchCat && matchSearch;
+    })
+    .slice(0, 15);
+}
 
-        function getCategoryColor(category) {
-            const colors = {
-                'Car Repairs': '#ffd1d1', 'Cafe': '#d4e8d4', 'Clothes': '#e8d5b7',
-                'Entertainment': '#d4b8ff', 'Electronics': '#d4e8ff', 'Games': '#d4b8ff',
-                'Gym': '#ffe5b4', 'Health': '#ffccd9', 'Home Repairs': '#ffd1d1',
-                'Internet': '#cce0ff', 'Personal Care': '#ffccd9', 'Pets': '#e8d5b7',
-                'Petrol': '#ffd1d1', 'Ride Hailing': '#ffe5b4', 'Smoking': '#e0e0e0',
-                'Subscriptions': '#cce7ff', 'Supermarket': '#ffe0b5', 'Travel': '#d4e8ff',
-                'Utilities': '#ffe5b4'
-            };
-            return colors[category] || '#f0f0f0';
-        }
+function renderExpensesList() {
+  const list   = document.getElementById('expensesList');
+  const items  = getFilteredHomeExpenses();
+  if (!items.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>No expenses found</p></div>`;
+    return;
+  }
+  list.innerHTML = items.map(e => `
+    <div class="expense-item">
+      <div class="cat-icon" style="background:${getCategoryColor(e.category)}">${getCategoryIcon(e.category)}</div>
+      <div class="exp-details">
+        <div class="exp-cat">${e.category}</div>
+        <div class="exp-meta">📅 ${formatDate(e.date)}</div>
+        ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
+      </div>
+      <div class="exp-right">
+        <div class="exp-amount">EGP ${e.amount.toFixed(2)}</div>
+        <div class="exp-actions">
+          <button class="action-btn" onclick="openEditModal(${e.id})" title="Edit">✏️</button>
+          <button class="action-btn" onclick="deleteExpense(${e.id})" title="Delete">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
 
-        function getChartColor(category, index) {
-            const chartColors = {
-                'Car Repairs': '#e57373', 'Cafe': '#81c784', 'Clothes': '#d4a574',
-                'Entertainment': '#b39ddb', 'Electronics': '#7986cb', 'Games': '#b39ddb',
-                'Gym': '#f4c542', 'Health': '#f48fb1', 'Home Repairs': '#e57373',
-                'Internet': '#4fc3f7', 'Personal Care': '#f48fb1', 'Pets': '#d4a574',
-                'Petrol': '#e57373', 'Ride Hailing': '#f4c542', 'Smoking': '#9e9e9e',
-                'Subscriptions': '#64b5f6', 'Supermarket': '#ffb74d', 'Travel': '#4fc3f7',
-                'Utilities': '#f4c542'
-            };
-            return chartColors[category] || `hsl(${index * 30}, 70%, 60%)`;
-        }
+function renderAll() {
+  updateStats();
+  updatePieChart();
+  updateBudgetOverview();
+  renderExpensesList();
+}
 
-        function updatePieChart() {
-            const chartCard = document.getElementById('chartCard');
-            const totals = getCategoryTotals();
-            const categories = Object.keys(totals);
-            
-            if (categories.length === 0) {
-                chartCard.style.display = 'none';
-                return;
-            }
-            
-            chartCard.style.display = 'block';
-            const amounts = categories.map(cat => totals[cat]);
-            const totalAmount = amounts.reduce((a, b) => a + b, 0);
-            const colors = categories.map((cat, idx) => getChartColor(cat, idx));
-            const ctx = document.getElementById('categoryChart').getContext('2d');
-            
-            if (categoryChart) categoryChart.destroy();
-            
-            categoryChart = new Chart(ctx, {
-                type: 'pie',
-                data: { labels: categories, datasets: [{ data: amounts, backgroundColor: colors, borderWidth: 0 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
-            });
-            
-            const legendDiv = document.getElementById('chartLegend');
-            legendDiv.innerHTML = categories.map((cat, idx) => {
-                const percentage = ((totals[cat] / totalAmount) * 100).toFixed(1);
-                return `<div class="legend-item"><div class="legend-color" style="background: ${colors[idx]}"></div><span>${cat} (${percentage}%)</span></div>`;
-            }).join('');
-        }
+// ── Add expense ───────────────────────────────────────────
+async function addExpense(date, category, amount, notes) {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Saving…';
 
-        function renderExpensesList() {
-            const expensesDiv = document.getElementById('expensesList');
-            const recentExpenses = expenses.slice(0, 5);
-            
-            if (recentExpenses.length === 0) {
-                expensesDiv.innerHTML = '<div class="empty-state"><span>📭</span><p>No expenses yet</p><p style="font-size: 12px; margin-top: 8px;">Add your first expense above</p></div>';
-                return;
-            }
-            
-            expensesDiv.innerHTML = recentExpenses.map(exp => `
-                <div class="expense-item">
-                    <div class="expense-left">
-                        <div class="category-icon" style="background: ${getCategoryColor(exp.category)};">${getCategoryIcon(exp.category)}</div>
-                        <div class="expense-details">
-                            <div class="expense-category">${exp.category}</div>
-                            <div class="expense-date">📅 ${formatDate(exp.date)}</div>
-                            ${exp.notes ? `<div class="expense-note">📝 ${exp.notes.substring(0, 30)}</div>` : ''}
-                        </div>
-                    </div>
-                    <div class="expense-right">
-                        <div class="expense-amount">EGP ${exp.amount.toFixed(2)}</div>
-                        <button class="action-btn edit-btn" onclick="editExpense(${exp.id})">✏️</button>
-                        <button class="action-btn delete-btn" onclick="deleteExpense(${exp.id})">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
-        }
+  const exp = { id: genId(), date, category, amount: parseFloat(amount), notes: notes || '', timestamp: new Date().toISOString() };
+  expenses.unshift(exp);
+  saveLocal();
+  renderAll();
 
-        function updateStats() {
-            document.getElementById('totalAmount').textContent = `EGP ${getCurrentMonthTotal().toFixed(2)}`;
-            document.getElementById('monthBadge').textContent = getCurrentMonthRange().month;
-        }
+  const ok = await addExpenseToSheet(exp);
+  if (ok) {
+    showToast('✅ Expense added & synced!');
+    setSyncStrip('✅ Last synced: just now', false);
+  } else {
+    showToast('⚠️ Saved locally — not synced', 'error');
+    setSyncStrip('⚠️ Offline – will sync when connected', true);
+  }
+  btn.disabled = false;
+  btn.innerHTML = '+ Add Expense';
+}
 
-        function showStatus(message, isError = false) {
-            const statusDiv = document.getElementById('statusMsg');
-            statusDiv.textContent = message;
-            statusDiv.className = `status show ${isError ? 'error' : 'success'}`;
-            setTimeout(() => statusDiv.classList.remove('show'), 3000);
-        }
+// ── Delete expense ────────────────────────────────────────
+async function deleteExpense(id) {
+  if (!confirm('Delete this expense?')) return;
+  expenses = expenses.filter(e => e.id !== id);
+  saveLocal();
+  renderAll();
+  await deleteExpenseFromSheet(id);
+  showToast('🗑️ Expense deleted');
+}
 
-        async function addExpense(date, category, amount, notes) {
-            const newExpense = { 
-                id: Date.now(), 
-                date, 
-                category, 
-                amount: parseFloat(amount), 
-                notes: notes || '', 
-                timestamp: new Date().toISOString() 
-            };
-            expenses.unshift(newExpense);
-            saveExpensesToLocal();
-            
-            const sheetSuccess = await addExpenseToSheet(newExpense);
-            if (sheetSuccess) {
-                showStatus('✅ Expense added and synced to Google Drive!');
-            } else {
-                showStatus('⚠️ Expense saved locally but not synced to Drive', true);
-            }
-            renderAll();
-        }
+// ── Edit modal ────────────────────────────────────────────
+function openEditModal(id) {
+  const exp = expenses.find(e => e.id === id);
+  if (!exp) return;
+  document.getElementById('editId').value       = id;
+  document.getElementById('editDate').value     = exp.date;
+  document.getElementById('editCategory').value = exp.category;
+  document.getElementById('editAmount').value   = exp.amount;
+  document.getElementById('editNotes').value    = exp.notes;
+  document.getElementById('editModalBackdrop').classList.add('open');
+}
+function closeEditModal() {
+  document.getElementById('editModalBackdrop').classList.remove('open');
+}
+async function saveEdit() {
+  const id       = parseInt(document.getElementById('editId').value);
+  const date     = document.getElementById('editDate').value;
+  const category = document.getElementById('editCategory').value;
+  const amount   = parseFloat(document.getElementById('editAmount').value);
+  const notes    = document.getElementById('editNotes').value.trim();
 
-        async function deleteExpense(id) {
-            if (confirm('Delete this expense?')) {
-                expenses = expenses.filter(exp => exp.id !== id);
-                saveExpensesToLocal();
-                await deleteExpenseFromSheet(id);
-                renderAll();
-                showStatus('🗑️ Expense deleted from Google Drive');
-            }
-        }
+  if (!date || !category || !amount || amount <= 0) { showToast('Please fill all required fields', 'error'); return; }
 
-        function editExpense(id) {
-            const expense = expenses.find(exp => exp.id === id);
-            if (expense) {
-                const newAmount = prompt('Edit amount (EGP):', expense.amount);
-                if (newAmount !== null && !isNaN(newAmount) && parseFloat(newAmount) > 0) {
-                    expense.amount = parseFloat(newAmount);
-                    const newNotes = prompt('Edit notes:', expense.notes);
-                    if (newNotes !== null) expense.notes = newNotes;
-                    saveExpensesToLocal();
-                    deleteExpenseFromSheet(id).then(() => {
-                        addExpenseToSheet(expense);
-                    });
-                    renderAll();
-                    showStatus('✏️ Expense updated');
-                }
-            }
-        }
+  const exp = expenses.find(e => e.id === id);
+  if (!exp) return;
 
-        function renderAll() {
-            updateStats();
-            updatePieChart();
-            renderExpensesList();
-        }
+  const saveBtn = document.getElementById('editSaveBtn');
+  saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
 
-        function setDefaultDate() {
-            document.getElementById('date').value = new Date().toISOString().split('T')[0];
-        }
+  Object.assign(exp, { date, category, amount, notes });
+  saveLocal();
+  renderAll();
+  closeEditModal();
 
-        async function completeLoginAndSetup(tokenResponse) {
-            if (tokenResponse.access_token) {
-                currentAccessToken = tokenResponse.access_token;
-                gapi.client.setToken({ access_token: currentAccessToken });
-                
-                // Check if folder exists in Drive
-                const folderExists = await checkFolderExists();
-                
-                if (folderExists) {
-                    // Folder exists - get the IDs
-                    folderId = await findExistingFolder();
-                    spreadsheetId = await findExistingSpreadsheet();
-                    localStorage.setItem(`drive_setup_${currentUserEmail}`, 'complete');
-                    localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
-                    
-                    // Load expenses from sheet
-                    await loadExpensesFromSheet();
-                    
-                    // Show main app
-                    document.getElementById('setupContainer').style.display = 'none';
-                    document.getElementById('folderMissingContainer').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
-                    showStatus(`✅ Welcome back, ${currentUserEmail}`);
-                } else {
-                    // Folder doesn't exist - check if this is a returning user or new
-                    const hadSetupBefore = localStorage.getItem(`drive_setup_${currentUserEmail}`);
-                    
-                    if (hadSetupBefore === 'complete') {
-                        // Returning user but folder deleted - show folder missing screen
-                        document.getElementById('setupContainer').style.display = 'none';
-                        document.getElementById('folderMissingContainer').style.display = 'flex';
-                        document.getElementById('mainApp').style.display = 'none';
-                        // Load local expenses first
-                        loadExpensesFromLocal();
-                    } else {
-                        // New user - show setup screen
-                        document.getElementById('setupContainer').style.display = 'flex';
-                        document.getElementById('folderMissingContainer').style.display = 'none';
-                        document.getElementById('mainApp').style.display = 'none';
-                    }
-                }
-            }
-        }
+  await deleteExpenseFromSheet(id);
+  await addExpenseToSheet(exp);
+  showToast('✏️ Expense updated & synced!');
+  saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
+}
 
-        async function handleCredentialResponse(response) {
-            const token = response.credential;
-            localStorage.setItem('google_token', token);
-            currentUserEmail = getUserEmailFromToken(token);
-            
-            document.getElementById('loginContainer').style.display = 'none';
-            
-            // Load GAPI
-            await new Promise((resolve) => {
-                if (gapi.client && gapi.client.drive) {
-                    resolve();
-                } else {
-                    gapi.load('client', resolve);
-                }
-            });
-            
-            await gapi.client.init({
-                apiKey: '',
-                discoveryDocs: [
-                    'https://sheets.googleapis.com/$discovery/rest?version=v4',
-                    'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
-                ]
-            });
-            
-            // Request access token with proper scopes
-            const tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
-                scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
-                callback: completeLoginAndSetup
-            });
-            
-            tokenClient.requestAccessToken();
-        }
+// ── Budget modal ──────────────────────────────────────────
+function openBudgetModal() {
+  const list = document.getElementById('budgetModalList');
+  list.innerHTML = CATEGORIES.map(c => `
+    <div class="budget-modal-row">
+      <div class="budget-cat-label">
+        <span>${c.icon}</span> ${c.value}
+      </div>
+      <div class="budget-input-wrap">
+        <span class="budget-curr">EGP</span>
+        <input type="number" data-cat="${c.value}" value="${budgets[c.value] || ''}" placeholder="no limit" min="0" step="1" inputmode="numeric">
+      </div>
+    </div>`).join('');
+  document.getElementById('budgetModalBackdrop').classList.add('open');
+}
+function closeBudgetModal() {
+  document.getElementById('budgetModalBackdrop').classList.remove('open');
+}
+function saveBudgets() {
+  document.querySelectorAll('#budgetModalList input[data-cat]').forEach(inp => {
+    const val = parseFloat(inp.value);
+    if (val > 0) budgets[inp.dataset.cat] = val;
+    else delete budgets[inp.dataset.cat];
+  });
+  saveLocal();
+  updateBudgetOverview();
+  closeBudgetModal();
+  showToast('🎯 Budgets saved!');
+}
 
-        function logout() {
-            localStorage.removeItem('google_token');
-            localStorage.removeItem(`drive_setup_${currentUserEmail}`);
-            localStorage.removeItem(`spreadsheet_id_${currentUserEmail}`);
-            currentUserEmail = null;
-            currentAccessToken = null;
-            spreadsheetId = null;
-            folderId = null;
-            expenses = [];
-            document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('setupContainer').style.display = 'none';
-            document.getElementById('folderMissingContainer').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-            showStatus('👋 Logged out successfully');
-        }
+// ── Sync strip ────────────────────────────────────────────
+function setSyncStrip(msg, warn) {
+  const el = document.getElementById('syncStatus');
+  el.textContent = msg;
+  el.className   = warn ? 'sync-strip warn' : 'sync-strip';
+}
 
-        function checkLogin() {
-            const token = localStorage.getItem('google_token');
-            if (token) {
-                currentUserEmail = getUserEmailFromToken(token);
-                if (currentUserEmail) {
-                    document.getElementById('loginContainer').style.display = 'none';
-                    document.getElementById('setupContainer').style.display = 'flex';
-                    document.getElementById('folderMissingContainer').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'none';
-                    
-                    // Initialize GAPI and check folder
-                    gapi.load('client', async () => {
-                        await gapi.client.init({
-                            apiKey: '',
-                            discoveryDocs: [
-                                'https://sheets.googleapis.com/$discovery/rest?version=v4',
-                                'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
-                            ]
-                        });
-                        
-                        // Request fresh token
-                        const tokenClient = google.accounts.oauth2.initTokenClient({
-                            client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
-                            scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets',
-                            callback: completeLoginAndSetup
-                        });
-                        tokenClient.requestAccessToken();
-                    });
-                    return;
-                }
-            }
-            document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('setupContainer').style.display = 'none';
-            document.getElementById('folderMissingContainer').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-        }
+// ── Google Drive helpers ──────────────────────────────────
+async function findExistingFolder() {
+  const res = await gapi.client.drive.files.list({
+    q: `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    spaces: 'drive', fields: 'files(id)'
+  });
+  return res.result.files?.[0]?.id || null;
+}
+async function findExistingSpreadsheet() {
+  const res = await gapi.client.drive.files.list({
+    q: `name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
+    spaces: 'drive', fields: 'files(id)'
+  });
+  return res.result.files?.[0]?.id || null;
+}
+async function checkFolderExists() {
+  try {
+    const [f, s] = await Promise.all([findExistingFolder(), findExistingSpreadsheet()]);
+    return f !== null && s !== null;
+  } catch { return false; }
+}
 
-        window.onload = function() {
-            checkLogin();
-            setDefaultDate();
-            
-            const buttonContainer = document.getElementById('googleSignInButton');
-            if (buttonContainer) {
-                google.accounts.id.initialize({
-                    client_id: '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com',
-                    callback: handleCredentialResponse
-                });
-                google.accounts.id.renderButton(
-                    buttonContainer,
-                    { theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular' }
-                );
-            }
-            
-            document.getElementById('createFolderBtn').addEventListener('click', () => createFolderAndSheet(false));
-            document.getElementById('recreateFolderBtn').addEventListener('click', () => createFolderAndSheet(true));
-            document.getElementById('setupLogoutBtn').addEventListener('click', logout);
-            document.getElementById('folderMissingLogoutBtn').addEventListener('click', logout);
-        };
+async function createFolderAndSheet(isRecreate = false) {
+  const btnId  = isRecreate ? 'recreateFolderBtn' : 'createFolderBtn';
+  const errId  = isRecreate ? 'recreateError'     : 'setupError';
+  const btn    = document.getElementById(btnId);
+  const errDiv = document.getElementById(errId);
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Creating…';
+  errDiv.style.display = 'none';
 
-        document.getElementById('submitBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const date = document.getElementById('date').value;
-            const category = document.getElementById('category').value;
-            const amount = document.getElementById('amount').value;
-            const notes = document.getElementById('notes').value;
-            
-            if (!date) return showStatus('❌ Please select a date', true);
-            if (!category) return showStatus('❌ Please select a category', true);
-            if (!amount || amount <= 0) return showStatus('❌ Please enter a valid amount', true);
-            
-            addExpense(date, category, amount, notes);
-            document.getElementById('category').value = '';
-            document.getElementById('amount').value = '';
-            document.getElementById('notes').value = '';
-            setDefaultDate();
-            document.getElementById('category').focus();
-        });
-        
-        document.getElementById('seeAllBtn').addEventListener('click', () => window.location.href = 'Expenses.html');
-        document.getElementById('logoutBtn').addEventListener('click', logout);
-    </script>
+  try {
+    if (!gapi.client?.drive) throw new Error('Google API not ready. Please refresh.');
+
+    // Create folder
+    const folderRes  = await gapi.client.drive.files.create({ resource: { name: FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }, fields: 'id' });
+    folderId         = folderRes.result.id;
+
+    // Create spreadsheet in folder
+    const sheetRes   = await gapi.client.drive.files.create({ resource: { name: SHEET_NAME, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [folderId] }, fields: 'id' });
+    spreadsheetId    = sheetRes.result.id;
+
+    // Add headers (Timestamp first)
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId, range: 'Sheet1!A1:F1',
+      valueInputOption: 'RAW',
+      resource: { values: [['Timestamp', 'Date', 'Category', 'Amount', 'Notes', 'ID']] }
+    });
+
+    localStorage.setItem(`drive_setup_${currentUserEmail}`,    'complete');
+    localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
+
+    // Re-sync existing local expenses
+    if (isRecreate) {
+      const local = localStorage.getItem(`expenses_${currentUserEmail}`);
+      const arr   = local ? JSON.parse(local) : [];
+      expenses    = arr;
+      for (const exp of arr) await addExpenseToSheet(exp);
+      if (arr.length) showToast(`✅ Synced ${arr.length} local expenses!`);
+    }
+
+    showScreen('mainApp');
+    setSyncStrip('✅ Synced to Google Drive', false);
+    showToast('✅ Folder & sheet created!');
+
+  } catch (err) {
+    errDiv.textContent    = err.message || 'Failed to create. Please try again.';
+    errDiv.style.display  = 'block';
+    showToast('❌ ' + (err.message || 'Setup failed'), 'error');
+    btn.disabled = false;
+    btn.textContent = isRecreate ? 'Recreate Folder & Continue' : 'Get Started';
+  }
+}
+
+// ── Load from sheet ───────────────────────────────────────
+async function loadExpensesFromSheet(showMsg = false) {
+  if (!spreadsheetId) {
+    spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
+    if (!spreadsheetId) return false;
+  }
+  if (showMsg) showToast('🔄 Syncing from Drive…');
+  try {
+    const res  = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: 'Sheet1!A2:F' });
+    const rows = res.result.values || [];
+    const sheetExps = rows.map(r => ({
+      id:        r[5] ? parseInt(r[5]) : genId(),
+      date:      r[1] || r[0], // support old layout (date in col A) for backward compat
+      category:  r[2],
+      amount:    parseFloat(r[3]),
+      notes:     r[4] || '',
+      timestamp: r[0] || new Date().toISOString()
+    }));
+
+    // Merge: sheet is source of truth, but push any local-only items up
+    const sheetIds     = new Set(sheetExps.map(e => e.id));
+    const localOnly    = expenses.filter(e => !sheetIds.has(e.id));
+    if (localOnly.length > 0) {
+      for (const exp of localOnly) await addExpenseToSheet(exp);
+    }
+
+    expenses = [...sheetExps, ...localOnly].sort((a, b) => b.id - a.id);
+    saveLocal();
+    renderAll();
+    if (showMsg) showToast(`✅ ${expenses.length} expenses loaded`);
+    return true;
+  } catch (err) {
+    console.error(err);
+    if (showMsg) showToast('⚠️ Could not sync. Using local data.', 'error');
+    return false;
+  }
+}
+
+// ── Add to sheet ──────────────────────────────────────────
+async function addExpenseToSheet(exp) {
+  if (!spreadsheetId) return false;
+  try {
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId, range: 'Sheet1!A2:F',
+      valueInputOption: 'RAW',
+      resource: { values: [[ exp.timestamp || new Date().toISOString(), exp.date, exp.category, exp.amount, exp.notes || '', exp.id ]] }
+    });
+    return true;
+  } catch (err) { console.error(err); return false; }
+}
+
+// ── Delete from sheet ─────────────────────────────────────
+async function deleteExpenseFromSheet(expId) {
+  if (!spreadsheetId) return false;
+  try {
+    const res  = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: 'Sheet1!A2:F' });
+    const rows = res.result.values || [];
+    let   rowIndex = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][5] && parseInt(rows[i][5]) === expId) { rowIndex = i + 2; break; } // +2 for header + 1-based
+    }
+    if (rowIndex < 2) return false;
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      resource: { requests: [{ deleteDimension: { range: { sheetId: 0, dimension: 'ROWS', startIndex: rowIndex - 1, endIndex: rowIndex } } }] }
+    });
+    return true;
+  } catch (err) { console.error(err); return false; }
+}
+
+// ── Manual sync ───────────────────────────────────────────
+async function manualSync() {
+  if (!spreadsheetId) { showToast('⚠️ No Google Sheet connected', 'error'); return; }
+  const ok = await loadExpensesFromSheet(true);
+  if (ok) setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
+}
+
+// ── Screen routing ────────────────────────────────────────
+function showScreen(id) {
+  ['loadingScreen','loginScreen','setupScreen','folderMissingScreen','mainApp'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.style.display = (s === id) ? (s === 'mainApp' ? 'block' : 'flex') : 'none';
+  });
+}
+
+// ── GAPI init helper ──────────────────────────────────────
+async function initGapi() {
+  await new Promise(resolve => {
+    if (gapi.client?.drive) { resolve(); return; }
+    gapi.load('client', resolve);
+  });
+  await gapi.client.init({ apiKey: '', discoveryDocs: DISCOVERY_DOCS });
+}
+
+function makeTokenClient(callback) {
+  return google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback });
+}
+
+// ── After login callback ──────────────────────────────────
+async function completeLoginAndSetup(tokenResponse) {
+  if (!tokenResponse.access_token) return;
+  currentAccessToken = tokenResponse.access_token;
+  gapi.client.setToken({ access_token: currentAccessToken });
+
+  showScreen('loadingScreen');
+  await new Promise(r => setTimeout(r, 800)); // let GAPI stabilise
+
+  // Load local expenses + budgets first (for offline fallback)
+  const localRaw = localStorage.getItem(`expenses_${currentUserEmail}`);
+  expenses = localRaw ? JSON.parse(localRaw) : [];
+  loadBudgets();
+
+  // Retry Drive check up to 3 times
+  let folderOk = false;
+  for (let i = 0; i < 3 && !folderOk; i++) {
+    folderOk = await checkFolderExists();
+    if (!folderOk && i < 2) await new Promise(r => setTimeout(r, 600));
+  }
+
+  if (folderOk) {
+    folderId      = await findExistingFolder();
+    spreadsheetId = await findExistingSpreadsheet();
+    localStorage.setItem(`drive_setup_${currentUserEmail}`,    'complete');
+    localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
+    await loadExpensesFromSheet(false);
+    document.getElementById('userEmailDisplay').textContent = currentUserEmail;
+    showScreen('mainApp');
+    setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
+    showToast(`✅ Welcome back, ${currentUserEmail.split('@')[0]}!`);
+  } else {
+    // Check if returning user whose folder was deleted
+    const hadSetup = localStorage.getItem(`drive_setup_${currentUserEmail}`);
+    renderAll(); // show local data while they decide
+    showScreen(hadSetup === 'complete' ? 'folderMissingScreen' : 'setupScreen');
+  }
+}
+
+// ── Google sign-in callback ───────────────────────────────
+async function handleCredentialResponse(response) {
+  const token = response.credential;
+  currentUserEmail = getUserEmailFromToken(token);
+  if (!currentUserEmail) return;
+  localStorage.setItem('google_token', token);
+
+  showScreen('loadingScreen');
+  await initGapi();
+  makeTokenClient(completeLoginAndSetup).requestAccessToken();
+}
+
+// ── Logout ────────────────────────────────────────────────
+function logout() {
+  ['google_token'].concat(
+    currentUserEmail
+      ? [`drive_setup_${currentUserEmail}`, `spreadsheet_id_${currentUserEmail}`]
+      : []
+  ).forEach(k => localStorage.removeItem(k));
+  currentUserEmail = currentAccessToken = spreadsheetId = folderId = null;
+  expenses = []; budgets = {};
+  showScreen('loginScreen');
+  showToast('👋 Logged out');
+}
+
+// ── Check existing login on load ──────────────────────────
+async function checkLogin() {
+  const token = localStorage.getItem('google_token');
+  if (!token) { showScreen('loginScreen'); return; }
+  currentUserEmail = getUserEmailFromToken(token);
+  if (!currentUserEmail) { showScreen('loginScreen'); return; }
+
+  const localRaw = localStorage.getItem(`expenses_${currentUserEmail}`);
+  expenses = localRaw ? JSON.parse(localRaw) : [];
+  loadBudgets();
+
+  showScreen('loadingScreen');
+  await initGapi();
+  makeTokenClient(completeLoginAndSetup).requestAccessToken();
+}
+
+// ── Wire up events ────────────────────────────────────────
+window.onload = function () {
+  buildCategorySelects();
+  buildCategoryFilterChips();
+  document.getElementById('date').value = todayStr();
+
+  // Google sign-in button
+  google.accounts.id.initialize({ client_id: CLIENT_ID, callback: handleCredentialResponse });
+  google.accounts.id.renderButton(document.getElementById('googleSignInButton'), { theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular' });
+
+  // Screen buttons
+  document.getElementById('createFolderBtn').addEventListener('click',       () => createFolderAndSheet(false));
+  document.getElementById('recreateFolderBtn').addEventListener('click',     () => createFolderAndSheet(true));
+  document.getElementById('setupLogoutBtn').addEventListener('click',        logout);
+  document.getElementById('folderMissingLogoutBtn').addEventListener('click',logout);
+  document.getElementById('manualSyncBtn').addEventListener('click',         manualSync);
+  document.getElementById('logoutBtn').addEventListener('click',             logout);
+  document.getElementById('seeAllBtn').addEventListener('click',             () => window.location.href = 'Expenses.html');
+  document.getElementById('openBudgetBtn').addEventListener('click',         openBudgetModal);
+
+  // Edit modal
+  document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+  document.getElementById('editSaveBtn').addEventListener('click',   saveEdit);
+  document.getElementById('editModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditModal(); });
+
+  // Budget modal
+  document.getElementById('budgetCancelBtn').addEventListener('click', closeBudgetModal);
+  document.getElementById('budgetSaveBtn').addEventListener('click',   saveBudgets);
+  document.getElementById('budgetModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeBudgetModal(); });
+
+  // Search
+  document.getElementById('homeSearch').addEventListener('input', e => {
+    homeSearchQuery = e.target.value.toLowerCase().trim();
+    renderExpensesList();
+  });
+
+  // Submit
+  document.getElementById('submitBtn').addEventListener('click', function () {
+    const date     = document.getElementById('date').value;
+    const category = document.getElementById('category').value;
+    const amount   = document.getElementById('amount').value;
+    const notes    = document.getElementById('notes').value.trim();
+    if (!date)                           return showToast('❌ Please select a date', 'error');
+    if (!category)                       return showToast('❌ Please select a category', 'error');
+    if (!amount || parseFloat(amount) <= 0) return showToast('❌ Please enter a valid amount', 'error');
+    addExpense(date, category, amount, notes);
+    document.getElementById('category').value = '';
+    document.getElementById('amount').value   = '';
+    document.getElementById('notes').value    = '';
+    document.getElementById('date').value     = todayStr();
+    document.getElementById('category').focus();
+  });
+
+  checkLogin();
+};
+</script>
 </body>
 </html>
