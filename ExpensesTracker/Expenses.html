@@ -195,7 +195,29 @@
     .detail-amt  { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); }
     .detail-date { font-size: 11px; color: var(--text-3); margin-top: 2px; }
     .detail-note { font-size: 11px; color: var(--text-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .tap-hint { font-size: 11px; color: var(--text-3); text-align: center; margin-top: 10px; }
+    .action-btn {
+      background: none; border: none;
+      width: 30px; height: 30px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 15px; transition: background 0.15s; flex-shrink: 0;
+    }
+    .action-btn:hover { background: var(--surface-2); }
+    .exp-actions { display: flex; gap: 2px; }
+
+    .form-group-exp { display: flex; flex-direction: column; gap: 6px; }
+    .form-group-exp label {
+      font-size: 11px; font-weight: 700; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .form-group-exp input, .form-group-exp select {
+      padding: 11px 13px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 15px; font-family: 'DM Sans', sans-serif;
+      background: var(--surface-2); color: var(--text);
+      -webkit-appearance: none; appearance: none; width: 100%;
+    }
+    .form-group-exp input:focus, .form-group-exp select:focus {
+      outline: none; border-color: var(--brand); background: #fff;
+    }
     .cat-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
     .cat-icon-sm {
       width: 36px; height: 36px; border-radius: 11px;
@@ -341,7 +363,7 @@
       <h1>📋 All Expenses</h1>
     </div>
     <div class="header-actions">
-      <button class="hdr-btn" id="exportBtn">⬇ Export</button>
+      <button class="hdr-btn" id="exportBtn">⬇</button>
       <button class="hdr-btn" id="refreshBtn">🔄</button>
       <button class="hdr-btn" id="logoutBtn">⏻</button>
     </div>
@@ -437,6 +459,40 @@
     <div id="catDetailList"></div>
     <div class="modal-footer">
       <button class="btn-primary" id="catDetailCloseBtn">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Expense Modal -->
+<div class="modal-backdrop" id="editModalBackdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Edit Expense</div>
+    <input type="hidden" id="editId">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group-exp">
+        <label>Date</label>
+        <input type="date" id="editDate" required>
+      </div>
+      <div class="form-group-exp">
+        <label>Category</label>
+        <select id="editCategory" required></select>
+      </div>
+      <div class="form-group-exp">
+        <label>Amount (EGP)</label>
+        <div style="position:relative">
+          <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">🇪🇬</span>
+          <input type="number" id="editAmount" placeholder="0.00" step="0.01" min="0.01" inputmode="decimal" style="padding-left:44px" required>
+        </div>
+      </div>
+      <div class="form-group-exp">
+        <label>Notes</label>
+        <input type="text" id="editNotes" placeholder="optional">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="editCancelBtn">Cancel</button>
+      <button class="btn-primary" id="editSaveBtn">Save Changes</button>
     </div>
   </div>
 </div>
@@ -654,7 +710,6 @@ function renderByDay(list) {
   }
   const grouped = {};
   list.forEach(e => { if (!grouped[e.date]) grouped[e.date] = []; grouped[e.date].push(e); });
-  // Sort newest first
   const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
   container.innerHTML = sortedDates.map(dateKey => {
     const dayExps  = grouped[dateKey];
@@ -672,7 +727,13 @@ function renderByDay(list) {
               <div class="exp-cat">${e.category}</div>
               ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
             </div>
-            <div class="exp-amt">EGP ${e.amount.toFixed(2)}</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <div class="exp-amt">EGP ${e.amount.toFixed(2)}</div>
+              <div class="exp-actions">
+                <button class="action-btn" onclick="openEditModal(${e.id})" title="Edit">✏️</button>
+                <button class="action-btn" onclick="deleteExpense(${e.id})" title="Delete">🗑️</button>
+              </div>
+            </div>
           </div>`).join('')}
       </div>`;
   }).join('');
@@ -685,6 +746,95 @@ function renderAll() {
   updatePieChart(filtered);
   renderCategorySummary(filtered);
   renderByDay(filtered);
+}
+
+// ── Edit modal ────────────────────────────────────────────
+function buildEditCategorySelect() {
+  const opts = CATEGORIES.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
+  document.getElementById('editCategory').innerHTML = opts;
+}
+
+function openEditModal(id) {
+  const exp = expenses.find(e => e.id === id);
+  if (!exp) return;
+  document.getElementById('editId').value       = id;
+  document.getElementById('editDate').value     = exp.date;
+  document.getElementById('editCategory').value = exp.category;
+  document.getElementById('editAmount').value   = exp.amount;
+  document.getElementById('editNotes').value    = exp.notes || '';
+  document.getElementById('editModalBackdrop').classList.add('open');
+}
+function closeEditModal() {
+  document.getElementById('editModalBackdrop').classList.remove('open');
+}
+async function saveEdit() {
+  const id       = parseInt(document.getElementById('editId').value);
+  const date     = document.getElementById('editDate').value;
+  const category = document.getElementById('editCategory').value;
+  const amount   = parseFloat(document.getElementById('editAmount').value);
+  const notes    = document.getElementById('editNotes').value.trim();
+  if (!date || !category || !amount || amount <= 0) { showToast('Please fill all required fields', 'error'); return; }
+
+  const exp = expenses.find(e => e.id === id);
+  if (!exp) return;
+
+  const btn = document.getElementById('editSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  Object.assign(exp, { date, category, amount, notes });
+  saveExpensesLocal();
+  renderAll();
+  closeEditModal();
+
+  await deleteExpenseFromSheet(id);
+  await addExpenseToSheet(exp);
+  showToast('✏️ Expense updated!');
+  btn.disabled = false; btn.textContent = 'Save Changes';
+}
+
+// ── Delete expense ────────────────────────────────────────
+async function deleteExpense(id) {
+  if (!confirm('Delete this expense?')) return;
+  expenses = expenses.filter(e => e.id !== id);
+  saveExpensesLocal();
+  renderAll();
+  await deleteExpenseFromSheet(id);
+  showToast('🗑️ Expense deleted');
+}
+
+// ── Local save ────────────────────────────────────────────
+function saveExpensesLocal() {
+  if (currentUserEmail) localStorage.setItem(`expenses_${currentUserEmail}`, JSON.stringify(expenses));
+}
+
+// ── Sheet write helpers ───────────────────────────────────
+async function addExpenseToSheet(exp) {
+  if (!spreadsheetId) return false;
+  try {
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId, range: 'Sheet1!A2:F', valueInputOption: 'RAW',
+      resource: { values: [[ exp.timestamp || new Date().toISOString(), exp.date, exp.category, exp.amount, exp.notes || '', exp.id ]] }
+    });
+    return true;
+  } catch (err) { console.error(err); return false; }
+}
+
+async function deleteExpenseFromSheet(expId) {
+  if (!spreadsheetId) return false;
+  try {
+    const res  = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: 'Sheet1!A2:F' });
+    const rows = res.result.values || [];
+    let rowIndex = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][5] && parseInt(rows[i][5]) === expId) { rowIndex = i + 2; break; }
+    }
+    if (rowIndex < 2) return false;
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      resource: { requests: [{ deleteDimension: { range: { sheetId: 0, dimension: 'ROWS', startIndex: rowIndex - 1, endIndex: rowIndex } } }] }
+    });
+    return true;
+  } catch (err) { console.error(err); return false; }
 }
 
 // ── Export ────────────────────────────────────────────────
@@ -797,28 +947,38 @@ async function findExistingSpreadsheet() {
   return res.result.files?.[0]?.id || null;
 }
 
+let _loadingFromSheet = false;
 async function loadExpensesFromSheet(showMsg = false) {
-  if (!spreadsheetId) return false;
+  if (_loadingFromSheet) return false;
+  _loadingFromSheet = true;
+  if (!spreadsheetId) { _loadingFromSheet = false; return false; }
   if (showMsg) { showToast('🔄 Syncing…'); document.getElementById('syncStatus').textContent = '🔄 Syncing…'; }
   try {
     const res  = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: 'Sheet1!A2:F' });
     const rows = res.result.values || [];
-    expenses   = rows.map(r => ({
-      id:        r[5] ? parseInt(r[5]) : Date.now(),
-      date:      r[1] || r[0],
-      category:  r[2],
-      amount:    parseFloat(r[3]),
-      notes:     r[4] || '',
-      timestamp: r[0] || new Date().toISOString()
-    }));
+    expenses   = rows
+      .filter(r => r[2] && r[3])  // skip rows missing category or amount
+      .map((r, i) => ({
+        // Never call genId()/Date.now() here — that creates a new ID every
+        // read and makes rows look like new expenses on next load.
+        id:        (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
+        date:      r[1] || r[0],
+        category:  r[2],
+        amount:    parseFloat(r[3]),
+        notes:     r[4] || '',
+        timestamp: r[0] || new Date().toISOString()
+      }));
+    saveExpensesLocal();
     renderAll();
     if (showMsg) {
       showToast(`✅ ${expenses.length} expenses loaded`);
       document.getElementById('syncStatus').textContent = '✅ Last synced: ' + new Date().toLocaleTimeString();
     }
+    _loadingFromSheet = false;
     return true;
   } catch (err) {
     console.error(err);
+    _loadingFromSheet = false;
     if (showMsg) { showToast('❌ Sync failed', 'error'); document.getElementById('syncStatus').textContent = '⚠️ Sync failed'; }
     return false;
   }
@@ -914,6 +1074,7 @@ async function loadSheetData() {
   const doTokenRequest = () => {
     const tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID, scope: SCOPES,
+      prompt: '',   // silent — no popup if already granted
       callback: async (tokenResponse) => {
         if (!tokenResponse.access_token) return;
         currentAccessToken = tokenResponse.access_token;
@@ -935,6 +1096,7 @@ async function loadSheetData() {
 
 // ── Wire up ───────────────────────────────────────────────
 buildCategoryChips();
+buildEditCategorySelect();
 populateYears();
 document.getElementById('monthSelect').value = new Date().getMonth();
 setupTabs();
@@ -954,8 +1116,8 @@ document.getElementById('exportCancelBtn').addEventListener('click',  closeExpor
 document.getElementById('exportConfirmBtn').addEventListener('click',  downloadCSV);
 document.getElementById('exportModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeExportModal(); });
 document.getElementById('exportSelectAllBtn').addEventListener('click', () => {
-  const items   = document.querySelectorAll('#exportMonthsGrid .export-month-item');
-  const allSel  = [...items].every(i => i.classList.contains('selected'));
+  const items  = document.querySelectorAll('#exportMonthsGrid .export-month-item');
+  const allSel = [...items].every(i => i.classList.contains('selected'));
   items.forEach(i => i.classList.toggle('selected', !allSel));
   document.getElementById('exportSelectAllBtn').textContent = allSel ? 'Select All' : 'Deselect All';
 });
@@ -963,6 +1125,11 @@ document.getElementById('exportSelectAllBtn').addEventListener('click', () => {
 // Category drill-down modal
 document.getElementById('catDetailCloseBtn').addEventListener('click', closeCatDetail);
 document.getElementById('catDetailBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeCatDetail(); });
+
+// Edit modal
+document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+document.getElementById('editSaveBtn').addEventListener('click',   saveEdit);
+document.getElementById('editModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditModal(); });
 
 loadSheetData();
 </script>
