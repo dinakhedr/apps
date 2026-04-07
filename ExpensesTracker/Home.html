@@ -245,15 +245,7 @@
     .search-wrap { position: relative; margin-bottom: 14px; }
     .search-wrap input { padding-left: 36px; font-size: 14px; }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; }
-    .filter-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-    .filter-chip {
-      padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
-      border: 1.5px solid var(--border); background: var(--surface-2);
-      color: var(--text-2); cursor: pointer; font-family: 'DM Sans', sans-serif;
-      white-space: nowrap; transition: all 0.15s;
-    }
-    .filter-chip:hover   { border-color: var(--brand); color: var(--brand); background: #ededff; }
-    .filter-chip.active  { background: var(--brand); color: #fff; border-color: var(--brand); }
+
 
     /* ── Expense item ── */
     .expense-item {
@@ -551,14 +543,10 @@
       <h3>📋 Recent Expenses</h3>
       <button class="see-all-btn" id="seeAllBtn">See All →</button>
     </div>
-    <!-- Search -->
+    <!-- Search only -->
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
       <input type="text" id="homeSearch" placeholder="Search expenses…">
-    </div>
-    <!-- Category filter chips -->
-    <div class="filter-row" id="homeCategoryFilter">
-      <button class="filter-chip active" data-cat="">All</button>
     </div>
     <div id="expensesList"></div>
   </div>
@@ -625,7 +613,6 @@ let currentAccessToken = null;
 let spreadsheetId = null;
 let folderId = null;
 let budgets = {};           // { category: limitEGP }
-let homeActiveCategory = '';
 let homeSearchQuery = '';
 
 // ── Populate selects ─────────────────────────────────────
@@ -633,26 +620,6 @@ function buildCategorySelects() {
   const opts = CATEGORIES.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
   document.getElementById('category').innerHTML     = '<option value="" disabled selected>Select…</option>' + opts;
   document.getElementById('editCategory').innerHTML = opts;
-}
-
-function buildCategoryFilterChips() {
-  const row = document.getElementById('homeCategoryFilter');
-  row.innerHTML = '<button class="filter-chip active" data-cat="">All</button>';
-  CATEGORIES.forEach(c => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-chip';
-    btn.dataset.cat = c.value;
-    btn.textContent = c.icon + ' ' + c.value;
-    row.appendChild(btn);
-  });
-  row.addEventListener('click', e => {
-    const chip = e.target.closest('.filter-chip');
-    if (!chip) return;
-    homeActiveCategory = chip.dataset.cat;
-    row.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
-    chip.classList.add('active');
-    renderExpensesList();
-  });
 }
 
 // ── Local storage ─────────────────────────────────────────
@@ -787,16 +754,11 @@ function updateBudgetOverview() {
 
 // ── Expense list ──────────────────────────────────────────
 function getFilteredHomeExpenses() {
-  return expenses
-    .slice(0, 30)
-    .filter(e => {
-      const matchCat    = !homeActiveCategory || e.category === homeActiveCategory;
-      const matchSearch = !homeSearchQuery ||
-        e.category.toLowerCase().includes(homeSearchQuery) ||
-        (e.notes || '').toLowerCase().includes(homeSearchQuery);
-      return matchCat && matchSearch;
-    })
-    .slice(0, 15);
+  if (!homeSearchQuery) return expenses.slice(0, 10);
+  return expenses.filter(e => {
+    const hay = (e.category + ' ' + (e.notes || '')).toLowerCase();
+    return hay.includes(homeSearchQuery);
+  }).slice(0, 10);
 }
 
 function renderExpensesList() {
@@ -1113,21 +1075,50 @@ function makeTokenClient(callback) {
   return google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback });
 }
 
+// ── Persist / restore access token across page navigations ─
+function saveAccessToken(token) { sessionStorage.setItem('gapi_access_token', token); }
+function getSavedAccessToken()  { return sessionStorage.getItem('gapi_access_token'); }
+function clearAccessToken()     { sessionStorage.removeItem('gapi_access_token'); }
+
+// ── Detect iOS Safari (blocks programmatic popups) ───────
+function isIOSSafari() {
+  return /iP(hone|od|ad)/.test(navigator.userAgent) &&
+         /WebKit/.test(navigator.userAgent) &&
+         !/CriOS|FxiOS|OPiOS|mercury/.test(navigator.userAgent);
+}
+
+// ── Show a tap-to-continue screen (required for iOS Safari) ─
+function showResumeScreen(onTap) {
+  // Reuse loading screen but replace content temporarily
+  const box = document.querySelector('#loadingScreen .screen-box');
+  const original = box.innerHTML;
+  box.innerHTML = `
+    <span class="screen-icon">💰</span>
+    <h2>Welcome Back</h2>
+    <p>Tap below to connect to your Google Drive</p>
+    <button class="primary-btn" id="resumeBtn" style="margin-top:8px">Connect to Google Drive</button>
+  `;
+  showScreen('loadingScreen');
+  document.getElementById('resumeBtn').addEventListener('click', () => {
+    box.innerHTML = `<span class="screen-icon">🔄</span><h2>Loading…</h2><p>Connecting to your Google Drive</p><div class="spinner"></div>`;
+    onTap();
+  });
+}
+
 // ── After login callback ──────────────────────────────────
 async function completeLoginAndSetup(tokenResponse) {
   if (!tokenResponse.access_token) return;
   currentAccessToken = tokenResponse.access_token;
+  saveAccessToken(currentAccessToken);
   gapi.client.setToken({ access_token: currentAccessToken });
 
   showScreen('loadingScreen');
-  await new Promise(r => setTimeout(r, 800)); // let GAPI stabilise
+  await new Promise(r => setTimeout(r, 500));
 
-  // Load local expenses + budgets first (for offline fallback)
   const localRaw = localStorage.getItem(`expenses_${currentUserEmail}`);
   expenses = localRaw ? JSON.parse(localRaw) : [];
   loadBudgets();
 
-  // Retry Drive check up to 3 times
   let folderOk = false;
   for (let i = 0; i < 3 && !folderOk; i++) {
     folderOk = await checkFolderExists();
@@ -1145,9 +1136,8 @@ async function completeLoginAndSetup(tokenResponse) {
     setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
     showToast(`✅ Welcome back, ${currentUserEmail.split('@')[0]}!`);
   } else {
-    // Check if returning user whose folder was deleted
     const hadSetup = localStorage.getItem(`drive_setup_${currentUserEmail}`);
-    renderAll(); // show local data while they decide
+    renderAll();
     showScreen(hadSetup === 'complete' ? 'folderMissingScreen' : 'setupScreen');
   }
 }
@@ -1161,11 +1151,14 @@ async function handleCredentialResponse(response) {
 
   showScreen('loadingScreen');
   await initGapi();
+  // On iOS Safari the token request must come from a direct tap — the
+  // Google sign-in button IS already a direct tap so this path is fine.
   makeTokenClient(completeLoginAndSetup).requestAccessToken();
 }
 
 // ── Logout ────────────────────────────────────────────────
 function logout() {
+  clearAccessToken();
   ['google_token'].concat(
     currentUserEmail
       ? [`drive_setup_${currentUserEmail}`, `spreadsheet_id_${currentUserEmail}`]
@@ -1188,6 +1181,36 @@ async function checkLogin() {
   expenses = localRaw ? JSON.parse(localRaw) : [];
   loadBudgets();
 
+  // ── Try reusing saved access token first ──────────────
+  const savedToken = getSavedAccessToken();
+  if (savedToken) {
+    currentAccessToken = savedToken;
+    showScreen('loadingScreen');
+    await initGapi();
+    gapi.client.setToken({ access_token: currentAccessToken });
+    spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
+    try {
+      await gapi.client.drive.files.list({ q: 'trashed=false', pageSize: 1, fields: 'files(id)' });
+      await loadExpensesFromSheet(false);
+      document.getElementById('userEmailDisplay').textContent = currentUserEmail;
+      showScreen('mainApp');
+      setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
+      return;
+    } catch (e) {
+      clearAccessToken(); // expired — fall through
+    }
+  }
+
+  // ── iOS Safari: must request token from a direct user tap ──
+  if (isIOSSafari()) {
+    await initGapi();
+    showResumeScreen(() => {
+      makeTokenClient(completeLoginAndSetup).requestAccessToken();
+    });
+    return;
+  }
+
+  // ── Other browsers: request silently ──────────────────
   showScreen('loadingScreen');
   await initGapi();
   makeTokenClient(completeLoginAndSetup).requestAccessToken();
@@ -1196,12 +1219,11 @@ async function checkLogin() {
 // ── Wire up events ────────────────────────────────────────
 window.onload = function () {
   buildCategorySelects();
-  buildCategoryFilterChips();
   document.getElementById('date').value = todayStr();
 
-  // Google sign-in button
+  // Google sign-in button — force English locale
   google.accounts.id.initialize({ client_id: CLIENT_ID, callback: handleCredentialResponse });
-  google.accounts.id.renderButton(document.getElementById('googleSignInButton'), { theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular' });
+  google.accounts.id.renderButton(document.getElementById('googleSignInButton'), { theme: 'outline', size: 'large', text: 'continue_with', shape: 'rectangular', locale: 'en' });
 
   // Screen buttons
   document.getElementById('createFolderBtn').addEventListener('click',       () => createFolderAndSheet(false));
