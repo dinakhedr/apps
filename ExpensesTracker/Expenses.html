@@ -702,12 +702,13 @@ function renderCategorySummary(list) {
     let budgetBadge = '';
     if (budget && budget > 0) {
       const spent = totals[cat];
+      const budgetFmt = budget.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
       if (spent >= budget) {
-        budgetBadge = `<span class="cat-budget-badge cat-budget-over">🚨 Over budget</span>`;
+        budgetBadge = `<span class="cat-budget-badge cat-budget-over">🚨 Over EGP ${budgetFmt} limit</span>`;
       } else if (spent >= budget * 0.8) {
-        budgetBadge = `<span class="cat-budget-badge cat-budget-warning">⚠️ Near limit</span>`;
+        budgetBadge = `<span class="cat-budget-badge cat-budget-warning">⚠️ Near EGP ${budgetFmt} limit</span>`;
       } else {
-        budgetBadge = `<span class="cat-budget-badge cat-budget-ok">✅ On track</span>`;
+        budgetBadge = `<span class="cat-budget-badge cat-budget-ok">✅ EGP ${budgetFmt} limit</span>`;
       }
     }
     return `
