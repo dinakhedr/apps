@@ -1226,10 +1226,29 @@ async function completeLoginAndSetup(tokenResponse) {
   expenses = localRaw ? JSON.parse(localRaw) : [];
   loadBudgets();
 
+  // If we already have the spreadsheetId cached, skip the slow Drive search
+  const cachedSheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
+  if (cachedSheetId) {
+    spreadsheetId = cachedSheetId;
+    try {
+      await ensureCategoriesTab(spreadsheetId);
+      await loadExpensesFromSheet(false);
+      document.getElementById('userEmailDisplay').textContent = currentUserEmail;
+      showScreen('mainApp');
+      setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
+      showToast(`✅ Welcome back, ${currentUserEmail.split('@')[0]}!`);
+      _setupRunning = false;
+      return;
+    } catch(e) {
+      // spreadsheetId may be stale — fall through to full search
+      console.warn('Cached sheet failed, retrying Drive search', e);
+    }
+  }
+
   let folderOk = false;
   for (let i = 0; i < 3 && !folderOk; i++) {
     folderOk = await checkFolderExists();
-    if (!folderOk && i < 2) await new Promise(r => setTimeout(r, 600));
+    if (!folderOk && i < 2) await new Promise(r => setTimeout(r, 800));
   }
 
   if (folderOk) {

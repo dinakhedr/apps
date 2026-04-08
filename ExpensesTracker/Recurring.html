@@ -29,9 +29,7 @@
       --warning:    #f59e0b;
       --danger:     #ef4444;
       --radius-lg:  24px;
-      --radius-md:  16px;
       --radius-sm:  10px;
-      --shadow:     0 8px 32px rgba(91,94,244,0.10);
       --nav-h:      72px;
     }
 
@@ -52,15 +50,8 @@
     .container { max-width: 520px; margin: 0 auto; padding: 0 18px; }
 
     /* ── Header ── */
-    .header {
-      display: flex; align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-    .header h1 {
-      font-family: 'Sora', sans-serif; font-size: 22px;
-      font-weight: 800; color: #fff; letter-spacing: -0.5px;
-    }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .header h1 { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
 
     /* ── Stats banner ── */
     .stats-row {
@@ -68,129 +59,124 @@
       border: 1px solid rgba(255,255,255,0.25);
       backdrop-filter: blur(8px);
       border-radius: var(--radius-lg);
-      padding: 18px 22px; margin-bottom: 18px;
+      padding: 16px 20px; margin-bottom: 16px;
       display: flex; justify-content: space-between; align-items: center;
     }
     .stats-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.06em; }
-    .stats-total { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; color: #fff; line-height: 1.1; margin-top: 3px; }
+    .stats-total { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1; margin-top: 3px; }
     .stats-sub   { font-size: 11px; color: rgba(255,255,255,0.70); margin-top: 2px; }
 
     /* ── Add button ── */
     .add-btn {
-      width: 100%; padding: 14px;
+      width: 100%; padding: 13px;
       background: #fff; color: var(--brand);
       border: none; border-radius: var(--radius-sm);
       font-size: 15px; font-weight: 700;
       font-family: 'Sora', sans-serif; cursor: pointer;
       box-shadow: 0 4px 16px rgba(0,0,0,0.10);
-      transition: opacity 0.15s, transform 0.15s;
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-bottom: 18px;
+      margin-bottom: 16px; transition: opacity 0.15s, transform 0.15s;
     }
     .add-btn:active { transform: scale(0.97); opacity: 0.9; }
 
     /* ── Card ── */
     .card {
       background: var(--surface); border-radius: var(--radius-lg);
-      padding: 18px 16px; margin-bottom: 16px; box-shadow: var(--shadow);
-    }
-    .card-title {
-      font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 700;
-      color: var(--text-2); margin-bottom: 14px; text-transform: uppercase;
-      letter-spacing: 0.06em;
-      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; box-shadow: 0 8px 32px rgba(91,94,244,0.10);
+      overflow: hidden;
     }
 
-    /* ── Subscription row — new clean design ── */
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex; border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1; padding: 13px 8px; border: none; background: none;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--text-3); cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; transition: all 0.15s; position: relative;
+    }
+    .tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
+    .tab-badge {
+      display: inline-block; background: var(--danger); color: #fff;
+      font-size: 10px; font-weight: 700; border-radius: 20px;
+      padding: 1px 6px; margin-left: 5px; vertical-align: middle;
+    }
+    .tab-content { padding: 16px; display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Subscription row ── */
     .sub-card {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 0; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 11px;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
       position: relative;
     }
     .sub-card:last-child { border-bottom: none; padding-bottom: 0; }
     .sub-card:first-child { padding-top: 0; }
 
-    /* coloured left indicator */
+    /* left status bar */
     .sub-card::before {
-      content: '';
-      position: absolute; left: -16px; top: 50%; transform: translateY(-50%);
-      width: 3px; height: 36px; border-radius: 0 3px 3px 0;
-      background: transparent; transition: background 0.2s;
+      content: ''; position: absolute; left: -16px; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 34px; border-radius: 0 3px 3px 0; background: transparent;
     }
-    .sub-card.overdue::before  { background: var(--danger); }
-    .sub-card.paid-state::before { background: var(--success); }
+    .sub-card.overdue::before   { background: var(--danger); }
+    .sub-card.paid-row::before  { background: var(--success); }
 
     .sub-icon {
-      width: 42px; height: 42px; border-radius: 13px;
-      background: var(--surface-2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
+      width: 40px; height: 40px; border-radius: 12px; background: var(--surface-2);
+      display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0;
     }
     .sub-card.overdue  .sub-icon { background: #fef2f2; }
-    .sub-card.paid-state .sub-icon { background: #f0fdf4; }
+    .sub-card.paid-row .sub-icon { background: #f0fdf4; }
 
     .sub-info { flex: 1; min-width: 0; }
     .sub-name {
       font-weight: 700; font-size: 14px; color: var(--text);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .sub-card.paid-state .sub-name { color: var(--text-3); }
+    .sub-card.paid-row .sub-name { color: var(--text-3); }
+    .sub-meta { font-size: 11px; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+    .sub-freq  { font-weight: 600; color: var(--text-3); }
+    .sub-dot   { color: var(--border); }
+    .sub-status { font-weight: 600; }
+    .sub-status.overdue  { color: var(--danger); }
+    .sub-status.upcoming { color: var(--text-3); }
+    .sub-status.paid     { color: var(--success); }
 
-    .sub-meta {
-      font-size: 11px; margin-top: 3px;
-      display: flex; align-items: center; gap: 5px;
-    }
-    .sub-meta-freq {
-      font-weight: 600; color: var(--text-3);
-    }
-    .sub-meta-dot { color: var(--border); }
-    .sub-date-label {
-      font-weight: 600;
-    }
-    .sub-date-label.overdue  { color: var(--danger); }
-    .sub-date-label.upcoming { color: var(--text-3); }
-    .sub-date-label.paid     { color: var(--success); }
-
-    .sub-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    .sub-amount {
-      font-weight: 700; font-size: 13px; color: var(--brand); text-align: right;
-      min-width: 72px;
-    }
-    .sub-card.paid-state .sub-amount { color: var(--text-3); }
+    .sub-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .sub-amount { font-weight: 700; font-size: 13px; color: var(--brand); min-width: 68px; text-align: right; }
+    .sub-card.paid-row .sub-amount { color: var(--text-3); }
 
     /* Pay button */
     .pay-btn {
       width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-      border: 1.5px solid var(--success); background: none; color: var(--success);
       font-size: 15px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
+      transition: all 0.15s; border: 1.5px solid;
     }
-    .pay-btn:active { transform: scale(0.93); }
-    .pay-btn.paid   { background: #d1fae5; border-color: var(--success); cursor: default; }
-    .pay-btn.upcoming-pay {
-      border-color: var(--border); color: var(--text-3);
-    }
+    .pay-btn.can-pay   { border-color: var(--success); background: none; color: var(--success); }
+    .pay-btn.can-pay:active { transform: scale(0.92); background: #d1fae5; }
+    .pay-btn.paid      { border-color: var(--success); background: #d1fae5; color: var(--success); cursor: default; }
+    .pay-btn.future    { border-color: var(--border); background: none; color: var(--text-3); cursor: not-allowed; opacity: 0.5; }
 
-    /* More (⋯) button */
+    /* More button */
     .more-btn {
       width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
       border: none; background: none; color: var(--text-3);
-      font-size: 18px; cursor: pointer; letter-spacing: -1px;
+      font-size: 16px; cursor: pointer; letter-spacing: 1px;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
+      transition: background 0.12s;
     }
-    .more-btn:hover  { background: var(--surface-2); }
-    .more-btn:active { background: var(--border); }
+    .more-btn:active { background: var(--surface-2); }
 
     /* Inactive rows */
-    .sub-card.inactive { opacity: 0.50; }
+    .sub-card.inactive { opacity: 0.55; }
     .badge-inactive {
       background: #e2e2ea; color: #6e6e8a;
-      font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 20px;
+      font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 20px;
     }
 
-    /* ── More actions bottom sheet ── */
+    /* ── More actions sheet ── */
     .sheet-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.40);
       z-index: 4000; display: flex; align-items: flex-end; justify-content: center;
@@ -199,19 +185,19 @@
     .sheet-backdrop.open { opacity: 1; pointer-events: all; }
     .sheet {
       background: #fff; border-radius: 24px 24px 0 0;
-      padding: 16px 16px 36px; width: 100%; max-width: 520px;
+      padding: 14px 16px 36px; width: 100%; max-width: 520px;
       transform: translateY(100%);
       transition: transform 0.28s cubic-bezier(.34,1.2,.64,1);
     }
     .sheet-backdrop.open .sheet { transform: translateY(0); }
-    .sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 16px; }
-    .sheet-title { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 12px; padding: 0 4px; }
+    .sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 14px; }
+    .sheet-title  { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 10px; padding: 0 4px; }
     .sheet-action {
       display: flex; align-items: center; gap: 14px;
       padding: 13px 4px; border-bottom: 1px solid var(--border);
-      cursor: pointer; border-radius: 8px; transition: background 0.12s;
-      font-size: 15px; color: var(--text); font-weight: 500;
-      background: none; border: none; width: 100%; text-align: left;
+      cursor: pointer; font-size: 15px; color: var(--text); font-weight: 500;
+      background: none; border-top: none; border-left: none; border-right: none;
+      width: 100%; text-align: left; transition: background 0.12s; border-radius: 8px;
     }
     .sheet-action:last-child { border-bottom: none; }
     .sheet-action:active { background: var(--surface-2); }
@@ -219,17 +205,15 @@
     .sheet-action.danger { color: var(--danger); }
 
     /* ── Log rows ── */
+    .log-section { padding: 16px; }
+    .log-title { font-size: 13px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; display: flex; justify-content: space-between; }
     .log-row {
       display: flex; align-items: center; gap: 10px;
       padding: 10px 0; border-bottom: 1px solid var(--border);
     }
     .log-row:last-child { border-bottom: none; }
-    .log-icon {
-      width: 34px; height: 34px; border-radius: 10px;
-      background: #f0eef9; display: flex; align-items: center;
-      justify-content: center; font-size: 17px; flex-shrink: 0;
-    }
-    .log-info { flex: 1; min-width: 0; }
+    .log-icon  { width: 34px; height: 34px; border-radius: 10px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .log-info  { flex: 1; min-width: 0; }
     .log-name  { font-weight: 700; color: var(--text); font-size: 13px; }
     .log-date  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
     .log-amount { font-weight: 700; color: var(--success); font-size: 13px; flex-shrink: 0; }
@@ -253,32 +237,20 @@
     .modal-title  { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 20px; }
     .form-row     { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .form-group   { margin-bottom: 0; }
-    .form-group label {
-      display: block; font-size: 11px; font-weight: 700; color: var(--text-2);
-      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
-    }
+    .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
     .form-group input, .form-group select {
       width: 100%; padding: 12px 14px;
       border: 2px solid var(--border); border-radius: var(--radius-sm);
       font-size: 15px; font-family: 'DM Sans', sans-serif;
       background: var(--surface-2); color: var(--text);
     }
-    .form-group input:focus, .form-group select:focus {
-      outline: none; border-color: var(--brand); background: #fff;
-    }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--brand); background: #fff; }
     .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-cancel {
-      flex: 1; padding: 13px; background: var(--surface-2); color: var(--text-2);
-      border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer;
-    }
-    .btn-save {
-      flex: 2; padding: 13px; background: var(--brand-grad); color: #fff;
-      border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700;
-      cursor: pointer; box-shadow: 0 4px 14px rgba(91,94,244,0.28);
-    }
+    .btn-cancel { flex: 1; padding: 13px; background: var(--surface-2); color: var(--text-2); border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-save   { flex: 2; padding: 13px; background: var(--brand-grad); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(91,94,244,0.28); }
     .btn-danger { flex: 1; background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
 
-    /* ── Bottom nav bar ── */
+    /* ── Bottom nav ── */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
       display: flex; flex-direction: column; align-items: center;
@@ -290,9 +262,7 @@
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
     }
-    .nav-tabs {
-      display: flex; gap: 8px; width: 100%; max-width: 400px; margin-bottom: 8px;
-    }
+    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; }
     .nav-tab {
       flex: 1; display: flex; flex-direction: column; align-items: center;
       gap: 3px; padding: 8px 4px; border-radius: 14px;
@@ -301,17 +271,8 @@
       cursor: pointer; transition: background 0.15s;
     }
     .nav-tab:active { background: rgba(255,255,255,0.30); }
-    .nav-tab.active { background: rgba(255,255,255,0.30); }
+    .nav-tab.active { background: rgba(255,255,255,0.32); }
     .nav-tab-icon { font-size: 18px; line-height: 1; }
-    .nav-logout {
-      width: 100%; max-width: 400px;
-      padding: 9px; border-radius: 12px;
-      background: rgba(239,68,68,0.18); color: #fecaca;
-      border: 1px solid rgba(239,68,68,0.30);
-      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: background 0.15s;
-      display: none; /* hidden for now — shown only if needed */
-    }
 
     /* ── Toast ── */
     .toast {
@@ -331,18 +292,10 @@
       backdrop-filter: blur(4px); z-index: 9000;
       display: flex; align-items: center; justify-content: center;
     }
-    .loading-box {
-      background: #fff; border-radius: 20px; padding: 28px 32px;
-      text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-    }
-    .spinner {
-      display: inline-block; width: 24px; height: 24px;
-      border: 3px solid #ededff; border-top-color: var(--brand);
-      border-radius: 50%; animation: spin 0.7s linear infinite;
-    }
+    .loading-box { background: #fff; border-radius: 20px; padding: 28px 32px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+    .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #ededff; border-top-color: var(--brand); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .empty-state { text-align: center; padding: 32px 20px; color: var(--text-3); font-size: 14px; }
+    .empty-state { text-align: center; padding: 28px 20px; color: var(--text-3); font-size: 14px; }
   </style>
 </head>
 <body>
@@ -350,12 +303,12 @@
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-box">
     <div class="spinner"></div>
-    <p style="margin-top:12px;font-size:14px;color:#6e6e8a">Loading recurring expenses…</p>
+    <p style="margin-top:12px;font-size:14px;color:#6e6e8a">Loading…</p>
   </div>
 </div>
 
 <div class="container">
-  <!-- Header -->
+
   <div class="header">
     <h1>🔄 Recurring</h1>
   </div>
@@ -369,36 +322,41 @@
     </div>
     <div style="text-align:right">
       <div class="stats-label">Next due</div>
-      <div class="stats-total" id="nextPaymentBadge" style="font-size:20px">—</div>
+      <div class="stats-total" id="nextPaymentBadge" style="font-size:19px">—</div>
     </div>
   </div>
 
-  <!-- Add button -->
   <button class="add-btn" onclick="openAddModal()">➕ Add Recurring Expense</button>
 
-  <!-- Active list -->
+  <!-- Main card with tabs -->
   <div class="card">
-    <div class="card-title">
-      <span>Active</span>
-      <span id="overdueCount" style="color:var(--danger);font-size:11px;display:none"></span>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabActiveBtn" onclick="switchTab('active')">
+        Active <span class="tab-badge" id="overdueCount" style="display:none"></span>
+      </button>
+      <button class="tab-btn" id="tabPausedBtn" onclick="switchTab('paused')">
+        Paused / Cancelled
+      </button>
     </div>
-    <div id="activeList"></div>
-  </div>
-
-  <!-- Inactive list -->
-  <div class="card" id="inactiveCard" style="display:none">
-    <div class="card-title">Paused / Cancelled</div>
-    <div id="inactiveList"></div>
+    <div class="tab-content active" id="tabActive">
+      <div id="activeList"></div>
+    </div>
+    <div class="tab-content" id="tabPaused">
+      <div id="inactiveList"></div>
+    </div>
   </div>
 
   <!-- Recurring Log -->
   <div class="card" id="logCard" style="display:none">
-    <div class="card-title">
-      <span>📒 Paid This Month</span>
-      <span id="logMonthLabel" style="font-size:11px;color:var(--text-3);font-weight:500;text-transform:none;letter-spacing:0"></span>
+    <div class="log-section">
+      <div class="log-title">
+        <span>📒 Paid This Month</span>
+        <span id="logMonthLabel" style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-3)"></span>
+      </div>
+      <div id="logList"></div>
     </div>
-    <div id="logList"></div>
   </div>
+
 </div>
 
 <!-- Bottom nav -->
@@ -483,13 +441,14 @@
   </div>
 </div>
 
-<!-- More actions bottom sheet -->
+<!-- More sheet -->
 <div class="sheet-backdrop" id="moreSheet">
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title" id="sheetTitle">Options</div>
     <button class="sheet-action" id="sheetPause" onclick="sheetToggleActive()">
-      <span class="sheet-action-icon">⏸️</span><span id="sheetPauseLabel">Pause</span>
+      <span class="sheet-action-icon" id="sheetPauseIcon">⏸️</span>
+      <span id="sheetPauseLabel">Pause</span>
     </button>
     <button class="sheet-action" onclick="sheetEdit()">
       <span class="sheet-action-icon">✏️</span>Edit
@@ -502,299 +461,165 @@
 
 <script>
 // ── State ──────────────────────────────────────────────────
-let recurringList     = [];
-let spreadsheetId     = null;
-let currentUserEmail  = null;
+let recurringList      = [];
+let spreadsheetId      = null;
+let currentUserEmail   = null;
 let currentAccessToken = null;
-let editingId         = null;
-let sheetTargetIdx    = null; // index used by more-sheet actions
+let editingId          = null;
+let sheetTargetIdx     = null;
+let activeTab          = 'active';
 
 const RECURRING_SHEET     = 'Recurring';
 const RECURRING_LOG_SHEET = 'Recurring Log';
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-// ── Paid tracking (localStorage, resets each month) ────────
-function paidKey() {
-  const n = new Date();
-  return `paid_${currentUserEmail}_${n.getFullYear()}_${n.getMonth()+1}`;
-}
-function getPaidSet()     { const r = localStorage.getItem(paidKey()); return r ? new Set(JSON.parse(r)) : new Set(); }
-function savePaidSet(s)   { localStorage.setItem(paidKey(), JSON.stringify([...s])); }
-function isPaid(id)       { return getPaidSet().has(String(id)); }
+// ── Paid tracking ──────────────────────────────────────────
+function paidKey() { const n=new Date(); return `paid_${currentUserEmail}_${n.getFullYear()}_${n.getMonth()+1}`; }
+function getPaidSet()   { const r=localStorage.getItem(paidKey()); return r?new Set(JSON.parse(r)):new Set(); }
+function savePaidSet(s) { localStorage.setItem(paidKey(), JSON.stringify([...s])); }
+function isPaid(id)     { return getPaidSet().has(String(id)); }
 
 // ── Category icons ─────────────────────────────────────────
-const categoryIcon = {
-  'Entertainment':'🎬','Music':'🎵','Podcasts':'🎙️',
-  'Phone Bill':'📱','Rent':'🏠','Transportation':'🚗',
-  'Digital Tools':'💻','Other':'🔄'
-};
+const categoryIcon = { 'Entertainment':'🎬','Music':'🎵','Podcasts':'🎙️','Phone Bill':'📱','Rent':'🏠','Transportation':'🚗','Digital Tools':'💻','Other':'🔄' };
 
 // ── Helpers ────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg, type='success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = `toast show ${type}`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  const t=document.getElementById('toast'); t.textContent=msg; t.className=`toast show ${type}`;
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
 }
-function formatMoney(n) {
-  return `EGP ${Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-}
-function escapeHtml(s) {
-  return (s||'').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
-}
-function todayYMD() { return new Date().toISOString().split('T')[0]; }
+function formatMoney(n) { return `EGP ${Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`; }
+function escapeHtml(s)  { return (s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+function todayYMD()     { return new Date().toISOString().split('T')[0]; }
 
-// ── Due-this-month logic ───────────────────────────────────
+// ── Tab switch ─────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tabActiveBtn').classList.toggle('active', tab==='active');
+  document.getElementById('tabPausedBtn').classList.toggle('active', tab==='paused');
+  document.getElementById('tabActive').classList.toggle('active', tab==='active');
+  document.getElementById('tabPaused').classList.toggle('active', tab==='paused');
+}
+
+// ── Due-this-month check ───────────────────────────────────
 function isDueThisMonth(sub) {
-  const now   = new Date();
-  const month = now.getMonth() + 1;
-  const year  = now.getFullYear();
-  if (sub.frequency === 'Monthly') {
-    return sub.startMonth <= month || (sub.startMonth === 1 && month >= 1);
-  }
-  if (sub.frequency === 'Quarterly') {
-    const diff = (year - 2024) * 12 + (month - sub.startMonth);
-    return diff >= 0 && diff % 3 === 0;
-  }
-  if (sub.frequency === 'Annual') {
-    return sub.startMonth === month;
-  }
+  const now=new Date(); const month=now.getMonth()+1; const year=now.getFullYear();
+  if (sub.frequency==='Monthly')   return sub.startMonth<=month;
+  if (sub.frequency==='Quarterly') { const d=(year-2024)*12+(month-sub.startMonth); return d>=0&&d%3===0; }
+  if (sub.frequency==='Annual')    return sub.startMonth===month;
   return false;
 }
 
+// ── Status info ────────────────────────────────────────────
+// Returns { state: 'paid'|'overdue'|'upcoming'|'future', label, payable }
 function getStatusInfo(sub) {
-  const now   = new Date();
-  const today = now.getDate();
-  const paid  = isPaid(sub.id);
-
-  if (paid) {
-    return { state: 'paid', label: '✅ Paid', labelClass: 'paid' };
+  const now=new Date(); const today=now.getDate();
+  if (isPaid(sub.id)) return { state:'paid',    label:`✅ Paid`,                    payable:false };
+  if (!isDueThisMonth(sub)) {
+    // find next due month
+    const next = getNextPaymentDate(sub);
+    const lbl  = next ? `${MONTHS[next.getMonth()]} ${next.getDate()}` : '—';
+    return { state:'future',  label:lbl,  payable:false };
   }
-
-  if (isDueThisMonth(sub)) {
-    if (sub.paymentDay <= today) {
-      // overdue — payment day passed, not yet logged
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return {
-        state: 'overdue',
-        label: `⚠️ Due ${months[now.getMonth()]} ${sub.paymentDay}`,
-        labelClass: 'overdue'
-      };
-    } else {
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return {
-        state: 'upcoming',
-        label: `${months[now.getMonth()]} ${sub.paymentDay}`,
-        labelClass: 'upcoming'
-      };
-    }
-  }
-
-  // not due this month — show next date
-  const next = getNextPaymentDate(sub);
-  if (!next) return { state: 'upcoming', label: '—', labelClass: 'upcoming' };
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return {
-    state: 'upcoming',
-    label: `${months[next.getMonth()]} ${next.getDate()}`,
-    labelClass: 'upcoming'
-  };
+  if (sub.paymentDay <= today) return { state:'overdue', label:`⚠️ Due ${MONTHS[now.getMonth()]} ${sub.paymentDay}`, payable:true };
+  return { state:'upcoming', label:`${MONTHS[now.getMonth()]} ${sub.paymentDay}`, payable:true };
 }
 
 // ── Next payment date ──────────────────────────────────────
-function getNextPaymentDate(sub, ref = new Date()) {
+function getNextPaymentDate(sub, ref=new Date()) {
   const { frequency, startMonth, paymentDay } = sub;
-  const d = Math.min(paymentDay, 28);
-  if (frequency === 'Monthly') {
-    let c = new Date(ref.getFullYear(), startMonth-1, d);
-    while (c <= ref) c.setMonth(c.getMonth()+1);
-    c.setDate(Math.min(paymentDay, new Date(c.getFullYear(), c.getMonth()+1, 0).getDate()));
-    return c;
+  const d = Math.min(paymentDay,28);
+  if (frequency==='Monthly') {
+    let c=new Date(ref.getFullYear(),startMonth-1,d);
+    while(c<=ref) c.setMonth(c.getMonth()+1);
+    c.setDate(Math.min(paymentDay,new Date(c.getFullYear(),c.getMonth()+1,0).getDate())); return c;
   }
-  if (frequency === 'Quarterly') {
-    let c = new Date(ref.getFullYear(), startMonth-1, d);
-    while (c <= ref) c.setMonth(c.getMonth()+3);
-    c.setDate(Math.min(paymentDay, new Date(c.getFullYear(), c.getMonth()+1, 0).getDate()));
-    return c;
+  if (frequency==='Quarterly') {
+    let c=new Date(ref.getFullYear(),startMonth-1,d);
+    while(c<=ref) c.setMonth(c.getMonth()+3);
+    c.setDate(Math.min(paymentDay,new Date(c.getFullYear(),c.getMonth()+1,0).getDate())); return c;
   }
-  if (frequency === 'Annual') {
-    let c = new Date(ref.getFullYear(), startMonth-1, d);
-    if (c <= ref) c.setFullYear(c.getFullYear()+1);
-    c.setDate(Math.min(paymentDay, new Date(c.getFullYear(), c.getMonth()+1, 0).getDate()));
-    return c;
+  if (frequency==='Annual') {
+    let c=new Date(ref.getFullYear(),startMonth-1,d);
+    if(c<=ref) c.setFullYear(c.getFullYear()+1);
+    c.setDate(Math.min(paymentDay,new Date(c.getFullYear(),c.getMonth()+1,0).getDate())); return c;
   }
   return null;
 }
 
-// ── Sheet parsing ──────────────────────────────────────────
-function parseRecurringRow(row) {
-  if (row.length < 8) {
-    return {
-      id: row[0] ? parseInt(row[0]) : Date.now()+Math.random(),
-      name: row[1]||'', category:'Other',
-      frequency: row[2]||'Monthly', amount: parseFloat(row[3])||0,
-      startMonth: parseInt(row[4])||1, paymentDay: parseInt(row[5])||1,
-      active: row[6]==='true'||row[6]===true,
-    };
-  }
-  return {
-    id: row[0] ? parseInt(row[0]) : Date.now()+Math.random(),
-    name: row[1]||'', category: row[2]||'Other',
-    frequency: row[3]||'Monthly', amount: parseFloat(row[4])||0,
-    startMonth: parseInt(row[5])||1, paymentDay: parseInt(row[6])||1,
-    active: row[7]==='true'||row[7]===true,
-  };
-}
-function recurringToRow(s) {
-  return [s.id, s.name, s.category, s.frequency, s.amount, s.startMonth, s.paymentDay, s.active?'true':'false'];
-}
-
-// ── Sheet I/O ──────────────────────────────────────────────
-async function loadRecurringFromSheet() {
-  if (!spreadsheetId) return false;
-  try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range:`${RECURRING_SHEET}!A2:H` });
-    recurringList = (res.result.values||[]).map(parseRecurringRow).filter(s=>s.name.trim());
-    saveRecurringLocal(); return true;
-  } catch(e) { console.error(e); return false; }
-}
-async function saveRecurringToSheet() {
-  if (!spreadsheetId) return false;
-  try {
-    await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range:`${RECURRING_SHEET}!A2:H` });
-    if (recurringList.length)
-      await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId, range:`${RECURRING_SHEET}!A2:H`, valueInputOption:'RAW', resource:{values:recurringList.map(recurringToRow)} });
-    return true;
-  } catch(e) { console.error(e); return false; }
-}
-
-async function ensureRecurringTab() {
-  try {
-    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
-    const exists = meta.result.sheets.some(s => s.properties.title === RECURRING_SHEET);
-    if (!exists) {
-      await gapi.client.sheets.spreadsheets.batchUpdate({ spreadsheetId, resource:{ requests:[{ addSheet:{ properties:{ title:RECURRING_SHEET } } }] } });
-      await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId, range:`${RECURRING_SHEET}!A1:H1`, valueInputOption:'RAW', resource:{ values:[['ID','Name','Category','Frequency','Amount','StartMonth','PaymentDay','Active']] } });
-    } else {
-      // Migrate old format if Category column missing
-      const hdr = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range:`${RECURRING_SHEET}!A1:H1` });
-      const headers = hdr.result.values?.[0] || [];
-      if (headers.length < 3 || headers[2] !== 'Category') {
-        const old = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range:`${RECURRING_SHEET}!A2:H` });
-        const newRows = (old.result.values||[]).map(r => r.length===7 ? [r[0],r[1],'Other',r[2],r[3],r[4],r[5],r[6]] : r);
-        await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range:`${RECURRING_SHEET}!A1:H` });
-        await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId, range:`${RECURRING_SHEET}!A1:H1`, valueInputOption:'RAW', resource:{ values:[['ID','Name','Category','Frequency','Amount','StartMonth','PaymentDay','Active']] } });
-        if (newRows.length) await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId, range:`${RECURRING_SHEET}!A2:H`, valueInputOption:'RAW', resource:{ values:newRows } });
-      }
-    }
-  } catch(e) { console.warn(e); }
-}
-
-async function ensureRecurringLogTab() {
-  try {
-    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
-    const exists = meta.result.sheets.some(s => s.properties.title === RECURRING_LOG_SHEET);
-    if (!exists) {
-      await gapi.client.sheets.spreadsheets.batchUpdate({ spreadsheetId, resource:{ requests:[{ addSheet:{ properties:{ title:RECURRING_LOG_SHEET } } }] } });
-      await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId, range:`${RECURRING_LOG_SHEET}!A1:F1`, valueInputOption:'RAW', resource:{ values:[['Timestamp','Date','Name','Category','Amount','Notes']] } });
-    }
-  } catch(e) { console.warn('ensureRecurringLogTab', e); }
-}
-
-async function writeToRecurringLog(sub, paidDate) {
-  const row = [new Date().toISOString(), paidDate, sub.name, sub.category, sub.amount, `Recurring: ${sub.name}`];
-  try {
-    await gapi.client.sheets.spreadsheets.values.append({ spreadsheetId, range:`${RECURRING_LOG_SHEET}!A2:F`, valueInputOption:'RAW', resource:{ values:[row] } });
-    return true;
-  } catch(e) { console.error(e); return false; }
-}
-
-async function loadRecurringLog() {
-  try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range:`${RECURRING_LOG_SHEET}!A2:F` });
-    return (res.result.values||[]).map(r=>({ timestamp:r[0]||'', date:r[1]||'', name:r[2]||'', category:r[3]||'', amount:parseFloat(r[4])||0, notes:r[5]||'' }));
-  } catch(e) { return []; }
-}
-
-// ── Local storage ──────────────────────────────────────────
-function saveRecurringLocal() { if (currentUserEmail) localStorage.setItem(`recurring_${currentUserEmail}`, JSON.stringify(recurringList)); }
-function loadRecurringLocal() { if (currentUserEmail) { const r=localStorage.getItem(`recurring_${currentUserEmail}`); if(r) recurringList=JSON.parse(r); } }
-
 // ── Render ─────────────────────────────────────────────────
 function render() {
-  const active   = recurringList.filter(s => s.active);
-  const inactive = recurringList.filter(s => !s.active);
+  // Filter: Active tab shows ONLY subscriptions due this month (or overdue/paid this month)
+  // Future ones (not due this month) are still active but not shown in this month's view
+  const allActive  = recurringList.filter(s=>s.active);
+  const inactive   = recurringList.filter(s=>!s.active);
 
-  // Sort active: overdue first, then upcoming by day, then paid
-  const sorted = [...active].sort((a, b) => {
-    const sa = getStatusInfo(a), sb = getStatusInfo(b);
-    const order = { overdue:0, upcoming:1, paid:2 };
-    if (order[sa.state] !== order[sb.state]) return order[sa.state] - order[sb.state];
-    return a.paymentDay - b.paymentDay;
+  // This month's active = due this month OR already paid this month
+  const thisMonthActive = allActive.filter(s => isDueThisMonth(s) || isPaid(s.id));
+
+  // Sort: overdue → upcoming → paid
+  const order = { overdue:0, upcoming:1, future:2, paid:3 };
+  const sorted = [...thisMonthActive].sort((a,b) => {
+    const sa=getStatusInfo(a), sb=getStatusInfo(b);
+    if (order[sa.state]!==order[sb.state]) return order[sa.state]-order[sb.state];
+    return a.paymentDay-b.paymentDay;
   });
 
-  const activeContainer  = document.getElementById('activeList');
-  const inactiveContainer = document.getElementById('inactiveList');
-  const inactiveCard     = document.getElementById('inactiveCard');
-  const overdueCount     = document.getElementById('overdueCount');
+  // Overdue badge
+  const overdueN = sorted.filter(s=>getStatusInfo(s).state==='overdue').length;
+  const badge = document.getElementById('overdueCount');
+  if (overdueN>0) { badge.textContent=overdueN; badge.style.display='inline-block'; }
+  else badge.style.display='none';
 
-  const overdueN = active.filter(s => { const si = getStatusInfo(s); return si.state === 'overdue'; }).length;
-  if (overdueN > 0) {
-    overdueCount.textContent = `${overdueN} overdue`;
-    overdueCount.style.display = 'block';
-  } else {
-    overdueCount.style.display = 'none';
-  }
-
-  if (sorted.length === 0) {
-    activeContainer.innerHTML = '<div class="empty-state">No active recurring expenses yet</div>';
+  // Active list
+  const activeContainer = document.getElementById('activeList');
+  if (sorted.length===0) {
+    activeContainer.innerHTML='<div class="empty-state">No recurring expenses due this month</div>';
   } else {
     activeContainer.innerHTML = sorted.map(sub => {
-      const globalIdx = recurringList.findIndex(s => s.id === sub.id);
+      const globalIdx = recurringList.findIndex(s=>s.id===sub.id);
       const si   = getStatusInfo(sub);
-      const icon = categoryIcon[sub.category] || '🔄';
-      const paid = si.state === 'paid';
-      const overdue = si.state === 'overdue';
-
-      const payBtnClass = paid ? 'pay-btn paid' : overdue ? 'pay-btn' : 'pay-btn upcoming-pay';
-      const payBtnIcon  = paid ? '✅' : '💳';
-      const payBtnClick = paid ? '' : `markAsPaid(${globalIdx})`;
-      const cardClass   = overdue ? 'sub-card overdue' : paid ? 'sub-card paid-state' : 'sub-card';
-
+      const icon = categoryIcon[sub.category]||'🔄';
+      const cardClass = si.state==='overdue' ? 'sub-card overdue' : si.state==='paid' ? 'sub-card paid-row' : 'sub-card';
+      const payClass  = si.state==='paid' ? 'pay-btn paid' : si.payable ? 'pay-btn can-pay' : 'pay-btn future';
+      const payIcon   = si.state==='paid' ? '✅' : '💳';
+      const payClick  = si.payable && si.state!=='paid' ? `markAsPaid(${globalIdx})` : '';
+      const payTitle  = si.state==='paid' ? 'Paid this month' : si.payable ? 'Mark as paid' : 'Not due yet';
       return `
         <div class="${cardClass}">
           <div class="sub-icon">${icon}</div>
           <div class="sub-info">
             <div class="sub-name">${escapeHtml(sub.name)}</div>
             <div class="sub-meta">
-              <span class="sub-meta-freq">${sub.frequency}</span>
-              <span class="sub-meta-dot">·</span>
-              <span class="sub-date-label ${si.labelClass}">${si.label}</span>
+              <span class="sub-freq">${sub.frequency}</span>
+              <span class="sub-dot">·</span>
+              <span class="sub-status ${si.state==='overdue'?'overdue':si.state==='paid'?'paid':'upcoming'}">${si.label}</span>
             </div>
           </div>
           <div class="sub-right">
             <div class="sub-amount">${formatMoney(sub.amount)}</div>
-            <button class="${payBtnClass}" onclick="${payBtnClick}" title="${paid?'Paid this month':'Mark as paid'}">${payBtnIcon}</button>
+            <button class="${payClass}" onclick="${payClick}" title="${payTitle}">${payIcon}</button>
             <button class="more-btn" onclick="openMoreSheet(${globalIdx})">···</button>
           </div>
         </div>`;
     }).join('');
   }
 
-  // Inactive
-  if (inactive.length === 0) {
-    inactiveCard.style.display = 'none';
+  // Paused tab
+  const inactiveContainer = document.getElementById('inactiveList');
+  if (inactive.length===0) {
+    inactiveContainer.innerHTML='<div class="empty-state">No paused subscriptions</div>';
   } else {
-    inactiveCard.style.display = 'block';
     inactiveContainer.innerHTML = inactive.map(sub => {
-      const globalIdx = recurringList.findIndex(s => s.id === sub.id);
-      const icon = categoryIcon[sub.category] || '🔄';
+      const globalIdx = recurringList.findIndex(s=>s.id===sub.id);
+      const icon = categoryIcon[sub.category]||'🔄';
       return `
         <div class="sub-card inactive">
           <div class="sub-icon">${icon}</div>
           <div class="sub-info">
             <div class="sub-name">${escapeHtml(sub.name)} <span class="badge-inactive">paused</span></div>
-            <div class="sub-meta"><span class="sub-meta-freq">${sub.frequency}</span><span class="sub-meta-dot">·</span><span class="sub-date-label upcoming">${formatMoney(sub.amount)}</span></div>
+            <div class="sub-meta"><span class="sub-freq">${sub.frequency}</span><span class="sub-dot">·</span><span class="sub-status upcoming">${formatMoney(sub.amount)}</span></div>
           </div>
           <div class="sub-right">
             <button class="more-btn" onclick="openMoreSheet(${globalIdx})">···</button>
@@ -806,221 +631,254 @@ function render() {
   // Stats
   const monthly = computeMonthlyTotal();
   const statsRow = document.getElementById('statsRow');
-  if (active.length > 0) {
-    statsRow.style.display = 'flex';
+  if (allActive.length>0) {
+    statsRow.style.display='flex';
     document.getElementById('monthTotal').textContent = formatMoney(monthly);
-    document.getElementById('activeCount').textContent = `${active.length} active · ${overdueN} overdue`;
-    // Next upcoming
-    let earliest = null;
-    for (const sub of active) {
+    document.getElementById('activeCount').textContent = `${allActive.length} active · ${overdueN} overdue`;
+    // Next unpaid
+    let earliest=null;
+    for (const sub of allActive) {
       if (isPaid(sub.id)) continue;
-      const si = getStatusInfo(sub);
-      if (si.state === 'overdue') { earliest = 'Now'; break; }
-      const next = getNextPaymentDate(sub);
-      if (next && (!earliest || next < earliest)) earliest = next;
+      const si=getStatusInfo(sub);
+      if (si.state==='overdue') { earliest='⚠️ Now'; break; }
+      if (si.state==='upcoming') { const next=getNextPaymentDate(sub); if(next&&(!earliest||next<earliest)) earliest=next; }
     }
-    const badge = document.getElementById('nextPaymentBadge');
-    if (earliest === 'Now') { badge.textContent = '⚠️ Now'; }
-    else if (earliest instanceof Date) {
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      badge.textContent = `${months[earliest.getMonth()]} ${earliest.getDate()}`;
-    } else { badge.textContent = '✅ All paid'; }
-  } else {
-    statsRow.style.display = 'none';
-  }
+    const badge2=document.getElementById('nextPaymentBadge');
+    if (earliest==='⚠️ Now') badge2.textContent='⚠️ Now';
+    else if (earliest instanceof Date) badge2.textContent=`${MONTHS[earliest.getMonth()]} ${earliest.getDate()}`;
+    else badge2.textContent='✅ All paid';
+  } else { statsRow.style.display='none'; }
 }
 
 function computeMonthlyTotal() {
-  const now = new Date(); const m = now.getMonth()+1; const y = now.getFullYear();
-  return recurringList.filter(s => s.active).reduce((sum, sub) => {
-    let due = false;
-    if (sub.frequency==='Monthly') due = sub.startMonth <= m;
-    else if (sub.frequency==='Quarterly') { const d=(y-2024)*12+(m-sub.startMonth); due=d>=0&&d%3===0; }
-    else if (sub.frequency==='Annual') due = sub.startMonth===m;
-    return sum + (due ? sub.amount : 0);
-  }, 0);
+  const now=new Date(); const m=now.getMonth()+1; const y=now.getFullYear();
+  return recurringList.filter(s=>s.active).reduce((sum,sub)=>{
+    let due=false;
+    if(sub.frequency==='Monthly')   due=sub.startMonth<=m;
+    else if(sub.frequency==='Quarterly') { const d=(y-2024)*12+(m-sub.startMonth); due=d>=0&&d%3===0; }
+    else if(sub.frequency==='Annual')   due=sub.startMonth===m;
+    return sum+(due?sub.amount:0);
+  },0);
 }
 
-// ── Recurring Log render ───────────────────────────────────
+// ── Recurring Log ──────────────────────────────────────────
 function renderLog(entries) {
-  const card = document.getElementById('logCard');
-  const list = document.getElementById('logList');
-  const now  = new Date();
-  const thisMonth = entries.filter(e => {
-    if (!e.date) return false;
-    const d = new Date(e.date+'T00:00:00');
-    return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  const card=document.getElementById('logCard');
+  const list=document.getElementById('logList');
+  const now=new Date();
+  const thisMonth=entries.filter(e=>{
+    if(!e.date) return false;
+    const d=new Date(e.date+'T00:00:00');
+    return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
   });
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('logMonthLabel').textContent = months[now.getMonth()];
-  if (!thisMonth.length) { card.style.display='none'; return; }
-  card.style.display = 'block';
-  list.innerHTML = thisMonth.map(e => {
-    const icon = categoryIcon[e.category] || '🔄';
-    const d = new Date(e.date+'T00:00:00');
-    const dateStr = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
-    return `
-      <div class="log-row">
-        <div class="log-icon">${icon}</div>
-        <div class="log-info">
-          <div class="log-name">${escapeHtml(e.name)}</div>
-          <div class="log-date">${dateStr} · ${e.category}</div>
-        </div>
-        <div class="log-amount">${formatMoney(e.amount)}</div>
-      </div>`;
+  document.getElementById('logMonthLabel').textContent=MONTHS_FULL[now.getMonth()];
+  if(!thisMonth.length){card.style.display='none';return;}
+  card.style.display='block';
+  list.innerHTML=thisMonth.map(e=>{
+    const icon=categoryIcon[e.category]||'🔄';
+    const d=new Date(e.date+'T00:00:00');
+    const ds=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+    return `<div class="log-row"><div class="log-icon">${icon}</div><div class="log-info"><div class="log-name">${escapeHtml(e.name)}</div><div class="log-date">${ds} · ${e.category}</div></div><div class="log-amount">${formatMoney(e.amount)}</div></div>`;
   }).join('');
 }
 
 // ── Mark as paid ───────────────────────────────────────────
 async function markAsPaid(index) {
-  const sub = recurringList[index];
-  if (isPaid(sub.id)) return;
-  const paidSet = getPaidSet();
-  paidSet.add(String(sub.id));
-  savePaidSet(paidSet);
+  const sub=recurringList[index];
+  if(isPaid(sub.id)) return;
+  const paidSet=getPaidSet(); paidSet.add(String(sub.id)); savePaidSet(paidSet);
   render();
-  const ok = await writeToRecurringLog(sub, todayYMD());
-  if (ok) {
-    showToast(`✅ ${sub.name} logged as paid`);
-    const entries = await loadRecurringLog();
-    renderLog(entries);
-  } else {
-    showToast('❌ Failed to log payment', 'error');
-    paidSet.delete(String(sub.id)); savePaidSet(paidSet); render();
-  }
+  const ok=await writeToRecurringLog(sub,todayYMD());
+  if(ok) { showToast(`✅ ${sub.name} logged as paid`); const e=await loadRecurringLog(); renderLog(e); }
+  else   { showToast('❌ Failed to log payment','error'); paidSet.delete(String(sub.id)); savePaidSet(paidSet); render(); }
 }
 
 // ── More sheet ─────────────────────────────────────────────
 function openMoreSheet(index) {
-  sheetTargetIdx = index;
-  const sub = recurringList[index];
-  document.getElementById('sheetTitle').textContent = sub.name;
-  document.getElementById('sheetPauseLabel').textContent = sub.active ? 'Pause' : 'Resume';
-  document.getElementById('sheetPause').querySelector('.sheet-action-icon').textContent = sub.active ? '⏸️' : '▶️';
+  sheetTargetIdx=index;
+  const sub=recurringList[index];
+  document.getElementById('sheetTitle').textContent=sub.name;
+  document.getElementById('sheetPauseLabel').textContent=sub.active?'Pause':'Resume';
+  document.getElementById('sheetPauseIcon').textContent=sub.active?'⏸️':'▶️';
   document.getElementById('moreSheet').classList.add('open');
 }
-function closeMoreSheet() { document.getElementById('moreSheet').classList.remove('open'); sheetTargetIdx = null; }
-
+function closeMoreSheet() { document.getElementById('moreSheet').classList.remove('open'); sheetTargetIdx=null; }
 async function sheetToggleActive() {
-  if (sheetTargetIdx === null) return; closeMoreSheet();
-  recurringList[sheetTargetIdx].active = !recurringList[sheetTargetIdx].active;
-  render();
-  const ok = await saveRecurringToSheet();
-  showToast(ok ? (recurringList[sheetTargetIdx].active ? '▶️ Resumed' : '⏸️ Paused') : '❌ Failed to update', ok ? 'success' : 'error');
+  if(sheetTargetIdx===null) return; closeMoreSheet();
+  recurringList[sheetTargetIdx].active=!recurringList[sheetTargetIdx].active; render();
+  const ok=await saveRecurringToSheet();
+  showToast(ok?(recurringList[sheetTargetIdx].active?'▶️ Resumed':'⏸️ Paused'):'❌ Failed',ok?'success':'error');
 }
-function sheetEdit() { if (sheetTargetIdx===null) return; closeMoreSheet(); openEditModal(sheetTargetIdx); }
+function sheetEdit()   { if(sheetTargetIdx===null) return; const i=sheetTargetIdx; closeMoreSheet(); openEditModal(i); }
 async function sheetDelete() {
-  if (sheetTargetIdx===null) return;
-  const sub = recurringList[sheetTargetIdx];
-  if (!confirm(`Delete "${sub.name}" permanently?`)) return;
-  closeMoreSheet();
-  recurringList.splice(sheetTargetIdx, 1);
-  render();
-  const ok = await saveRecurringToSheet();
-  showToast(ok ? `🗑️ ${sub.name} deleted` : '❌ Delete failed', ok?'success':'error');
+  if(sheetTargetIdx===null) return;
+  const sub=recurringList[sheetTargetIdx];
+  if(!confirm(`Delete "${sub.name}" permanently?`)) return;
+  const i=sheetTargetIdx; closeMoreSheet();
+  recurringList.splice(i,1); render();
+  const ok=await saveRecurringToSheet();
+  showToast(ok?`🗑️ ${sub.name} deleted`:'❌ Delete failed',ok?'success':'error');
 }
 
 // ── CRUD Modals ────────────────────────────────────────────
 function openAddModal() {
-  editingId = null;
-  document.getElementById('modalTitle').innerText = '➕ New Recurring Expense';
-  document.getElementById('subName').value = '';
-  document.getElementById('subCategory').value = 'Other';
-  document.getElementById('subFreq').value = 'Monthly';
-  document.getElementById('subAmount').value = '';
-  document.getElementById('subStartMonth').value = new Date().getMonth()+1;
-  document.getElementById('subPaymentDay').value = '15';
-  document.getElementById('modalFooter').innerHTML = `<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveRecurring()">Save</button>`;
+  editingId=null;
+  document.getElementById('modalTitle').innerText='➕ New Recurring Expense';
+  document.getElementById('subName').value='';
+  document.getElementById('subCategory').value='Other';
+  document.getElementById('subFreq').value='Monthly';
+  document.getElementById('subAmount').value='';
+  document.getElementById('subStartMonth').value=new Date().getMonth()+1;
+  document.getElementById('subPaymentDay').value='15';
+  document.getElementById('modalFooter').innerHTML=`<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveRecurring()">Save</button>`;
   document.getElementById('subModal').classList.add('open');
 }
 function openEditModal(index) {
-  editingId = index;
-  const sub = recurringList[index];
-  document.getElementById('modalTitle').innerText = '✏️ Edit';
-  document.getElementById('subName').value = sub.name;
-  document.getElementById('subCategory').value = sub.category;
-  document.getElementById('subFreq').value = sub.frequency;
-  document.getElementById('subAmount').value = sub.amount;
-  document.getElementById('subStartMonth').value = sub.startMonth;
-  document.getElementById('subPaymentDay').value = sub.paymentDay;
-  document.getElementById('modalFooter').innerHTML = `<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveRecurring()">Update</button>`;
+  editingId=index; const sub=recurringList[index];
+  document.getElementById('modalTitle').innerText='✏️ Edit';
+  document.getElementById('subName').value=sub.name;
+  document.getElementById('subCategory').value=sub.category;
+  document.getElementById('subFreq').value=sub.frequency;
+  document.getElementById('subAmount').value=sub.amount;
+  document.getElementById('subStartMonth').value=sub.startMonth;
+  document.getElementById('subPaymentDay').value=sub.paymentDay;
+  document.getElementById('modalFooter').innerHTML=`<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveRecurring()">Update</button>`;
   document.getElementById('subModal').classList.add('open');
 }
 function closeModal() { document.getElementById('subModal').classList.remove('open'); editingId=null; }
 
 async function saveRecurring() {
-  const name = document.getElementById('subName').value.trim();
-  const category = document.getElementById('subCategory').value;
-  const frequency = document.getElementById('subFreq').value;
-  const amount = parseFloat(document.getElementById('subAmount').value);
-  const startMonth = parseInt(document.getElementById('subStartMonth').value);
-  const paymentDay = parseInt(document.getElementById('subPaymentDay').value);
-  if (!name)                          { showToast('❌ Name required','error'); return; }
-  if (isNaN(amount)||amount<=0)       { showToast('❌ Valid amount required','error'); return; }
-  if (startMonth<1||startMonth>12)    { showToast('❌ Start month invalid','error'); return; }
-  if (paymentDay<1||paymentDay>31)    { showToast('❌ Payment day 1-31','error'); return; }
-  const newSub = {
-    id: editingId!==null ? recurringList[editingId].id : Date.now()+Math.random(),
-    name, category, frequency, amount, startMonth, paymentDay,
-    active: editingId!==null ? recurringList[editingId].active : true,
-  };
-  if (editingId!==null) recurringList[editingId]=newSub;
-  else recurringList.push(newSub);
+  const name=document.getElementById('subName').value.trim();
+  const category=document.getElementById('subCategory').value;
+  const frequency=document.getElementById('subFreq').value;
+  const amount=parseFloat(document.getElementById('subAmount').value);
+  const startMonth=parseInt(document.getElementById('subStartMonth').value);
+  const paymentDay=parseInt(document.getElementById('subPaymentDay').value);
+  if(!name)                       {showToast('❌ Name required','error');return;}
+  if(isNaN(amount)||amount<=0)    {showToast('❌ Valid amount required','error');return;}
+  if(startMonth<1||startMonth>12) {showToast('❌ Start month invalid','error');return;}
+  if(paymentDay<1||paymentDay>31) {showToast('❌ Payment day 1-31','error');return;}
+  const newSub={ id:editingId!==null?recurringList[editingId].id:Date.now()+Math.random(), name,category,frequency,amount,startMonth,paymentDay, active:editingId!==null?recurringList[editingId].active:true };
+  if(editingId!==null) recurringList[editingId]=newSub; else recurringList.push(newSub);
   render();
-  const ok = await saveRecurringToSheet();
-  showToast(ok ? (editingId!==null?'✅ Updated':'✅ Added') : '❌ Failed to save', ok?'success':'error');
+  const ok=await saveRecurringToSheet();
+  showToast(ok?(editingId!==null?'✅ Updated':'✅ Added'):'❌ Failed to save',ok?'success':'error');
   closeModal();
 }
 
-// Close sheets on backdrop tap
-document.getElementById('moreSheet').addEventListener('click', e => { if(e.target===e.currentTarget) closeMoreSheet(); });
-document.getElementById('subModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+// Close on backdrop
+document.getElementById('moreSheet').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMoreSheet();});
+document.getElementById('subModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
 
-// ── Auth & Init ────────────────────────────────────────────
-async function initGapiClient() {
-  await new Promise(resolve => { if(gapi.client?.drive) resolve(); else gapi.load('client', resolve); });
-  await gapi.client.init({ apiKey:'', discoveryDocs: DISCOVERY_DOCS });
+// ── Sheet parsing ──────────────────────────────────────────
+function parseRecurringRow(row) {
+  if(row.length<8) return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:'Other', frequency:row[2]||'Monthly', amount:parseFloat(row[3])||0, startMonth:parseInt(row[4])||1, paymentDay:parseInt(row[5])||1, active:row[6]==='true' };
+  return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:row[2]||'Other', frequency:row[3]||'Monthly', amount:parseFloat(row[4])||0, startMonth:parseInt(row[5])||1, paymentDay:parseInt(row[6])||1, active:row[7]==='true' };
 }
-function saveAccessToken(t)  { sessionStorage.setItem('gapi_access_token', t); }
+function recurringToRow(s) { return [s.id,s.name,s.category,s.frequency,s.amount,s.startMonth,s.paymentDay,s.active?'true':'false']; }
+
+// ── Sheet I/O ──────────────────────────────────────────────
+async function loadRecurringFromSheet() {
+  if(!spreadsheetId) return false;
+  try {
+    const res=await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_SHEET}!A2:H`});
+    recurringList=(res.result.values||[]).map(parseRecurringRow).filter(s=>s.name.trim());
+    saveRecurringLocal(); return true;
+  } catch(e){console.error(e);return false;}
+}
+async function saveRecurringToSheet() {
+  if(!spreadsheetId) return false;
+  try {
+    await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId,range:`${RECURRING_SHEET}!A2:H`});
+    if(recurringList.length) await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A2:H`,valueInputOption:'RAW',resource:{values:recurringList.map(recurringToRow)}});
+    return true;
+  } catch(e){console.error(e);return false;}
+}
+async function ensureRecurringTab() {
+  try {
+    const meta=await gapi.client.sheets.spreadsheets.get({spreadsheetId});
+    const exists=meta.result.sheets.some(s=>s.properties.title===RECURRING_SHEET);
+    if(!exists) {
+      await gapi.client.sheets.spreadsheets.batchUpdate({spreadsheetId,resource:{requests:[{addSheet:{properties:{title:RECURRING_SHEET}}}]}});
+      await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A1:H1`,valueInputOption:'RAW',resource:{values:[['ID','Name','Category','Frequency','Amount','StartMonth','PaymentDay','Active']]}});
+    } else {
+      const hdr=await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_SHEET}!A1:H1`});
+      const headers=hdr.result.values?.[0]||[];
+      if(headers.length<3||headers[2]!=='Category') {
+        const old=await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_SHEET}!A2:H`});
+        const newRows=(old.result.values||[]).map(r=>r.length===7?[r[0],r[1],'Other',r[2],r[3],r[4],r[5],r[6]]:r);
+        await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId,range:`${RECURRING_SHEET}!A1:H`});
+        await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A1:H1`,valueInputOption:'RAW',resource:{values:[['ID','Name','Category','Frequency','Amount','StartMonth','PaymentDay','Active']]}});
+        if(newRows.length) await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A2:H`,valueInputOption:'RAW',resource:{values:newRows}});
+      }
+    }
+  } catch(e){console.warn(e);}
+}
+async function ensureRecurringLogTab() {
+  try {
+    const meta=await gapi.client.sheets.spreadsheets.get({spreadsheetId});
+    const exists=meta.result.sheets.some(s=>s.properties.title===RECURRING_LOG_SHEET);
+    if(!exists) {
+      await gapi.client.sheets.spreadsheets.batchUpdate({spreadsheetId,resource:{requests:[{addSheet:{properties:{title:RECURRING_LOG_SHEET}}}]}});
+      await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_LOG_SHEET}!A1:F1`,valueInputOption:'RAW',resource:{values:[['Timestamp','Date','Name','Category','Amount','Notes']]}});
+    }
+  } catch(e){console.warn(e);}
+}
+async function writeToRecurringLog(sub,paidDate) {
+  const row=[new Date().toISOString(),paidDate,sub.name,sub.category,sub.amount,`Recurring: ${sub.name}`];
+  try { await gapi.client.sheets.spreadsheets.values.append({spreadsheetId,range:`${RECURRING_LOG_SHEET}!A2:F`,valueInputOption:'RAW',resource:{values:[row]}}); return true; }
+  catch(e){console.error(e);return false;}
+}
+async function loadRecurringLog() {
+  try {
+    const res=await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_LOG_SHEET}!A2:F`});
+    return (res.result.values||[]).map(r=>({timestamp:r[0]||'',date:r[1]||'',name:r[2]||'',category:r[3]||'',amount:parseFloat(r[4])||0,notes:r[5]||''}));
+  } catch(e){return[];}
+}
+
+function saveRecurringLocal() { if(currentUserEmail) localStorage.setItem(`recurring_${currentUserEmail}`,JSON.stringify(recurringList)); }
+function loadRecurringLocal() { if(currentUserEmail){const r=localStorage.getItem(`recurring_${currentUserEmail}`);if(r) recurringList=JSON.parse(r);} }
+
+// ── Auth ───────────────────────────────────────────────────
+async function initGapiClient() {
+  await new Promise(resolve=>{if(gapi.client?.drive) resolve(); else gapi.load('client',resolve);});
+  await gapi.client.init({apiKey:'',discoveryDocs:DISCOVERY_DOCS});
+}
+function saveAccessToken(t)    { sessionStorage.setItem('gapi_access_token',t); }
 function getSavedAccessToken() { return sessionStorage.getItem('gapi_access_token'); }
-function clearAccessToken()  { sessionStorage.removeItem('gapi_access_token'); }
+function clearAccessToken()    { sessionStorage.removeItem('gapi_access_token'); }
 
 async function initAndLoad() {
   await ensureRecurringTab();
   await ensureRecurringLogTab();
   await loadRecurringFromSheet();
   render();
-  const entries = await loadRecurringLog();
+  const entries=await loadRecurringLog();
   renderLog(entries);
-  document.getElementById('loadingOverlay').style.display = 'none';
+  document.getElementById('loadingOverlay').style.display='none';
 }
 
 async function loadPage() {
-  const token = localStorage.getItem('google_token');
-  if (!token) { showToast('❌ Please sign in first','error'); setTimeout(()=>window.location.href='Home.html',1500); return; }
-  currentUserEmail = getUserEmailFromToken(token);
-  spreadsheetId    = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
-  document.getElementById('loadingOverlay').style.display = 'flex';
+  const token=localStorage.getItem('google_token');
+  if(!token){showToast('❌ Please sign in first','error');setTimeout(()=>window.location.href='Home.html',1500);return;}
+  currentUserEmail=getUserEmailFromToken(token);
+  spreadsheetId=localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
+  document.getElementById('loadingOverlay').style.display='flex';
   await initGapiClient();
   loadRecurringLocal();
 
-  const saved = getSavedAccessToken();
-  if (saved) {
-    currentAccessToken = saved;
-    gapi.client.setToken({ access_token: currentAccessToken });
-    try {
-      await gapi.client.drive.files.list({ q:'trashed=false', pageSize:1 });
-      await initAndLoad(); return;
-    } catch(e) { clearAccessToken(); }
+  const saved=getSavedAccessToken();
+  if(saved) {
+    currentAccessToken=saved; gapi.client.setToken({access_token:currentAccessToken});
+    try { await gapi.client.drive.files.list({q:'trashed=false',pageSize:1}); await initAndLoad(); return; }
+    catch(e){ clearAccessToken(); }
   }
-
   google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID, scope: SCOPES, prompt:'',
-    callback: async resp => {
-      if (!resp.access_token) { showToast('❌ Auth failed','error'); document.getElementById('loadingOverlay').style.display='none'; return; }
-      currentAccessToken = resp.access_token;
-      saveAccessToken(currentAccessToken);
-      gapi.client.setToken({ access_token: currentAccessToken });
+    client_id:CLIENT_ID, scope:SCOPES, prompt:'',
+    callback: async resp=>{
+      if(!resp.access_token){showToast('❌ Auth failed','error');document.getElementById('loadingOverlay').style.display='none';return;}
+      currentAccessToken=resp.access_token; saveAccessToken(currentAccessToken);
+      gapi.client.setToken({access_token:currentAccessToken});
       await initAndLoad();
     }
   }).requestAccessToken();
