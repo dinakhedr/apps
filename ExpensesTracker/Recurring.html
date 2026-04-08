@@ -119,7 +119,7 @@
     .add-btn:hover  { opacity: 0.92; }
     .add-btn:active { transform: scale(0.97); }
 
-    /* Recurring row with badge and next date */
+    /* Recurring row */
     .sub-row {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 0; border-bottom: 1px solid var(--border);
@@ -324,8 +324,21 @@
       <label>Name *</label>
       <input type="text" id="subName" placeholder="e.g. Netflix, iCloud, Gym" maxlength="50">
     </div>
-    <!-- Row: Frequency + Amount -->
+    <!-- Row: Category + Frequency -->
     <div class="form-row">
+      <div class="form-group">
+        <label>Category</label>
+        <select id="subCategory">
+          <option value="Entertainment">🎬 Entertainment</option>
+          <option value="Music">🎵 Music</option>
+          <option value="Podcasts">🎙️ Podcasts</option>
+          <option value="Phone Bill">📱 Phone Bill</option>
+          <option value="Rent">🏠 Rent</option>
+          <option value="Transportation">🚗 Transportation</option>
+          <option value="Digital Tools">💻 Digital Tools</option>
+          <option value="Other">🔄 Other</option>
+        </select>
+      </div>
       <div class="form-group">
         <label>Frequency</label>
         <select id="subFreq">
@@ -334,34 +347,35 @@
           <option value="Annual">Annual</option>
         </select>
       </div>
+    </div>
+    <!-- Row: Amount + Payment Day -->
+    <div class="form-row">
       <div class="form-group">
         <label>Amount (EGP) *</label>
         <input type="number" id="subAmount" placeholder="0.00" step="0.01" min="0">
-      </div>
-    </div>
-    <!-- Row: Starting Month (as month name) + Payment Day -->
-    <div class="form-row">
-      <div class="form-group">
-        <label>Starting Month</label>
-        <select id="subStartMonth">
-          <option value="1">January</option>
-          <option value="2">February</option>
-          <option value="3">March</option>
-          <option value="4">April</option>
-          <option value="5">May</option>
-          <option value="6">June</option>
-          <option value="7">July</option>
-          <option value="8">August</option>
-          <option value="9">September</option>
-          <option value="10">October</option>
-          <option value="11">November</option>
-          <option value="12">December</option>
-        </select>
       </div>
       <div class="form-group">
         <label>Payment Day (1–31)</label>
         <input type="number" id="subPaymentDay" placeholder="15" min="1" max="31">
       </div>
+    </div>
+    <!-- Row: Starting Month -->
+    <div class="form-group">
+      <label>Starting Month</label>
+      <select id="subStartMonth">
+        <option value="1">January</option>
+        <option value="2">February</option>
+        <option value="3">March</option>
+        <option value="4">April</option>
+        <option value="5">May</option>
+        <option value="6">June</option>
+        <option value="7">July</option>
+        <option value="8">August</option>
+        <option value="9">September</option>
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+      </select>
     </div>
 
     <div class="modal-footer" id="modalFooter">
@@ -381,6 +395,18 @@ let editingId = null;
 
 const RECURRING_SHEET = 'Recurring';
 
+// Category icon mapping
+const categoryIcon = {
+  'Entertainment': '🎬',
+  'Music': '🎵',
+  'Podcasts': '🎙️',
+  'Phone Bill': '📱',
+  'Rent': '🏠',
+  'Transportation': '🚗',
+  'Digital Tools': '💻',
+  'Other': '🔄'
+};
+
 // ======================= HELPER FUNCTIONS =======================
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
@@ -393,25 +419,27 @@ function formatMoney(amount) {
   return `EGP ${Number(amount).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
 }
 
-// Badge colors based on frequency (Palette 4: Teal, Purple, Coral)
+// Badge colors based on frequency (Palette 4)
 function getBadgeColor(frequency) {
   switch (frequency) {
-    case 'Monthly': return '#14b8a6';   // teal
-    case 'Quarterly': return '#a855f7'; // purple
-    case 'Annual': return '#ec4899';    // pink/coral
+    case 'Monthly': return '#14b8a6';
+    case 'Quarterly': return '#a855f7';
+    case 'Annual': return '#ec4899';
     default: return '#14b8a6';
   }
 }
 
+// Parse row from sheet (columns: ID, Name, Category, Frequency, Amount, StartMonth, PaymentDay, Active)
 function parseRecurringRow(row) {
   return {
     id:          row[0] ? parseInt(row[0]) : Date.now() + Math.random(),
     name:        row[1] || '',
-    frequency:   row[2] || 'Monthly',
-    amount:      parseFloat(row[3]) || 0,
-    startMonth:  parseInt(row[4]) || 1,
-    paymentDay:  parseInt(row[5]) || 1,
-    active:      row[6] === 'true' || row[6] === true,
+    category:    row[2] || 'Other',
+    frequency:   row[3] || 'Monthly',
+    amount:      parseFloat(row[4]) || 0,
+    startMonth:  parseInt(row[5]) || 1,
+    paymentDay:  parseInt(row[6]) || 1,
+    active:      row[7] === 'true' || row[7] === true,
   };
 }
 
@@ -419,6 +447,7 @@ function recurringToRow(sub) {
   return [
     sub.id,
     sub.name,
+    sub.category,
     sub.frequency,
     sub.amount,
     sub.startMonth,
@@ -432,7 +461,7 @@ async function loadRecurringFromSheet() {
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${RECURRING_SHEET}!A2:G`
+      range: `${RECURRING_SHEET}!A2:H`
     });
     const rows = res.result.values || [];
     recurringList = rows.map(parseRecurringRow);
@@ -451,12 +480,12 @@ async function saveRecurringToSheet() {
     const rows = recurringList.map(r => recurringToRow(r));
     await gapi.client.sheets.spreadsheets.values.clear({
       spreadsheetId,
-      range: `${RECURRING_SHEET}!A2:G`,
+      range: `${RECURRING_SHEET}!A2:H`,
     });
     if (rows.length) {
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${RECURRING_SHEET}!A2:G`,
+        range: `${RECURRING_SHEET}!A2:H`,
         valueInputOption: 'RAW',
         resource: { values: rows }
       });
@@ -477,12 +506,40 @@ async function ensureRecurringTab() {
         spreadsheetId,
         resource: { requests: [{ addSheet: { properties: { title: RECURRING_SHEET } } }] }
       });
+      // Headers: ID, Name, Category, Frequency, Amount, StartMonth, PaymentDay, Active
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${RECURRING_SHEET}!A1:G1`,
+        range: `${RECURRING_SHEET}!A1:H1`,
         valueInputOption: 'RAW',
-        resource: { values: [['ID','Name','Frequency','Amount','StartMonth','PaymentDay','Active']] }
+        resource: { values: [['ID','Name','Category','Frequency','Amount','StartMonth','PaymentDay','Active']] }
       });
+    } else {
+      // Check if Category column exists (column C). If not, add it.
+      const headerRes = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${RECURRING_SHEET}!A1:H1`
+      });
+      const headers = headerRes.result.values?.[0] || [];
+      if (headers.length < 3 || headers[2] !== 'Category') {
+        // Insert Category column at C
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+          spreadsheetId,
+          resource: {
+            requests: [{
+              insertDimension: {
+                range: { sheetId: 0, dimension: 'COLUMNS', startIndex: 2, endIndex: 3 },
+                inheritFromBefore: false
+              }
+            }]
+          }
+        });
+        await gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `${RECURRING_SHEET}!C1`,
+          valueInputOption: 'RAW',
+          resource: { values: [['Category']] }
+        });
+      }
     }
   } catch(e) { console.warn(e); }
 }
@@ -579,9 +636,10 @@ function render() {
       const globalIdx = recurringList.findIndex(s => s.id === sub.id);
       const nextDate = formatNextPaymentDate(sub);
       const badgeColor = getBadgeColor(sub.frequency);
+      const icon = categoryIcon[sub.category] || '🔄';
       return `
         <div class="sub-row">
-          <div class="sub-icon">${getIconForName(sub.name)}</div>
+          <div class="sub-icon">${icon}</div>
           <div class="sub-info">
             <div class="sub-freq-badge" style="background: ${badgeColor};">${sub.frequency}</div>
             <div class="sub-name">${escapeHtml(sub.name)}</div>
@@ -603,9 +661,10 @@ function render() {
     inactiveCard.style.display = 'block';
     inactiveContainer.innerHTML = inactive.map((sub, idx) => {
       const globalIdx = recurringList.findIndex(s => s.id === sub.id);
+      const icon = categoryIcon[sub.category] || '🔄';
       return `
         <div class="sub-row inactive-row">
-          <div class="sub-icon">${getIconForName(sub.name)}</div>
+          <div class="sub-icon">${icon}</div>
           <div class="sub-info">
             <div class="sub-name">${escapeHtml(sub.name)} <span class="badge-inactive">cancelled</span></div>
             <div class="sub-next" style="color:var(--text-3)">${sub.frequency} · ${formatMoney(sub.amount)}</div>
@@ -638,12 +697,6 @@ function render() {
   }
 }
 
-function getIconForName(name) {
-  const icons = { 'netflix':'🎬','spotify':'🎵','icloud':'☁️','adobe':'🎨','google':'📧','chatgpt':'🤖','claude':'🧠','genspark':'✨','we':'📡','vodafone':'📱','zayed':'🚗','shahid':'📺','podcast':'🎙️' };
-  const lower = name.toLowerCase();
-  for (let [k, v] of Object.entries(icons)) if (lower.includes(k)) return v;
-  return '🔄';
-}
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
 
 // ======================= CRUD =======================
@@ -668,6 +721,7 @@ function openAddModal() {
   editingId = null;
   document.getElementById('modalTitle').innerText = '➕ New Recurring Expense';
   document.getElementById('subName').value = '';
+  document.getElementById('subCategory').value = 'Other';
   document.getElementById('subFreq').value = 'Monthly';
   document.getElementById('subAmount').value = '';
   const currentMonth = new Date().getMonth() + 1;
@@ -682,6 +736,7 @@ function openEditModal(index) {
   const sub = recurringList[index];
   document.getElementById('modalTitle').innerText = '✏️ Edit Recurring Expense';
   document.getElementById('subName').value = sub.name;
+  document.getElementById('subCategory').value = sub.category;
   document.getElementById('subFreq').value = sub.frequency;
   document.getElementById('subAmount').value = sub.amount;
   document.getElementById('subStartMonth').value = sub.startMonth;
@@ -705,6 +760,7 @@ async function deleteAndClose() {
 
 async function saveRecurring() {
   const name = document.getElementById('subName').value.trim();
+  const category = document.getElementById('subCategory').value;
   const frequency = document.getElementById('subFreq').value;
   const amount = parseFloat(document.getElementById('subAmount').value);
   const startMonth = parseInt(document.getElementById('subStartMonth').value);
@@ -717,7 +773,7 @@ async function saveRecurring() {
 
   const newSub = {
     id: editingId !== null ? recurringList[editingId].id : Date.now() + Math.random(),
-    name, frequency, amount, startMonth, paymentDay,
+    name, category, frequency, amount, startMonth, paymentDay,
     active: editingId !== null ? recurringList[editingId].active : true,
   };
 
