@@ -846,8 +846,9 @@ async function initGapiClient() {
   await gapi.client.init({ apiKey: '', discoveryDocs: DISCOVERY_DOCS });
 }
 
-function saveAccessToken(token) { sessionStorage.setItem('gapi_access_token', token); }
-function getSavedAccessToken() { return sessionStorage.getItem('gapi_access_token'); }
+function saveAccessToken(token)  { sessionStorage.setItem('gapi_access_token', token); }
+function getSavedAccessToken()   { return sessionStorage.getItem('gapi_access_token'); }
+function clearAccessToken()      { sessionStorage.removeItem('gapi_access_token'); }
 
 async function loadPage() {
   const token = localStorage.getItem('google_token');
@@ -871,7 +872,7 @@ async function loadPage() {
       render();
       document.getElementById('loadingOverlay').style.display = 'none';
       return;
-    } catch(e) { /* token expired */ }
+    } catch(e) { clearAccessToken(); /* token expired — cleared so Home doesn't reuse it */ }
   }
 
   const tokenClient = google.accounts.oauth2.initTokenClient({
