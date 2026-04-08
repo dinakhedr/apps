@@ -422,6 +422,23 @@
     }
     .budget-curr { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-3); pointer-events: none; }
 
+    /* ── Manage Categories button ── */
+    .manage-cats-btn {
+      display: block; width: 100%;
+      padding: 14px;
+      background: var(--surface);
+      color: var(--brand);
+      border: 1.5px solid var(--brand);
+      border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: background 0.15s;
+    }
+    .manage-cats-btn:hover  { background: #ededff; }
+    .manage-cats-btn:active { transform: scale(0.97); }
+    
     /* ── Logout bottom button ── */
     .logout-bottom-btn {
       display: block; width: 100%;
@@ -569,6 +586,8 @@
     </div>
     <div id="expensesList"></div>
   </div>
+  <!-- Manage Categories button -->
+  <button class="manage-cats-btn" onclick="window.location.href='Categories.html'">⚙️ Manage Categories</button>
 
   <!-- Logout button — placed at bottom to prevent accidental taps -->
   <button class="logout-bottom-btn" id="logoutBtn">⏻ Logout</button>
