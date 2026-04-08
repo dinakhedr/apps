@@ -678,7 +678,7 @@ function renderCategorySummary(list) {
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <div style="text-align:right">
-            <div class="cat-amt">EGP ${totals[cat].toFixed(2)}</div>
+            <div class="cat-amt">EGP ${totals[cat].toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
             <div class="cat-count">${counts[cat]} ${counts[cat] === 1 ? 'expense' : 'expenses'}</div>
           </div>
           <span style="color:var(--text-3);font-size:14px">›</span>
@@ -712,7 +712,7 @@ function openCatDetail(category) {
             ${e.notes ? `<div class="detail-note">📝 ${e.notes}</div>` : ''}
           </div>
           <div class="detail-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-            <div class="detail-amt">EGP ${e.amount.toFixed(2)}</div>
+            <div class="detail-amt">EGP ${e.amount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
             <div style="display:flex;gap:4px">
               <button class="action-btn" onclick="catDetailEdit('${e.id}')" title="Edit">✏️</button>
               <button class="action-btn" onclick="catDetailDelete('${e.id}')" title="Delete">🗑️</button>
@@ -760,7 +760,7 @@ function renderByDay(list) {
       <div class="day-group">
         <div class="day-header">
           <span class="day-title">📅 ${formatDayHeader(dateKey)}</span>
-          <span class="day-total">EGP ${dayTotal.toFixed(2)}</span>
+          <span class="day-total">EGP ${dayTotal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
         </div>
         ${dayExps.map(e => `
           <div class="expense-item">
@@ -770,7 +770,7 @@ function renderByDay(list) {
               ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-              <div class="exp-amt">EGP ${e.amount.toFixed(2)}</div>
+              <div class="exp-amt">EGP ${e.amount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
               <div class="exp-actions">
                 <button class="action-btn" onclick="openEditModal('${e.id}')" title="Edit">✏️</button>
                 <button class="action-btn" onclick="deleteExpense('${e.id}')" title="Delete">🗑️</button>
