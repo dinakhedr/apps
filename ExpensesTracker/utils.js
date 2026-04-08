@@ -16,7 +16,7 @@ const DISCOVERY_DOCS = [
 const DEFAULT_CATEGORIES = [
   { value: 'Car Repairs',   icon: '🚗', bg: '#ffd1d1', chart: '#e57373' },
   { value: 'Cafe',          icon: '☕', bg: '#d4e8d4', chart: '#81c784' },
-  { value: 'Shopping',      icon: '👕', bg: '#e8d5b7', chart: '#d4a574' },
+  { value: 'Shopping',      icon: '🛍️', bg: '#e8d5b7', chart: '#d4a574' },
   { value: 'Entertainment', icon: '🎬', bg: '#d4b8ff', chart: '#b39ddb' },
   { value: 'Electronics',   icon: '📱', bg: '#d4e8ff', chart: '#7986cb' },
   { value: 'Games',         icon: '🎮', bg: '#d4b8ff', chart: '#b39ddb' },
@@ -149,7 +149,20 @@ async function ensureCategoriesTab(spreadsheetId) {
     const fullRes = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId, range: `${CAT_SHEET_NAME}!A2:H`
     });
-    const rows = (fullRes.result.values || []).map(parseCatRow);
+    let rows = (fullRes.result.values || []).map(parseCatRow);
+
+    // Merge any new defaults that don't exist in the sheet yet
+    const existingOriginals = new Set(rows.map(r => r.originalValue));
+    const newDefaults = DEFAULT_CATEGORIES.filter(d => !existingOriginals.has(d.value));
+    if (newDefaults.length) {
+      const newRows = newDefaults.map(c => ({
+        type: 'default', originalValue: c.value, value: c.value,
+        icon: c.icon, bg: c.bg, chart: c.chart, budget: null, hidden: false,
+      }));
+      rows = [...rows, ...newRows];
+      await saveCategoriesToSheet(spreadsheetId, rows);
+    }
+
     CATEGORIES = rows.filter(c => !c.hidden);
     return rows;
   } catch(e) {
