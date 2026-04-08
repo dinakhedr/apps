@@ -140,6 +140,7 @@
       border-radius: 12px;
       letter-spacing: 0.5px;
       margin-bottom: 5px;
+      color: white;
     }
     .sub-name {
       font-weight: 700;
@@ -392,24 +393,14 @@ function formatMoney(amount) {
   return `EGP ${Number(amount).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
 }
 
-// Generate a consistent HEX color from a string (name)
-function getColorFromName(name) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = ((hash << 5) - hash) + name.charCodeAt(i);
-    hash |= 0; // convert to 32-bit integer
+// Return badge color based on frequency (3 distinct brand theme colors)
+function getBadgeColor(frequency) {
+  switch (frequency) {
+    case 'Monthly': return '#5b5ef4';   // brand primary
+    case 'Quarterly': return '#8b5cf6'; // brand secondary
+    case 'Annual': return '#a78bfa';    // lighter purple accent
+    default: return '#5b5ef4';
   }
-  // Use hue from 0 to 360, saturation 60%, lightness 70% for pastel but distinct
-  const hue = Math.abs(hash % 360);
-  return `hsl(${hue}, 65%, 70%)`;
-}
-
-// Determine readable text color (black or white) based on background luminance
-function getContrastColor(hexOrHsl) {
-  // Convert HSL to RGB? Simpler: compute luminance from HSL hue/saturation/lightness
-  // We'll use a small helper: if background is too dark, white text; else dark text.
-  // Since we use HSL with 70% lightness, dark text is fine. But to be safe:
-  return '#1f1f2e'; // dark text for light backgrounds
 }
 
 function parseRecurringRow(row) {
@@ -587,7 +578,7 @@ function render() {
     activeContainer.innerHTML = active.map((sub, idx) => {
       const globalIdx = recurringList.findIndex(s => s.id === sub.id);
       const nextDate = formatNextPaymentDate(sub);
-      const badgeColor = getColorFromName(sub.name);
+      const badgeColor = getBadgeColor(sub.frequency);
       return `
         <div class="sub-row">
           <div class="sub-icon">${getIconForName(sub.name)}</div>
