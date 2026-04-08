@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%235b5ef4'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3Crect width='180' height='180' rx='40' fill='url(%23g)'/%3E%3Ctext x='90' y='115' font-size='90' text-anchor='middle'%3E💰%3C/text%3E%3C/svg%3E">
-<meta name="apple-mobile-web-app-title" content="Expenses">
   <title>📋 All Expenses</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -359,11 +357,11 @@
     .swipe-action-btn {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 3px; padding: 0 18px;
+      gap: 3px; padding: 0;
       border: none; cursor: pointer;
-      font-size: 18px; font-family: 'DM Sans', sans-serif;
+      font-family: 'DM Sans', sans-serif;
       font-size: 11px; font-weight: 700;
-      min-width: 64px;
+      width: 72px; flex-shrink: 0;
     }
     .swipe-action-btn .action-icon { font-size: 20px; }
     .swipe-edit-btn   { background: var(--brand); color: #fff; }
@@ -375,7 +373,23 @@
       touch-action: pan-y;
       user-select: none;
     }
-    .swipe-wrapper.revealed .swipe-content { transform: translateX(-128px); }
+    .swipe-wrapper.revealed .swipe-content { transform: translateX(-144px); }
+    /* ── Logout bottom button ── */
+    .logout-bottom-btn {
+      display: block; width: 100%;
+      padding: 14px;
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1.5px solid #fca5a5;
+      border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      margin-bottom: 32px;
+      transition: background 0.15s;
+    }
+    .logout-bottom-btn:hover  { background: #fecaca; }
+    .logout-bottom-btn:active { transform: scale(0.97); }
   </style>
 </head>
 <body>
@@ -402,7 +416,6 @@
     <div class="header-actions">
       <button class="hdr-btn" id="exportBtn">⬇</button>
       <button class="hdr-btn" id="refreshBtn">🔄</button>
-      <button class="hdr-btn" id="logoutBtn">⏻</button>
     </div>
   </div>
 
@@ -476,6 +489,9 @@
       <div id="bydayList"></div>
     </div>
   </div>
+
+  <!-- Logout button — placed at bottom to prevent accidental taps -->
+  <button class="logout-bottom-btn" id="logoutBtn">⏻ Logout</button>
 
 </div><!-- /mainApp -->
 
@@ -798,7 +814,6 @@ function catDetailEdit(id) {
 }
 
 async function catDetailDelete(id) {
-  closeCatDetail();
   if (!confirm('Delete this expense?')) return;
   id = typeof id === 'string' ? parseInt(id) : id;
   const before = expenses.length;
@@ -806,6 +821,7 @@ async function catDetailDelete(id) {
   if (expenses.length === before) expenses = expenses.filter(e => String(e.id) !== String(id));
   saveExpensesLocal();
   renderAll();
+  closeCatDetail();
   await deleteExpenseFromSheet(id);
   showToast('🗑️ Expense deleted');
 }
@@ -819,7 +835,7 @@ function renderByDay(list) {
   }
   const grouped = {};
   list.forEach(e => { if (!grouped[e.date]) grouped[e.date] = []; grouped[e.date].push(e); });
-  const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+  const sortedDates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
   container.innerHTML = sortedDates.map(dateKey => {
     const dayExps  = grouped[dateKey];
     const dayTotal = dayExps.reduce((s, e) => s + e.amount, 0);
@@ -1251,6 +1267,37 @@ document.getElementById('editSaveBtn').addEventListener('click',   saveEdit);
 document.getElementById('editModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditModal(); });
 
 loadSheetData();
+</script>
+
+<script>
+(function() {
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = 180;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 180, 180);
+    g.addColorStop(0, '#5b5ef4');
+    g.addColorStop(1, '#8b5cf6');
+    const r = 36;
+    ctx.beginPath();
+    ctx.moveTo(r, 0); ctx.lineTo(180-r, 0);
+    ctx.quadraticCurveTo(180, 0, 180, r);
+    ctx.lineTo(180, 180-r);
+    ctx.quadraticCurveTo(180, 180, 180-r, 180);
+    ctx.lineTo(r, 180);
+    ctx.quadraticCurveTo(0, 180, 0, 180-r);
+    ctx.lineTo(0, r);
+    ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath();
+    ctx.fillStyle = g; ctx.fill();
+    ctx.font = '90px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💰', 90, 95);
+    const link = document.querySelector('link[rel="apple-touch-icon"]') || document.createElement('link');
+    link.rel = 'apple-touch-icon';
+    link.href = c.toDataURL('image/png');
+    document.head.appendChild(link);
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>

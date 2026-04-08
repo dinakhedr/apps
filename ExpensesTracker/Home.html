@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%235b5ef4'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3Crect width='180' height='180' rx='40' fill='url(%23g)'/%3E%3Ctext x='90' y='115' font-size='90' text-anchor='middle'%3E💰%3C/text%3E%3C/svg%3E">
-<meta name="apple-mobile-web-app-title" content="Expenses">
   <title>💰 Expense Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -424,6 +422,37 @@
     }
     .budget-curr { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-3); pointer-events: none; }
 
+    /* ── Swipe-to-reveal (recent expenses) ── */
+    .swipe-wrapper {
+      position: relative; overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+    .swipe-wrapper:last-child { border-bottom: none; }
+    .swipe-actions {
+      position: absolute; right: 0; top: 0; bottom: 0;
+      display: flex; align-items: stretch;
+      transform: translateX(100%);
+      transition: transform 0.25s ease; z-index: 1;
+    }
+    .swipe-wrapper.revealed .swipe-actions { transform: translateX(0); }
+    .swipe-action-btn {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; padding: 0; border: none; cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px; font-weight: 700;
+      width: 72px; flex-shrink: 0;
+    }
+    .swipe-action-btn .action-icon { font-size: 20px; }
+    .swipe-edit-btn   { background: var(--brand); color: #fff; }
+    .swipe-delete-btn { background: var(--danger); color: #fff; }
+    .swipe-content {
+      position: relative; z-index: 2; background: #fff;
+      transition: transform 0.25s ease;
+      touch-action: pan-y; user-select: none;
+    }
+    .swipe-wrapper.revealed .swipe-content { transform: translateX(-144px); }
+
     /* ── Logout bottom button ── */
     .logout-bottom-btn {
       display: block; width: 100%;
@@ -460,7 +489,7 @@
     <span class="screen-icon">💰</span>
     <h2>Expense Tracker</h2>
     <p>Sign in with Google to save expenses to your own private Google Sheet</p>
-    <div id="googleSignInButton"></div>
+    <div id="googleSignInButton" style="display:flex;justify-content:center;margin:4px 0"></div>
     <small>Your data stays in <strong>your</strong> Google Drive.<br>No one else can access it.</small>
   </div>
 </div>
@@ -802,21 +831,49 @@ function renderExpensesList() {
     return;
   }
   list.innerHTML = items.map(e => `
-    <div class="expense-item">
-      <div class="cat-icon" style="background:${getCategoryColor(e.category)}">${getCategoryIcon(e.category)}</div>
-      <div class="exp-details">
-        <div class="exp-cat">${e.category}</div>
-        <div class="exp-meta">📅 ${formatDate(e.date)}</div>
-        ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
+    <div class="swipe-wrapper" data-id="${e.id}">
+      <div class="swipe-actions">
+        <button class="swipe-action-btn swipe-edit-btn"   onclick="openEditModal(${e.id})"><span class="action-icon">✏️</span>Edit</button>
+        <button class="swipe-action-btn swipe-delete-btn" onclick="deleteExpense(${e.id})"><span class="action-icon">🗑️</span>Delete</button>
       </div>
-      <div class="exp-right">
-        <div class="exp-amount">EGP ${e.amount.toFixed(2)}</div>
-        <div class="exp-actions">
-          <button class="action-btn" onclick="openEditModal(${e.id})" title="Edit">✏️</button>
-          <button class="action-btn" onclick="deleteExpense(${e.id})" title="Delete">🗑️</button>
+      <div class="swipe-content expense-item" style="border-bottom:none">
+        <div class="cat-icon" style="background:${getCategoryColor(e.category)}">${getCategoryIcon(e.category)}</div>
+        <div class="exp-details">
+          <div class="exp-cat">${e.category}</div>
+          <div class="exp-meta">📅 ${formatDate(e.date)}</div>
+          ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
+        </div>
+        <div class="exp-right">
+          <div class="exp-amount">EGP ${e.amount.toFixed(2)}</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:4px">← swipe</div>
         </div>
       </div>
     </div>`).join('');
+  setTimeout(() => setupSwipeItems(document.getElementById('expensesList')), 50);
+}
+
+// ── Swipe gesture setup ───────────────────────────────────
+function setupSwipeItems(container) {
+  let touchStartX = 0, touchStartY = 0;
+  container.addEventListener('touchstart', e => {
+    const wrapper = e.target.closest('.swipe-wrapper');
+    if (!wrapper) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  container.addEventListener('touchend', e => {
+    const wrapper = e.target.closest('.swipe-wrapper');
+    if (!wrapper) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (dx < -40) {
+      container.querySelectorAll('.swipe-wrapper.revealed').forEach(w => { if (w !== wrapper) w.classList.remove('revealed'); });
+      wrapper.classList.add('revealed');
+    } else if (dx > 20) {
+      wrapper.classList.remove('revealed');
+    }
+  }, { passive: true });
 }
 
 function renderAll() {
@@ -1329,6 +1386,37 @@ window.onload = function () {
 
   checkLogin();
 };
+</script>
+
+<script>
+(function() {
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = 180;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 180, 180);
+    g.addColorStop(0, '#5b5ef4');
+    g.addColorStop(1, '#8b5cf6');
+    const r = 36;
+    ctx.beginPath();
+    ctx.moveTo(r, 0); ctx.lineTo(180-r, 0);
+    ctx.quadraticCurveTo(180, 0, 180, r);
+    ctx.lineTo(180, 180-r);
+    ctx.quadraticCurveTo(180, 180, 180-r, 180);
+    ctx.lineTo(r, 180);
+    ctx.quadraticCurveTo(0, 180, 0, 180-r);
+    ctx.lineTo(0, r);
+    ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath();
+    ctx.fillStyle = g; ctx.fill();
+    ctx.font = '90px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💰', 90, 95);
+    const link = document.querySelector('link[rel="apple-touch-icon"]') || document.createElement('link');
+    link.rel = 'apple-touch-icon';
+    link.href = c.toDataURL('image/png');
+    document.head.appendChild(link);
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>
