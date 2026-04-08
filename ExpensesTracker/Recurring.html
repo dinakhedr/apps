@@ -554,7 +554,7 @@ function render() {
   if (active.length > 0) {
     statsRow.style.display = 'flex';
     document.getElementById('monthTotal').textContent = formatMoney(monthly);
-    activeCountSpan.textContent = `${active.length} active recurring expense{active.length !== 1 ? 's' : ''}`;
+    activeCountSpan.textContent = `${active.length} active recurring expense {active.length !== 1 ? 's' : ''}`;
     
     const today = new Date();
     const currentDay = today.getDate();
