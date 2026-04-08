@@ -68,6 +68,16 @@
       font-weight: 800; color: #fff; letter-spacing: -0.5px;
     }
 
+    /* ── Header action button ── */
+    .hdr-btn {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff; padding: 7px 13px; border-radius: 30px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; transition: background 0.15s;
+    }
+    .hdr-btn:hover  { background: rgba(255,255,255,0.28); }
+    .hdr-btn:active { transform: scale(0.96); }
     /* ── Cards ── */
     .card {
       background: var(--surface); border-radius: var(--radius-lg);
@@ -308,6 +318,7 @@
       <button class="back-btn" onclick="window.location.href='Home.html'">←</button>
       <h1>⚙️ Categories</h1>
     </div>
+    <button class="hdr-btn" onclick="window.location.href='Expenses.html'">📋 Expenses</button>
   </div>
 
   <!-- Add custom category -->
