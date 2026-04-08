@@ -783,11 +783,11 @@ function updateBudgetOverview() {
 // ── Expense list ──────────────────────────────────────────
 function getFilteredHomeExpenses() {
   const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date) || b.id - a.id);
-  if (!homeSearchQuery) return sorted.slice(0, 10);
+  if (!homeSearchQuery) return sorted.slice(0, 5);
   return sorted.filter(e => {
     const hay = (e.category + ' ' + (e.notes || '')).toLowerCase();
     return hay.includes(homeSearchQuery);
-  }).slice(0, 10);
+  }).slice(0, 5);
 }
 
 function renderExpensesList() {
