@@ -421,6 +421,23 @@
       border-radius: 8px; min-height: unset;
     }
     .budget-curr { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-3); pointer-events: none; }
+
+    /* ── Logout bottom button ── */
+    .logout-bottom-btn {
+      display: block; width: 100%;
+      padding: 14px;
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1.5px solid #fca5a5;
+      border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      margin-bottom: 32px;
+      transition: background 0.15s;
+    }
+    .logout-bottom-btn:hover  { background: #fecaca; }
+    .logout-bottom-btn:active { transform: scale(0.97); }
   </style>
 </head>
 <body>
@@ -480,9 +497,6 @@
   <div class="header">
     <h1>💰 Expense Tracker</h1>
     <p id="userEmailDisplay">Track your spending</p>
-    <div class="header-actions">
-      <button class="hdr-btn" id="logoutBtn">⏻ Logout</button>
-    </div>
   </div>
 
   <!-- Month comparison -->
@@ -552,7 +566,7 @@
   </div>
 
   <!-- Recent Expenses -->
-  <div class="card" style="margin-bottom:0">
+  <div class="card">
     <div class="expenses-header">
       <h3>📋 Recent Expenses</h3>
       <button class="see-all-btn" id="seeAllBtn">See All →</button>
@@ -564,6 +578,9 @@
     </div>
     <div id="expensesList"></div>
   </div>
+
+  <!-- Logout button — placed at bottom to prevent accidental taps -->
+  <button class="logout-bottom-btn" id="logoutBtn">⏻ Logout</button>
 
 </div><!-- /mainApp -->
 
@@ -832,8 +849,15 @@ async function addExpense(date, category, amount, notes) {
 
 // ── Delete expense ────────────────────────────────────────
 async function deleteExpense(id) {
+  id = typeof id === 'string' ? parseInt(id) : id;
   if (!confirm('Delete this expense?')) return;
-  expenses = expenses.filter(e => e.id !== id);
+  const before = expenses.length;
+  expenses = expenses.filter(e => Number(e.id) !== Number(id));
+  if (expenses.length === before) {
+    // id comparison failed — try string match
+    console.warn('deleteExpense: id not matched as number, trying string', id, typeof id);
+    expenses = expenses.filter(e => String(e.id) !== String(id));
+  }
   saveLocal();
   renderAll();
   await deleteExpenseFromSheet(id);
@@ -1298,7 +1322,7 @@ window.onload = function () {
     document.getElementById('amount').value   = '';
     document.getElementById('notes').value    = '';
     document.getElementById('date').value     = todayStr();
-    document.getElementById('category').focus();
+    // Do NOT focus the category select — on mobile it auto-opens the picker
   });
 
   checkLogin();
