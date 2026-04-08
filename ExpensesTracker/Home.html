@@ -707,8 +707,7 @@ function updateMonthCompare() {
 // ── Stats ─────────────────────────────────────────────────
 function updateStats() {
   const total = expenses.filter(e => isInCurrentMonth(e.date)).reduce((s,e) => s + e.amount, 0);
-  document.getElementById('totalAmount').textContent = `EGP ${total.toFixed(2)}`;
-  document.getElementById('monthBadge').textContent  = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+document.getElementById('totalAmount').textContent = `EGP ${total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;  document.getElementById('monthBadge').textContent  = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
   updateMonthCompare();
 }
 
@@ -742,8 +741,7 @@ function updateBudgetOverview() {
             <div class="budget-bar ${status}" style="width:${pct}%"></div>
           </div>
         </div>
-        <div class="budget-nums"><b>EGP ${use.toFixed(0)}</b><br>of ${limit.toFixed(0)}</div>
-      </div>`;
+<div class="budget-nums"><b>EGP ${use.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</b><br>of ${limit.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</div>      </div>`;
   }).join('');
 }
 
@@ -773,7 +771,7 @@ function renderExpensesList() {
         ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
       </div>
       <div class="exp-right">
-        <div class="exp-amount">EGP ${e.amount.toFixed(2)}</div>
+<div class="exp-amount">EGP ${e.amount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
         <div class="exp-actions">
           <button class="action-btn" onclick="openEditModal(${e.id})" title="Edit">✏️</button>
           <button class="action-btn" onclick="deleteExpense(${e.id})" title="Delete">🗑️</button>
