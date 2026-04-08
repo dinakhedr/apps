@@ -483,9 +483,9 @@ function showToast(msg, type = 'success') {
 
 // ── Render ────────────────────────────────────────────────
 function render() {
-  const defaults = allCats.filter(c => c.type === 'default');
-  const customs  = allCats.filter(c => c.type === 'custom');
-
+  const defaults = allCats.filter(c => c.type === 'default').sort((a, b) => a.value.localeCompare(b.value));
+  const customs  = allCats.filter(c => c.type === 'custom').sort((a, b) => a.value.localeCompare(b.value));
+  
   document.getElementById('defaultCatList').innerHTML = defaults.map((cat, _) => {
     const i = allCats.indexOf(cat);
     const budget = cat.budget;
