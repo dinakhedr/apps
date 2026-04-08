@@ -71,7 +71,10 @@ function getUserEmailFromToken(token) {
   } catch { return null; }
 }
 
-// ── ID generator (crypto-safe) ────────────────────────────
+// ── ID generator (incremental, collision-safe) ────────────
 function genId() {
-  return Date.now() * 1000 + Math.floor(Math.random() * 1000);
+  const key = 'expense_id_counter';
+  const next = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, next);
+  return next;
 }

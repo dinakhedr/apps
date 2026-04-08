@@ -340,40 +340,6 @@
     }
     .export-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 
-    /* ── Swipe-to-reveal actions (WhatsApp style) ── */
-    .swipe-wrapper {
-      position: relative; overflow: hidden;
-      border-bottom: 1px solid var(--border);
-    }
-    .swipe-wrapper:last-child { border-bottom: none; }
-    .swipe-actions {
-      position: absolute; right: 0; top: 0; bottom: 0;
-      display: flex; align-items: stretch;
-      transform: translateX(100%);
-      transition: transform 0.25s ease;
-      z-index: 1;
-    }
-    .swipe-wrapper.revealed .swipe-actions { transform: translateX(0); }
-    .swipe-action-btn {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 3px; padding: 0;
-      border: none; cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 11px; font-weight: 700;
-      width: 72px; flex-shrink: 0;
-    }
-    .swipe-action-btn .action-icon { font-size: 20px; }
-    .swipe-edit-btn   { background: var(--brand); color: #fff; }
-    .swipe-delete-btn { background: var(--danger); color: #fff; }
-    .swipe-content {
-      position: relative; z-index: 2;
-      background: #fff;
-      transition: transform 0.25s ease;
-      touch-action: pan-y;
-      user-select: none;
-    }
-    .swipe-wrapper.revealed .swipe-content { transform: translateX(-144px); }
     /* ── Logout bottom button ── */
     .logout-bottom-btn {
       display: block; width: 100%;
@@ -454,7 +420,7 @@
   <!-- Stats band -->
   <div class="stats-band" id="statsBand" style="display:none">
     <div class="stats-band-left">
-      <div class="lbl">Total Spent</div>
+      <div class="lbl" id="statsBandLabel">Total Spent</div>
       <div class="val" id="totalAmount">EGP 0</div>
     </div>
     <div class="stats-band-right">
@@ -472,7 +438,7 @@
   <!-- Summary Tab -->
   <div id="summaryTab" class="tab-content active">
     <div class="card" id="chartCard" style="display:none">
-      <div class="card-title"><span class="card-title-icon">📈</span> Spending by Category</div>
+      <div class="card-title"><span class="card-title-icon">📈</span> Month Spending by Category</div>
       <div class="chart-container"><canvas id="categoryChart"></canvas></div>
       <div id="chartLegend" class="chart-legend"></div>
     </div>
@@ -650,9 +616,12 @@ function updateStats(list) {
   if (!list.length) { band.style.display = 'none'; return; }
   band.style.display = 'flex';
   const total = list.reduce((s, e) => s + e.amount, 0);
-  document.getElementById('totalAmount').textContent  = `EGP ${total.toFixed(2)}`;
-  document.getElementById('expenseCount').textContent = `${list.length} ${list.length === 1 ? 'expense' : 'expenses'}`;
-  document.getElementById('expenseAvg').textContent   = `Avg: EGP ${(total / list.length).toFixed(2)}`;
+  const avg   = total / list.length;
+  const monthName = MONTH_NAMES[parseInt(document.getElementById('monthSelect').value)];
+  document.getElementById('statsBandLabel').textContent  = `Total Spent in ${monthName}`;
+  document.getElementById('totalAmount').textContent     = `EGP ${total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+  document.getElementById('expenseCount').textContent   = `${list.length} ${list.length === 1 ? 'expense' : 'expenses'}`;
+  document.getElementById('expenseAvg').textContent     = `Avg: EGP ${avg.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
 }
 
 // ── Pie chart ─────────────────────────────────────────────
@@ -730,84 +699,34 @@ function openCatDetail(category) {
   document.getElementById('catDetailTitle').innerHTML =
     `<span style="margin-right:6px">${getCategoryIcon(category)}</span>${category}`;
   document.getElementById('catDetailTotal').textContent =
-    `EGP ${total.toFixed(2)}`;
+    `EGP ${total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
   document.getElementById('catDetailCount').textContent =
     `${catExps.length} ${catExps.length === 1 ? 'expense' : 'expenses'}`;
 
   document.getElementById('catDetailList').innerHTML = catExps.length
     ? catExps.map(e => `
-        <div class="swipe-wrapper" data-id="${e.id}">
-          <div class="swipe-actions">
-            <button class="swipe-action-btn swipe-edit-btn"   onclick="catDetailEdit(${e.id})"><span class="action-icon">✏️</span>Edit</button>
-            <button class="swipe-action-btn swipe-delete-btn" onclick="catDetailDelete(${e.id})"><span class="action-icon">🗑️</span>Delete</button>
+        <div class="detail-item">
+          <div class="cat-icon" style="background:${getCategoryColor(e.category)};width:40px;height:40px;border-radius:12px;font-size:19px;flex-shrink:0">${getCategoryIcon(e.category)}</div>
+          <div class="exp-details" style="flex:1;min-width:0">
+            <div class="exp-cat" style="font-size:14px;font-weight:600;color:var(--text)">${formatDate(e.date)}</div>
+            ${e.notes ? `<div class="detail-note">📝 ${e.notes}</div>` : ''}
           </div>
-          <div class="swipe-content detail-item" style="border-bottom:none">
-            <div class="cat-icon" style="background:${getCategoryColor(e.category)};width:40px;height:40px;border-radius:12px;font-size:19px;flex-shrink:0">${getCategoryIcon(e.category)}</div>
-            <div class="exp-details" style="flex:1;min-width:0">
-              <div class="exp-cat" style="font-size:14px;font-weight:600;color:var(--text)">${formatDate(e.date)}</div>
-              ${e.notes ? `<div class="detail-note">📝 ${e.notes}</div>` : ''}
-            </div>
-            <div class="detail-right">
-              <div class="detail-amt">EGP ${e.amount.toFixed(2)}</div>
-              <div style="font-size:10px;color:var(--text-3);margin-top:3px">← swipe</div>
+          <div class="detail-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <div class="detail-amt">EGP ${e.amount.toFixed(2)}</div>
+            <div style="display:flex;gap:4px">
+              <button class="action-btn" onclick="catDetailEdit('${e.id}')" title="Edit">✏️</button>
+              <button class="action-btn" onclick="catDetailDelete('${e.id}')" title="Delete">🗑️</button>
             </div>
           </div>
         </div>`).join('')
     : '<div class="empty-state"><div class="empty-icon">📭</div><p>No expenses</p></div>';
 
   document.getElementById('catDetailBackdrop').classList.add('open');
-  // Initialise swipe gestures after DOM update
-  setTimeout(() => setupSwipeItems(document.getElementById('catDetailList')), 50);
 }
 function closeCatDetail() {
   document.getElementById('catDetailBackdrop').classList.remove('open');
 }
 
-// ── Swipe gesture setup ───────────────────────────────────
-function setupSwipeItems(container) {
-  let touchStartX = 0, touchStartY = 0, activeSwiped = null;
-
-  // Close any open swipe on backdrop tap
-  container.addEventListener('click', e => {
-    if (!e.target.closest('.swipe-action-btn') && !e.target.closest('.swipe-content')) {
-      closeAllSwipes(container);
-    }
-  }, true);
-
-  container.addEventListener('touchstart', e => {
-    const wrapper = e.target.closest('.swipe-wrapper');
-    if (!wrapper) return;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
-
-  container.addEventListener('touchend', e => {
-    const wrapper = e.target.closest('.swipe-wrapper');
-    if (!wrapper) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = e.changedTouches[0].clientY - touchStartY;
-    // Only register if mostly horizontal and enough swipe distance
-    if (Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    if (dx < -40) {
-      // Swipe left — reveal actions
-      closeAllSwipes(container, wrapper);
-      wrapper.classList.add('revealed');
-      activeSwiped = wrapper;
-    } else if (dx > 20) {
-      // Swipe right — close
-      wrapper.classList.remove('revealed');
-      if (activeSwiped === wrapper) activeSwiped = null;
-    }
-  }, { passive: true });
-}
-
-function closeAllSwipes(container, except) {
-  container.querySelectorAll('.swipe-wrapper.revealed').forEach(w => {
-    if (w !== except) w.classList.remove('revealed');
-  });
-}
-
-// Helpers for catDetail modal actions
 function catDetailEdit(id) {
   closeCatDetail();
   setTimeout(() => openEditModal(id), 320);
@@ -815,14 +734,12 @@ function catDetailEdit(id) {
 
 async function catDetailDelete(id) {
   if (!confirm('Delete this expense?')) return;
-  id = typeof id === 'string' ? parseInt(id) : id;
-  const before = expenses.length;
-  expenses = expenses.filter(e => Number(e.id) !== Number(id));
-  if (expenses.length === before) expenses = expenses.filter(e => String(e.id) !== String(id));
+  const numId = Number(id);
+  expenses = expenses.filter(e => Number(e.id) !== numId);
   saveExpensesLocal();
   renderAll();
   closeCatDetail();
-  await deleteExpenseFromSheet(id);
+  await deleteExpenseFromSheet(numId);
   showToast('🗑️ Expense deleted');
 }
 
@@ -846,27 +763,22 @@ function renderByDay(list) {
           <span class="day-total">EGP ${dayTotal.toFixed(2)}</span>
         </div>
         ${dayExps.map(e => `
-          <div class="swipe-wrapper" data-id="${e.id}">
-            <div class="swipe-actions">
-              <button class="swipe-action-btn swipe-edit-btn"   onclick="openEditModal(${e.id})"><span class="action-icon">✏️</span>Edit</button>
-              <button class="swipe-action-btn swipe-delete-btn" onclick="deleteExpense(${e.id})"><span class="action-icon">🗑️</span>Delete</button>
+          <div class="expense-item">
+            <div class="cat-icon" style="background:${getCategoryColor(e.category)}">${getCategoryIcon(e.category)}</div>
+            <div class="exp-details">
+              <div class="exp-cat">${e.category}</div>
+              ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
             </div>
-            <div class="swipe-content expense-item" style="border-bottom:none">
-              <div class="cat-icon" style="background:${getCategoryColor(e.category)}">${getCategoryIcon(e.category)}</div>
-              <div class="exp-details">
-                <div class="exp-cat">${e.category}</div>
-                ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
-              </div>
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
-                <div class="exp-amt">EGP ${e.amount.toFixed(2)}</div>
-                <div style="font-size:10px;color:var(--text-3)">← swipe</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <div class="exp-amt">EGP ${e.amount.toFixed(2)}</div>
+              <div class="exp-actions">
+                <button class="action-btn" onclick="openEditModal('${e.id}')" title="Edit">✏️</button>
+                <button class="action-btn" onclick="deleteExpense('${e.id}')" title="Delete">🗑️</button>
               </div>
             </div>
           </div>`).join('')}
       </div>`;
   }).join('');
-  // Wire up swipe gestures for by-day list
-  setTimeout(() => setupSwipeItems(container), 50);
 }
 
 // ── Render all ────────────────────────────────────────────
@@ -885,9 +797,10 @@ function buildEditCategorySelect() {
 }
 
 function openEditModal(id) {
-  const exp = expenses.find(e => e.id === id);
+  const numId = Number(id);
+  const exp = expenses.find(e => Number(e.id) === numId);
   if (!exp) return;
-  document.getElementById('editId').value       = id;
+  document.getElementById('editId').value       = exp.id;
   document.getElementById('editDate').value     = exp.date;
   document.getElementById('editCategory').value = exp.category;
   document.getElementById('editAmount').value   = exp.amount;
@@ -898,14 +811,14 @@ function closeEditModal() {
   document.getElementById('editModalBackdrop').classList.remove('open');
 }
 async function saveEdit() {
-  const id       = parseInt(document.getElementById('editId').value);
+  const id       = Number(document.getElementById('editId').value);
   const date     = document.getElementById('editDate').value;
   const category = document.getElementById('editCategory').value;
   const amount   = parseFloat(document.getElementById('editAmount').value);
   const notes    = document.getElementById('editNotes').value.trim();
   if (!date || !category || !amount || amount <= 0) { showToast('Please fill all required fields', 'error'); return; }
 
-  const exp = expenses.find(e => e.id === id);
+  const exp = expenses.find(e => Number(e.id) === id);
   if (!exp) return;
 
   const btn = document.getElementById('editSaveBtn');
@@ -1103,6 +1016,12 @@ async function loadExpensesFromSheet(showMsg = false) {
         notes:     r[4] || '',
         timestamp: r[0] || new Date().toISOString()
       }));
+
+    // Sync ID counter to the largest existing ID so new ones don't collide
+    const maxId = expenses.reduce((m, e) => Math.max(m, Number(e.id) || 0), 0);
+    const stored = parseInt(localStorage.getItem('expense_id_counter') || '0');
+    if (maxId > stored) localStorage.setItem('expense_id_counter', maxId);
+
     saveExpensesLocal();
     renderAll();
     if (showMsg) {
@@ -1289,13 +1208,9 @@ loadSheetData();
     ctx.lineTo(0, r);
     ctx.quadraticCurveTo(0, 0, r, 0);
     ctx.closePath();
-    ctx.fillStyle = g;
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 96px -apple-system, Helvetica, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('$', 90, 96);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.font = '90px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💰', 90, 95);
     const link = document.querySelector('link[rel="apple-touch-icon"]') || document.createElement('link');
     link.rel = 'apple-touch-icon';
     link.href = c.toDataURL('image/png');
