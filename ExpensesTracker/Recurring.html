@@ -119,7 +119,7 @@
     .add-btn:hover  { opacity: 0.92; }
     .add-btn:active { transform: scale(0.97); }
 
-    /* Subscription row */
+    /* Recurring Expense row */
     .sub-row {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 0; border-bottom: 1px solid var(--border);
@@ -263,10 +263,10 @@
     </div>
   </div>
 
-  <button class="add-btn" onclick="openAddModal()">➕ Add Subscription</button>
+  <button class="add-btn" onclick="openAddModal()">➕ Add Recurring Expense</button>
 
   <div class="card">
-    <div class="card-title"><span class="card-title-icon">🔄</span> Active Subscriptions</div>
+    <div class="card-title"><span class="card-title-icon">🔄</span> Active Recurring Expenses</div>
     <div id="activeList"></div>
   </div>
 
@@ -282,7 +282,7 @@
 <div class="modal-backdrop" id="subModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="modalTitle">➕ New Subscription</div>
+    <div class="modal-title" id="modalTitle">➕ New Recurring Expense</div>
     <div class="form-group">
       <label>Name *</label>
       <input type="text" id="subName" placeholder="e.g. Netflix, iCloud, Gym" maxlength="50">
@@ -329,7 +329,7 @@
 
     <div class="modal-footer" id="modalFooter">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="saveSubscription()">Save</button>
+      <button class="btn-save" onclick="saveRecurring()">Save</button>
     </div>
   </div>
 </div>
@@ -462,7 +462,7 @@ function getNextPaymentDate(sub, referenceDate = new Date()) {
 
   // For monthly: find the next occurrence after today
   if (frequency === 'Monthly') {
-    // Determine if this subscription has already started (startMonth <= current month? but can start in future)
+    // Determine if this Recurring Expense has already started (startMonth <= current month? but can start in future)
     // Actually we consider startMonth as the month the first payment occurs (could be future)
     // We'll compute candidate date: same year, startMonth, targetDay
     let candidate = new Date(year, startMonth - 1, targetDay);
@@ -543,7 +543,7 @@ function render() {
   const inactiveCard = document.getElementById('inactiveCard');
   
   if (active.length === 0) {
-    activeContainer.innerHTML = '<div class="empty-state"><span>✨ No active subscriptions</span></div>';
+    activeContainer.innerHTML = '<div class="empty-state"><span>✨ No active recurring expenses</span></div>';
   } else {
     activeContainer.innerHTML = active.map((sub, idx) => {
       const globalIdx = recurringList.findIndex(s => s.id === sub.id);
@@ -563,7 +563,7 @@ function render() {
           <div class="sub-actions">
             <button class="action-btn" onclick="toggleActive(${globalIdx})" title="${sub.active ? 'Pause/Cancel' : 'Reactivate'}">${sub.active ? '⏸️' : '▶️'}</button>
             <button class="action-btn" onclick="openEditModal(${globalIdx})" title="Edit">✏️</button>
-            <button class="action-btn" onclick="deleteSubscription(${globalIdx})" title="Delete">🗑️</button>
+            <button class="action-btn" onclick="deleteRecurring(${globalIdx})" title="Delete">🗑️</button>
           </div>
         </div>`;
     }).join('');
@@ -584,7 +584,7 @@ function render() {
           </div>
           <div class="sub-actions">
             <button class="action-btn" onclick="toggleActive(${globalIdx})" title="Reactivate">▶️</button>
-            <button class="action-btn" onclick="deleteSubscription(${globalIdx})" title="Delete permanently">🗑️</button>
+            <button class="action-btn" onclick="deleteRecurring(${globalIdx})" title="Delete permanently">🗑️</button>
           </div>
         </div>`;
     }).join('');
@@ -599,7 +599,7 @@ function render() {
     document.getElementById('monthTotal').textContent = formatMoney(monthly);
     activeCountSpan.textContent = `${active.length} active recurring expense${active.length !== 1 ? 's' : ''}`;
     
-    // Find earliest next payment among active subscriptions
+    // Find earliest next payment among active recurring expenses
     let earliestDate = null;
     for (let sub of active) {
       const next = getNextPaymentDate(sub);
@@ -624,11 +624,11 @@ async function toggleActive(index) {
   recurringList[index].active = !recurringList[index].active;
   render();
   const ok = await saveRecurringToSheet();
-  if (ok) showToast(recurringList[index].active ? '✅ Subscription resumed' : '⏸️ Subscription cancelled/stopped');
+  if (ok) showToast(recurringList[index].active ? '✅ Recurring Expense resumed' : '⏸️ Recurring Expense paused');
   else { recurringList[index].active = !recurringList[index].active; render(); showToast('❌ Failed to update', 'error'); }
 }
 
-async function deleteSubscription(index) {
+async function deleteRecurring(index) {
   if (!confirm(`Delete "${recurringList[index].name}" permanently?`)) return;
   const removed = recurringList.splice(index, 1);
   render();
@@ -639,21 +639,21 @@ async function deleteSubscription(index) {
 
 function openAddModal() {
   editingId = null;
-  document.getElementById('modalTitle').innerText = '➕ New Subscription';
+  document.getElementById('modalTitle').innerText = '➕ New Recurring Expense';
   document.getElementById('subName').value = '';
   document.getElementById('subFreq').value = 'Monthly';
   document.getElementById('subAmount').value = '';
   const currentMonth = new Date().getMonth() + 1;
   document.getElementById('subStartMonth').value = currentMonth;
   document.getElementById('subPaymentDay').value = '15';
-  document.getElementById('modalFooter').innerHTML = `<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveSubscription()">Save</button>`;
+  document.getElementById('modalFooter').innerHTML = `<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveRecurring()">Save</button>`;
   document.getElementById('subModal').classList.add('open');
 }
 
 function openEditModal(index) {
   editingId = index;
   const sub = recurringList[index];
-  document.getElementById('modalTitle').innerText = '✏️ Edit Subscription';
+  document.getElementById('modalTitle').innerText = '✏️ Edit Recurring Expense';
   document.getElementById('subName').value = sub.name;
   document.getElementById('subFreq').value = sub.frequency;
   document.getElementById('subAmount').value = sub.amount;
@@ -662,12 +662,12 @@ function openEditModal(index) {
   document.getElementById('modalFooter').innerHTML = `
     <button class="btn-cancel" onclick="closeModal()">Cancel</button>
     <button class="btn-danger" style="flex:1" onclick="deleteAndClose()">Delete</button>
-    <button class="btn-save" onclick="saveSubscription()">Save</button>`;
+    <button class="btn-save" onclick="saveRecurring()">Save</button>`;
   document.getElementById('subModal').classList.add('open');
 }
 
 async function deleteAndClose() {
-  if (editingId !== null && confirm('Delete this subscription?')) {
+  if (editingId !== null && confirm('Delete this recurring expense?')) {
     const removed = recurringList.splice(editingId, 1);
     await saveRecurringToSheet();
     render();
@@ -676,7 +676,7 @@ async function deleteAndClose() {
   }
 }
 
-async function saveSubscription() {
+async function saveRecurring() {
   const name = document.getElementById('subName').value.trim();
   const frequency = document.getElementById('subFreq').value;
   const amount = parseFloat(document.getElementById('subAmount').value);
@@ -701,7 +701,7 @@ async function saveSubscription() {
   }
   render();
   const ok = await saveRecurringToSheet();
-  if (ok) showToast(editingId !== null ? '✅ Updated' : '✅ Subscription added');
+  if (ok) showToast(editingId !== null ? '✅ Updated' : '✅ Recurring Expense added');
   else showToast('❌ Failed to save to sheet', 'error');
   closeModal();
 }
