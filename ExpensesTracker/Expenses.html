@@ -837,7 +837,7 @@ function renderAll() {
 // ── Edit modal ────────────────────────────────────────────
 function buildEditCategorySelect() {
   const sorted = [...CATEGORIES].sort((a, b) => a.value.localeCompare(b.value));
-  const opts = sorted.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
+  const opts = sorted.map(c => `<option value="${c.originalValue || c.value}">${c.icon} ${c.value}</option>`).join('');
   document.getElementById('editCategory').innerHTML = opts;
 }
 
