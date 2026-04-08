@@ -135,8 +135,6 @@
       font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      color: var(--brand);
-      background: #ede9fe;
       display: inline-block;
       padding: 2px 8px;
       border-radius: 12px;
@@ -394,6 +392,26 @@ function formatMoney(amount) {
   return `EGP ${Number(amount).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
 }
 
+// Generate a consistent HEX color from a string (name)
+function getColorFromName(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash |= 0; // convert to 32-bit integer
+  }
+  // Use hue from 0 to 360, saturation 60%, lightness 70% for pastel but distinct
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 65%, 70%)`;
+}
+
+// Determine readable text color (black or white) based on background luminance
+function getContrastColor(hexOrHsl) {
+  // Convert HSL to RGB? Simpler: compute luminance from HSL hue/saturation/lightness
+  // We'll use a small helper: if background is too dark, white text; else dark text.
+  // Since we use HSL with 70% lightness, dark text is fine. But to be safe:
+  return '#1f1f2e'; // dark text for light backgrounds
+}
+
 function parseRecurringRow(row) {
   return {
     id:          row[0] ? parseInt(row[0]) : Date.now() + Math.random(),
@@ -569,11 +587,12 @@ function render() {
     activeContainer.innerHTML = active.map((sub, idx) => {
       const globalIdx = recurringList.findIndex(s => s.id === sub.id);
       const nextDate = formatNextPaymentDate(sub);
+      const badgeColor = getColorFromName(sub.name);
       return `
         <div class="sub-row">
           <div class="sub-icon">${getIconForName(sub.name)}</div>
           <div class="sub-info">
-            <div class="sub-freq-badge">${sub.frequency}</div>
+            <div class="sub-freq-badge" style="background: ${badgeColor};">${sub.frequency}</div>
             <div class="sub-name">${escapeHtml(sub.name)}</div>
             <div class="sub-next">Next: ${nextDate}</div>
           </div>
