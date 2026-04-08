@@ -735,24 +735,28 @@ document.getElementById('totalAmount').textContent = `EGP ${total.toLocaleString
 // ── Budget overview ───────────────────────────────────────
 function updateBudgetOverview() {
   const card = document.getElementById('budgetCard');
-  // Collect budgets from CATEGORIES (loaded from sheet) + legacy local budgets
   const budgetMap = {};
   CATEGORIES.forEach(c => { if (c.budget > 0) budgetMap[c.value] = c.budget; });
-  // Also merge legacy local budgets for backward compat
   Object.keys(budgets).forEach(k => { if (!budgetMap[k] && budgets[k] > 0) budgetMap[k] = budgets[k]; });
 
-  const spent = {};
-  expenses.filter(e => isInCurrentMonth(e.date)).forEach(e => {
-    spent[e.category] = (spent[e.category] || 0) + e.amount;
-  });
-
-  const cats = Object.keys(budgetMap).filter(cat => (spent[cat] || 0) > 0);
+  const cats = Object.keys(budgetMap);
   if (!cats.length) { card.style.display = 'none'; return; }
 
+  // Build spent map — index by both display name and original name
+  const spent = {};
+  expenses.filter(e => isInCurrentMonth(e.date)).forEach(e => {
+    const meta = getCategoryMeta(e.category);
+    const key  = meta ? meta.value : e.category;
+    spent[key] = (spent[key] || 0) + e.amount;
+    // also index by raw name in case key differs
+    if (e.category !== key) spent[e.category] = (spent[e.category] || 0) + e.amount;
+  });
 
-  document.getElementById('budgetList').innerHTML = cats.map(cat => {
+  card.style.display = 'block';
+  const rows = cats.map(cat => {
+    const use = spent[cat] || 0;
+    if (use === 0) return ''; // hide zero-spend rows
     const limit  = budgetMap[cat];
-    const use    = spent[cat] || 0;
     const pct    = Math.min((use / limit) * 100, 100).toFixed(0);
     const status = use >= limit ? 'over' : use >= limit * 0.8 ? 'warning' : 'ok';
     const label  = use >= limit ? 'Over budget!' : use >= limit * 0.8 ? 'Near limit' : 'On track';
@@ -770,7 +774,10 @@ function updateBudgetOverview() {
         </div>
         <div class="budget-nums"><b>EGP ${use.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</b><br>of ${limit.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</div>
       </div>`;
-  }).join('');
+  }).filter(Boolean).join('');
+
+  if (!rows) { card.style.display = 'none'; return; }
+  document.getElementById('budgetList').innerHTML = rows;
 }
 
 // ── Expense list ──────────────────────────────────────────
