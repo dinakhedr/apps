@@ -12,7 +12,7 @@ const DISCOVERY_DOCS = [
 ];
 
 // ── Categories ────────────────────────────────────────────
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   { value: 'Car Repairs',   icon: '🚗', bg: '#ffd1d1', chart: '#e57373' },
   { value: 'Cafe',          icon: '☕', bg: '#d4e8d4', chart: '#81c784' },
   { value: 'Clothes',       icon: '👕', bg: '#e8d5b7', chart: '#d4a574' },
@@ -34,8 +34,32 @@ const CATEGORIES = [
   { value: 'Utilities',     icon: '⚡', bg: '#ffe5b4', chart: '#f4c542' },
 ];
 
+// Build the active CATEGORIES list from defaults + user settings + custom cats
+function buildCategories() {
+  const settings   = JSON.parse(localStorage.getItem('cat_settings') || '{}');
+  const customRaw  = JSON.parse(localStorage.getItem('custom_cats')  || '[]');
+
+  const builtIn = DEFAULT_CATEGORIES
+    .filter(c => !(settings[c.value] && settings[c.value].hidden))
+    .map(c => {
+      const s = settings[c.value] || {};
+      return { ...c, value: s.name || c.value, originalValue: c.value, budget: s.budget || null };
+    });
+
+  const custom = customRaw
+    .filter(c => !c.hidden)
+    .map(c => ({ ...c, originalValue: c.value }));
+
+  return [...builtIn, ...custom];
+}
+
+let CATEGORIES = buildCategories();
+
 function getCategoryMeta(category) {
-  return CATEGORIES.find(c => c.value === category) || { icon: '💰', bg: '#f0f0f0', chart: '#aaa' };
+  // Match by current display name or original value (for renamed categories)
+  return CATEGORIES.find(c => c.value === category || c.originalValue === category)
+    || DEFAULT_CATEGORIES.find(c => c.value === category)
+    || { icon: '💰', bg: '#f0f0f0', chart: '#aaa' };
 }
 function getCategoryIcon(category)  { return getCategoryMeta(category).icon; }
 function getCategoryColor(category) { return getCategoryMeta(category).bg; }
