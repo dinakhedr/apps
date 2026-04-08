@@ -16,7 +16,7 @@ const DISCOVERY_DOCS = [
 const DEFAULT_CATEGORIES = [
   { value: 'Car Repairs',   icon: '🚗', bg: '#ffd1d1', chart: '#e57373' },
   { value: 'Cafe',          icon: '☕', bg: '#d4e8d4', chart: '#81c784' },
-  { value: 'Clothes',       icon: '👕', bg: '#e8d5b7', chart: '#d4a574' },
+  { value: 'Shopping',      icon: '👕', bg: '#e8d5b7', chart: '#d4a574' },
   { value: 'Entertainment', icon: '🎬', bg: '#d4b8ff', chart: '#b39ddb' },
   { value: 'Electronics',   icon: '📱', bg: '#d4e8ff', chart: '#7986cb' },
   { value: 'Games',         icon: '🎮', bg: '#d4b8ff', chart: '#b39ddb' },
@@ -33,6 +33,8 @@ const DEFAULT_CATEGORIES = [
   { value: 'Supermarket',   icon: '🛒', bg: '#ffe0b5', chart: '#ffb74d' },
   { value: 'Travel',        icon: '✈️', bg: '#d4e8ff', chart: '#4fc3f7' },
   { value: 'Utilities',     icon: '⚡', bg: '#ffe5b4', chart: '#f4c542' },
+  { value: 'Rent',          icon: '🏠', bg: '#cce0ff', chart: '#7986cb' },
+  { value: 'Installments',  icon: '🔄', bg: '#d4e8d4', chart: '#81c784' },
 ];
 
 // ── Active categories (loaded from sheet, falls back to defaults) ──
