@@ -5,13 +5,14 @@
 const CLIENT_ID = '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com';
 const FOLDER_NAME = 'Expense Tracker';
 const SHEET_NAME = 'My Expenses';
+const CAT_SHEET_NAME = 'Categories';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets';
 const DISCOVERY_DOCS = [
   'https://sheets.googleapis.com/$discovery/rest?version=v4',
   'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
 ];
 
-// ── Categories ────────────────────────────────────────────
+// ── Default Categories (fallback only) ────────────────────
 const DEFAULT_CATEGORIES = [
   { value: 'Car Repairs',   icon: '🚗', bg: '#ffd1d1', chart: '#e57373' },
   { value: 'Cafe',          icon: '☕', bg: '#d4e8d4', chart: '#81c784' },
@@ -34,29 +35,129 @@ const DEFAULT_CATEGORIES = [
   { value: 'Utilities',     icon: '⚡', bg: '#ffe5b4', chart: '#f4c542' },
 ];
 
-// Build the active CATEGORIES list from defaults + user settings + custom cats
-function buildCategories() {
-  const settings   = JSON.parse(localStorage.getItem('cat_settings') || '{}');
-  const customRaw  = JSON.parse(localStorage.getItem('custom_cats')  || '[]');
+// ── Active categories (loaded from sheet, falls back to defaults) ──
+// This is populated by loadCategoriesFromSheet() called on each page load.
+// Pages call CATEGORIES / getCategoryMeta() after that resolves.
+let CATEGORIES = [...DEFAULT_CATEGORIES];
 
-  const builtIn = DEFAULT_CATEGORIES
-    .filter(c => !(settings[c.value] && settings[c.value].hidden))
-    .map(c => {
-      const s = settings[c.value] || {};
-      return { ...c, value: s.name || c.value, originalValue: c.value, budget: s.budget || null };
-    });
-
-  const custom = customRaw
-    .filter(c => !c.hidden)
-    .map(c => ({ ...c, originalValue: c.value }));
-
-  return [...builtIn, ...custom];
+// Parse a Categories sheet row → category object
+// Row format: Type | OriginalValue | Name | Icon | BG | Chart | Budget | Hidden
+function parseCatRow(r) {
+  return {
+    type:          r[0] || 'default',
+    originalValue: r[1] || '',
+    value:         r[2] || r[1] || '',
+    icon:          r[3] || '💰',
+    bg:            r[4] || '#f0f0f0',
+    chart:         r[5] || '#aaa',
+    budget:        r[6] ? parseFloat(r[6]) : null,
+    hidden:        r[7] === 'true',
+  };
 }
 
-let CATEGORIES = buildCategories();
+// Serialize a category object → sheet row
+function catToRow(cat) {
+  return [
+    cat.type          || 'default',
+    cat.originalValue || cat.value,
+    cat.value,
+    cat.icon,
+    cat.bg,
+    cat.chart,
+    cat.budget  || '',
+    cat.hidden  ? 'true' : 'false',
+  ];
+}
+
+// Load categories from sheet tab; returns array of active category objects
+async function loadCategoriesFromSheet(spreadsheetId) {
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${CAT_SHEET_NAME}!A2:H`,
+    });
+    const rows = res.result.values || [];
+    if (!rows.length) return null; // sheet exists but empty — seed it
+    const cats = rows.map(parseCatRow).filter(c => !c.hidden);
+    CATEGORIES = cats;
+    return cats;
+  } catch (e) {
+    // Sheet tab may not exist yet
+    return null;
+  }
+}
+
+// Write entire categories list to the sheet tab (full overwrite)
+async function saveCategoriesToSheet(spreadsheetId, allCats) {
+  // allCats includes hidden ones so user can toggle them back
+  const rows = allCats.map(catToRow);
+  // Clear then write
+  await gapi.client.sheets.spreadsheets.values.clear({
+    spreadsheetId,
+    range: `${CAT_SHEET_NAME}!A2:H`,
+  });
+  if (rows.length) {
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${CAT_SHEET_NAME}!A2:H`,
+      valueInputOption: 'RAW',
+      resource: { values: rows },
+    });
+  }
+}
+
+// Create the Categories sheet tab with headers + default data
+async function createCategoriesTab(spreadsheetId) {
+  // Add new sheet tab
+  await gapi.client.sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    resource: {
+      requests: [{
+        addSheet: { properties: { title: CAT_SHEET_NAME } }
+      }]
+    }
+  });
+  // Write header
+  await gapi.client.sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `${CAT_SHEET_NAME}!A1:H1`,
+    valueInputOption: 'RAW',
+    resource: { values: [['Type','OriginalValue','Name','Icon','BG','Chart','Budget','Hidden']] },
+  });
+  // Seed with defaults
+  const defaultRows = DEFAULT_CATEGORIES.map(c => ({
+    type: 'default', originalValue: c.value, value: c.value,
+    icon: c.icon, bg: c.bg, chart: c.chart, budget: null, hidden: false,
+  }));
+  await saveCategoriesToSheet(spreadsheetId, defaultRows);
+  CATEGORIES = [...DEFAULT_CATEGORIES];
+  return defaultRows;
+}
+
+// Ensure Categories tab exists; create + seed if not. Returns full cat list (including hidden).
+async function ensureCategoriesTab(spreadsheetId) {
+  try {
+    const res = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
+    const sheets = res.result.sheets || [];
+    const exists = sheets.some(s => s.properties.title === CAT_SHEET_NAME);
+    if (!exists) {
+      return await createCategoriesTab(spreadsheetId);
+    }
+    // Tab exists — load all rows including hidden
+    const fullRes = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId, range: `${CAT_SHEET_NAME}!A2:H`
+    });
+    const rows = (fullRes.result.values || []).map(parseCatRow);
+    CATEGORIES = rows.filter(c => !c.hidden);
+    return rows;
+  } catch(e) {
+    console.error('ensureCategoriesTab error', e);
+    CATEGORIES = [...DEFAULT_CATEGORIES];
+    return DEFAULT_CATEGORIES.map(c => ({ ...c, type:'default', originalValue:c.value }));
+  }
+}
 
 function getCategoryMeta(category) {
-  // Match by current display name or original value (for renamed categories)
   return CATEGORIES.find(c => c.value === category || c.originalValue === category)
     || DEFAULT_CATEGORIES.find(c => c.value === category)
     || { icon: '💰', bg: '#f0f0f0', chart: '#aaa' };
@@ -64,10 +165,13 @@ function getCategoryMeta(category) {
 function getCategoryIcon(category)  { return getCategoryMeta(category).icon; }
 function getCategoryColor(category) { return getCategoryMeta(category).bg; }
 function getChartColor(category)    { return getCategoryMeta(category).chart; }
+function getCategoryBudget(category) {
+  const m = getCategoryMeta(category);
+  return m ? (m.budget || null) : null;
+}
 
 // ── Date helpers ──────────────────────────────────────────
 function parseLocalDate(str) {
-  // Avoid UTC-offset issues: "2024-04-15" → local midnight
   if (!str) return new Date();
   const [y, m, d] = str.split('-').map(Number);
   return new Date(y, m - 1, d);

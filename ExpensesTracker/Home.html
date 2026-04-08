@@ -733,8 +733,14 @@ document.getElementById('totalAmount').textContent = `EGP ${total.toLocaleString
 
 // ── Budget overview ───────────────────────────────────────
 function updateBudgetOverview() {
-  const card   = document.getElementById('budgetCard');
-  const cats   = Object.keys(budgets).filter(c => budgets[c] > 0);
+  const card = document.getElementById('budgetCard');
+  // Collect budgets from CATEGORIES (loaded from sheet) + legacy local budgets
+  const budgetMap = {};
+  CATEGORIES.forEach(c => { if (c.budget > 0) budgetMap[c.value] = c.budget; });
+  // Also merge legacy local budgets for backward compat
+  Object.keys(budgets).forEach(k => { if (!budgetMap[k] && budgets[k] > 0) budgetMap[k] = budgets[k]; });
+
+  const cats = Object.keys(budgetMap);
   if (!cats.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
 
@@ -744,11 +750,11 @@ function updateBudgetOverview() {
   });
 
   document.getElementById('budgetList').innerHTML = cats.map(cat => {
-    const limit   = budgets[cat];
-    const use     = spent[cat] || 0;
-    const pct     = Math.min((use / limit) * 100, 100).toFixed(0);
-    const status  = use >= limit ? 'over' : use >= limit * 0.8 ? 'warning' : 'ok';
-    const label   = use >= limit ? 'Over budget!' : use >= limit * 0.8 ? 'Near limit' : 'On track';
+    const limit  = budgetMap[cat];
+    const use    = spent[cat] || 0;
+    const pct    = Math.min((use / limit) * 100, 100).toFixed(0);
+    const status = use >= limit ? 'over' : use >= limit * 0.8 ? 'warning' : 'ok';
+    const label  = use >= limit ? 'Over budget!' : use >= limit * 0.8 ? 'Near limit' : 'On track';
     return `
       <div class="budget-row">
         <div>
@@ -761,7 +767,8 @@ function updateBudgetOverview() {
             <div class="budget-bar ${status}" style="width:${pct}%"></div>
           </div>
         </div>
-<div class="budget-nums"><b>EGP ${use.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</b><br>of ${limit.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</div>      </div>`;
+        <div class="budget-nums"><b>EGP ${use.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</b><br>of ${limit.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</div>
+      </div>`;
   }).join('');
 }
 
@@ -973,6 +980,9 @@ async function createFolderAndSheet(isRecreate = false) {
       resource: { values: [['Timestamp', 'Date', 'Category', 'Amount', 'Notes', 'ID']] }
     });
 
+    // Create Categories tab and seed with defaults
+    await createCategoriesTab(spreadsheetId);
+
     localStorage.setItem(`drive_setup_${currentUserEmail}`,    'complete');
     localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
 
@@ -1034,6 +1044,8 @@ async function loadExpensesFromSheet(showMsg = false) {
     const stored = parseInt(localStorage.getItem('expense_id_counter') || '0');
     if (maxId > stored) localStorage.setItem('expense_id_counter', maxId);
 
+    // Rebuild category selects in case categories changed
+    buildCategorySelects();
     saveLocal();
     renderAll();
     if (showMsg) showToast(`✅ ${expenses.length} expenses loaded`);
@@ -1175,6 +1187,7 @@ async function completeLoginAndSetup(tokenResponse) {
     spreadsheetId = await findExistingSpreadsheet();
     localStorage.setItem(`drive_setup_${currentUserEmail}`,    'complete');
     localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
+    await ensureCategoriesTab(spreadsheetId);
     await loadExpensesFromSheet(false);
     document.getElementById('userEmailDisplay').textContent = currentUserEmail;
     showScreen('mainApp');
@@ -1237,6 +1250,7 @@ async function checkLogin() {
     spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
     try {
       await gapi.client.drive.files.list({ q: 'trashed=false', pageSize: 1, fields: 'files(id)' });
+      await ensureCategoriesTab(spreadsheetId);
       await loadExpensesFromSheet(false);
       document.getElementById('userEmailDisplay').textContent = currentUserEmail;
       showScreen('mainApp');

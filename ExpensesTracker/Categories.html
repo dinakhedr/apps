@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <script src="utils.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -268,11 +270,37 @@
       padding: 10px 0 6px; border-bottom: 1px solid var(--border);
       margin-bottom: 4px;
     }
+
+    /* ── Loading overlay ── */
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(91,94,244,0.18);
+      backdrop-filter: blur(4px); z-index: 9000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .loading-box {
+      background: #fff; border-radius: 20px; padding: 28px 32px;
+      text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .loading-box p { font-size: 14px; color: var(--text-2); margin-top: 10px; }
+    .spinner-brand {
+      display: inline-block; width: 28px; height: 28px;
+      border: 3px solid #ededff; border-top-color: var(--brand);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
 <div class="container">
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="spinner-brand"></div>
+      <p>Loading categories…</p>
+    </div>
+  </div>
 
   <!-- Header -->
   <div class="header">
@@ -420,53 +448,17 @@ const COLOR_OPTIONS = [
 ];
 
 // ── State ─────────────────────────────────────────────────
-// catSettings: { [originalValue]: { name, hidden, budget } }  — for built-ins
-// customCats:  [{ value, icon, bg, chart, hidden, budget }]    — user-added
-let catSettings = {};
-let customCats  = [];
-let editingCustomIndex = null; // null = new, number = editing existing
-let editingBuiltinKey   = null;
+let allCats = [];          // full list including hidden (from sheet)
+let spreadsheetId  = null;
+let currentUserEmail = null;
+let currentAccessToken = null;
+let editingIndex   = null; // index in allCats being edited, null = new
+let editingBuiltinKey  = null;
 let builtinSelectedIcon  = null;
 let builtinSelectedColor = null;
-let selectedIcon  = ICON_OPTIONS[0];
-let selectedColor = COLOR_OPTIONS[0];
-
-// ── Load / Save ───────────────────────────────────────────
-function loadSettings() {
-  const s = localStorage.getItem('cat_settings');
-  catSettings = s ? JSON.parse(s) : {};
-  const c = localStorage.getItem('custom_cats');
-  customCats = c ? JSON.parse(c) : [];
-}
-
-function saveSettings() {
-  localStorage.setItem('cat_settings', JSON.stringify(catSettings));
-  localStorage.setItem('custom_cats',  JSON.stringify(customCats));
-  // Rebuild the live CATEGORIES array so Home/Expenses pages pick up changes on next load
-  rebuildCategoriesArray();
-}
-
-function rebuildCategoriesArray() {
-  // Overwrite global CATEGORIES with merged built-in + custom
-  // Built-ins: apply renames, hide flags
-  // This affects the same session if navigated back without reload — but
-  // main effect is via localStorage which Home/Expenses read on load.
-  localStorage.setItem('categories_override', JSON.stringify(getMergedCategories()));
-}
-
-function getMergedCategories() {
-  const merged = CATEGORIES
-    .filter(c => {
-      const s = catSettings[c.value];
-      return !(s && s.hidden);
-    })
-    .map(c => {
-      const s = catSettings[c.value];
-      return { ...c, value: (s && s.name) ? s.name : c.value, originalValue: c.value };
-    });
-  const custom = customCats.filter(c => !c.hidden);
-  return [...merged, ...custom];
-}
+let selectedIcon   = ICON_OPTIONS[0];
+let selectedColor  = COLOR_OPTIONS[0];
+let isSaving = false;
 
 // ── Toast ─────────────────────────────────────────────────
 let toastTimer;
@@ -480,98 +472,112 @@ function showToast(msg, type = 'success') {
 
 // ── Render ────────────────────────────────────────────────
 function render() {
-  renderDefaultList();
-  renderCustomList();
-}
+  const defaults = allCats.filter(c => c.type === 'default');
+  const customs  = allCats.filter(c => c.type === 'custom');
 
-function renderDefaultList() {
-  const el = document.getElementById('defaultCatList');
-  el.innerHTML = CATEGORIES.map(cat => {
-    const s       = catSettings[cat.value] || {};
-    const name    = s.name   || cat.value;
-    const hidden  = s.hidden || false;
-    const budget  = s.budget || null;
+  document.getElementById('defaultCatList').innerHTML = defaults.map((cat, _) => {
+    const i = allCats.indexOf(cat);
+    const budget = cat.budget;
     const budgetTxt = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
-    return `
-      <div class="cat-row ${hidden ? 'hidden-cat' : ''}" id="row-${cat.value.replace(/\s/g,'_')}">
-        <div class="cat-icon-preview" style="background:${s.bg || cat.bg}">${s.icon || cat.icon}</div>
-        <div class="cat-info">
-          <div class="cat-name-text">${name}${s.name && s.name !== cat.value ? ` <span style="font-size:10px;color:var(--text-3)">(${cat.value})</span>` : ''}</div>
-          <div class="cat-budget-text">${budgetTxt}</div>
-        </div>
-        <div class="cat-actions">
-          <button class="action-btn" onclick="openEditBuiltin('${cat.value}')" title="Edit">✏️</button>
-          <button class="toggle ${hidden ? '' : 'on'}" onclick="toggleHide('${cat.value}')" title="${hidden ? 'Show' : 'Hide'}"></button>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function renderCustomList() {
-  const card = document.getElementById('customCatCard');
-  const el   = document.getElementById('customCatList');
-  if (!customCats.length) { card.style.display = 'none'; return; }
-  card.style.display = 'block';
-  el.innerHTML = customCats.map((cat, i) => {
-    const budget    = cat.budget || null;
-    const budgetTxt = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
+    const origDef = DEFAULT_CATEGORIES.find(d => d.value === cat.originalValue) || {};
+    const displayName = cat.value !== cat.originalValue
+      ? `${cat.value} <span style="font-size:10px;color:var(--text-3)">(${cat.originalValue})</span>`
+      : cat.value;
     return `
       <div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
         <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
         <div class="cat-info">
-          <div class="cat-name-text">${cat.value}</div>
+          <div class="cat-name-text">${displayName}</div>
           <div class="cat-budget-text">${budgetTxt}</div>
         </div>
         <div class="cat-actions">
-          <button class="action-btn" onclick="openEditCustom(${i})" title="Edit">✏️</button>
-          <button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHideCustom(${i})"></button>
-          <button class="action-btn" onclick="deleteCustom(${i})" title="Delete" style="color:var(--danger)">🗑️</button>
+          <button class="action-btn" onclick="openEditBuiltin(${i})" title="Edit">✏️</button>
+          <button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button>
         </div>
       </div>`;
   }).join('');
+
+  const customCard = document.getElementById('customCatCard');
+  const customList = document.getElementById('customCatList');
+  if (!customs.length) { customCard.style.display = 'none'; }
+  else {
+    customCard.style.display = 'block';
+    customList.innerHTML = customs.map((cat, _) => {
+      const i = allCats.indexOf(cat);
+      const budget = cat.budget;
+      const budgetTxt = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
+      return `
+        <div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
+          <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
+          <div class="cat-info">
+            <div class="cat-name-text">${cat.value}</div>
+            <div class="cat-budget-text">${budgetTxt}</div>
+          </div>
+          <div class="cat-actions">
+            <button class="action-btn" onclick="openEditCustom(${i})" title="Edit">✏️</button>
+            <button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button>
+            <button class="action-btn" onclick="deleteCustom(${i})" title="Delete" style="color:var(--danger)">🗑️</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+}
+
+// ── Save to sheet ─────────────────────────────────────────
+async function persistToSheet() {
+  if (!spreadsheetId) { showToast('⚠️ Not connected to sheet', 'error'); return false; }
+  if (isSaving) return false;
+  isSaving = true;
+  try {
+    await saveCategoriesToSheet(spreadsheetId, allCats);
+    // Refresh active CATEGORIES for this session
+    CATEGORIES = allCats.filter(c => !c.hidden);
+    isSaving = false;
+    return true;
+  } catch(e) {
+    console.error(e);
+    showToast('❌ Failed to save to sheet', 'error');
+    isSaving = false;
+    return false;
+  }
 }
 
 // ── Toggle hide ───────────────────────────────────────────
-function toggleHide(originalValue) {
-  if (!catSettings[originalValue]) catSettings[originalValue] = {};
-  catSettings[originalValue].hidden = !catSettings[originalValue].hidden;
-  saveSettings();
+async function toggleHide(i) {
+  allCats[i].hidden = !allCats[i].hidden;
   render();
-  showToast(catSettings[originalValue].hidden ? '👁 Category hidden' : '👁 Category visible');
-}
-
-function toggleHideCustom(i) {
-  customCats[i].hidden = !customCats[i].hidden;
-  saveSettings();
+  const ok = await persistToSheet();
+  if (ok) showToast(allCats[i].hidden ? '👁 Category hidden' : '👁 Category visible');
+  else allCats[i].hidden = !allCats[i].hidden; // revert on fail
   render();
-  showToast(customCats[i].hidden ? '👁 Category hidden' : '👁 Category visible');
 }
 
 // ── Delete custom ─────────────────────────────────────────
-function deleteCustom(i) {
-  if (!confirm(`Delete "${customCats[i].value}"? This won't affect existing expenses.`)) return;
-  customCats.splice(i, 1);
-  saveSettings();
+async function deleteCustom(i) {
+  if (!confirm(`Delete "${allCats[i].value}"? This won't affect existing expenses.`)) return;
+  const removed = allCats.splice(i, 1);
   render();
-  showToast('🗑️ Category deleted');
+  const ok = await persistToSheet();
+  if (ok) showToast('🗑️ Category deleted');
+  else { allCats.splice(i, 0, removed[0]); render(); } // revert
 }
 
 // ── Edit built-in ─────────────────────────────────────────
-function openEditBuiltin(originalValue) {
-  editingBuiltinKey = originalValue;
-  const cat = DEFAULT_CATEGORIES.find(c => c.value === originalValue);
-  const s   = catSettings[originalValue] || {};
+function openEditBuiltin(i) {
+  editingIndex     = i;
+  editingBuiltinKey = allCats[i].originalValue;
+  const cat = allCats[i];
 
-  builtinSelectedIcon  = s.icon  || cat.icon;
-  builtinSelectedColor = COLOR_OPTIONS.find(c => c.bg === (s.bg || cat.bg)) || COLOR_OPTIONS[0];
+  builtinSelectedIcon  = cat.icon;
+  builtinSelectedColor = COLOR_OPTIONS.find(c => c.bg === cat.bg) || COLOR_OPTIONS[0];
 
-  document.getElementById('editBuiltinTitle').textContent = `✏️ Edit — ${originalValue}`;
-  document.getElementById('builtinPreviewIcon').textContent         = builtinSelectedIcon;
-  document.getElementById('builtinPreviewIcon').style.background    = builtinSelectedColor.bg;
-  document.getElementById('builtinPreviewName').textContent         = s.name || originalValue;
-  document.getElementById('builtinPreviewBudget').textContent       = s.budget ? `EGP ${Number(s.budget).toLocaleString('en-US')} / month` : 'No budget limit';
-  document.getElementById('builtinName').value   = s.name   || '';
-  document.getElementById('builtinBudget').value = s.budget || '';
+  document.getElementById('editBuiltinTitle').textContent        = `✏️ Edit — ${cat.originalValue}`;
+  document.getElementById('builtinPreviewIcon').textContent      = builtinSelectedIcon;
+  document.getElementById('builtinPreviewIcon').style.background = builtinSelectedColor.bg;
+  document.getElementById('builtinPreviewName').textContent      = cat.value;
+  document.getElementById('builtinPreviewBudget').textContent    = cat.budget ? `EGP ${Number(cat.budget).toLocaleString('en-US')} / month` : 'No budget limit';
+  document.getElementById('builtinName').value   = cat.value !== cat.originalValue ? cat.value : '';
+  document.getElementById('builtinBudget').value = cat.budget || '';
 
   buildBuiltinIconGrid();
   buildBuiltinColorGrid();
@@ -581,60 +587,50 @@ function openEditBuiltin(originalValue) {
 function updateBuiltinPreview() {
   const name   = document.getElementById('builtinName').value.trim();
   const budget = document.getElementById('builtinBudget').value;
-  const cat    = DEFAULT_CATEGORIES.find(c => c.value === editingBuiltinKey);
-  document.getElementById('builtinPreviewIcon').textContent      = builtinSelectedIcon || (cat ? cat.icon : '❓');
-  document.getElementById('builtinPreviewIcon').style.background = builtinSelectedColor ? builtinSelectedColor.bg : (cat ? cat.bg : '#eee');
-  document.getElementById('builtinPreviewName').textContent      = name || (cat ? cat.value : '');
+  const cat    = allCats[editingIndex];
+  document.getElementById('builtinPreviewIcon').textContent      = builtinSelectedIcon;
+  document.getElementById('builtinPreviewIcon').style.background = builtinSelectedColor ? builtinSelectedColor.bg : cat.bg;
+  document.getElementById('builtinPreviewName').textContent      = name || cat.originalValue;
   document.getElementById('builtinPreviewBudget').textContent    = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
 }
+
 function buildBuiltinIconGrid() {
   document.getElementById('builtinIconGrid').innerHTML = ICON_OPTIONS.map(icon => `
     <button class="icon-option ${icon === builtinSelectedIcon ? 'selected' : ''}"
       onclick="selectBuiltinIcon('${icon}')">${icon}</button>`).join('');
 }
-
 function buildBuiltinColorGrid() {
   document.getElementById('builtinColorGrid').innerHTML = COLOR_OPTIONS.map((c, i) => `
     <div class="color-option ${c.bg === builtinSelectedColor.bg ? 'selected' : ''}"
       style="background:${c.bg}" onclick="selectBuiltinColor(${i})"></div>`).join('');
 }
+function selectBuiltinIcon(icon) { builtinSelectedIcon = icon; buildBuiltinIconGrid(); updateBuiltinPreview(); }
+function selectBuiltinColor(i)   { builtinSelectedColor = COLOR_OPTIONS[i]; buildBuiltinColorGrid(); updateBuiltinPreview(); }
 
-function selectBuiltinIcon(icon) {
-  builtinSelectedIcon = icon;
-  buildBuiltinIconGrid();
-  updateBuiltinPreview();
-}
-
-function selectBuiltinColor(i) {
-  builtinSelectedColor = COLOR_OPTIONS[i];
-  buildBuiltinColorGrid();
-  updateBuiltinPreview();
-}
 function closeBuiltinModal() {
   document.getElementById('editBuiltinBackdrop').classList.remove('open');
-  editingBuiltinKey = null;
+  editingIndex = null; editingBuiltinKey = null;
 }
 
-function saveBuiltin() {
+async function saveBuiltin() {
   const name   = document.getElementById('builtinName').value.trim();
   const budget = parseFloat(document.getElementById('builtinBudget').value);
-  const cat    = DEFAULT_CATEGORIES.find(c => c.value === editingBuiltinKey);
-  if (!catSettings[editingBuiltinKey]) catSettings[editingBuiltinKey] = {};
-  if (name) catSettings[editingBuiltinKey].name = name;
-  else      delete catSettings[editingBuiltinKey].name;
-  if (budget > 0) catSettings[editingBuiltinKey].budget = budget;
-  else            delete catSettings[editingBuiltinKey].budget;
-  // Save icon/color only if changed from default
-  if (builtinSelectedIcon !== cat.icon)           catSettings[editingBuiltinKey].icon = builtinSelectedIcon;
-  else                                            delete catSettings[editingBuiltinKey].icon;
-  if (builtinSelectedColor.bg !== cat.bg)         catSettings[editingBuiltinKey].bg   = builtinSelectedColor.bg;
-  else                                            delete catSettings[editingBuiltinKey].bg;
-  if (builtinSelectedColor.chart !== cat.chart)   catSettings[editingBuiltinKey].chart = builtinSelectedColor.chart;
-  else                                            delete catSettings[editingBuiltinKey].chart;
-  saveSettings();
-  render();
+  const cat    = allCats[editingIndex];
+  const origDef = DEFAULT_CATEGORIES.find(d => d.value === cat.originalValue);
+
+  allCats[editingIndex] = {
+    ...cat,
+    value:  name || cat.originalValue,
+    icon:   builtinSelectedIcon,
+    bg:     builtinSelectedColor.bg,
+    chart:  builtinSelectedColor.chart,
+    budget: budget > 0 ? budget : null,
+  };
+
   closeBuiltinModal();
-  showToast('✅ Category updated');
+  render();
+  const ok = await persistToSheet();
+  if (ok) showToast('✅ Category updated');
 }
 
 // ── Add / Edit custom category modal ─────────────────────
@@ -643,54 +639,40 @@ function buildIconGrid() {
     <button class="icon-option ${icon === selectedIcon ? 'selected' : ''}"
       onclick="selectIcon('${icon}')">${icon}</button>`).join('');
 }
-
 function buildColorGrid() {
   document.getElementById('colorGrid').innerHTML = COLOR_OPTIONS.map((c, i) => `
     <div class="color-option ${c.bg === selectedColor.bg ? 'selected' : ''}"
       style="background:${c.bg}" onclick="selectColor(${i})"></div>`).join('');
 }
-
-function selectIcon(icon) {
-  selectedIcon = icon;
-  buildIconGrid();
-  updatePreview();
-}
-
-function selectColor(i) {
-  selectedColor = COLOR_OPTIONS[i];
-  buildColorGrid();
-  updatePreview();
-}
+function selectIcon(icon)  { selectedIcon = icon; buildIconGrid(); updatePreview(); }
+function selectColor(i)    { selectedColor = COLOR_OPTIONS[i]; buildColorGrid(); updatePreview(); }
 
 function updatePreview() {
   const name   = document.getElementById('catName').value.trim();
   const budget = document.getElementById('catBudget').value;
-  document.getElementById('previewIcon').textContent        = selectedIcon;
-  document.getElementById('previewIcon').style.background   = selectedColor.bg;
-  document.getElementById('previewName').textContent        = name || 'Category Name';
-  document.getElementById('previewBudget').textContent      = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
+  document.getElementById('previewIcon').textContent      = selectedIcon;
+  document.getElementById('previewIcon').style.background = selectedColor.bg;
+  document.getElementById('previewName').textContent      = name || 'Category Name';
+  document.getElementById('previewBudget').textContent    = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
 }
 
 function openAddModal() {
-  editingCustomIndex = null;
+  editingIndex  = null;
   selectedIcon  = ICON_OPTIONS[0];
   selectedColor = COLOR_OPTIONS[0];
   document.getElementById('catModalTitle').textContent = '✨ New Category';
   document.getElementById('catName').value   = '';
   document.getElementById('catBudget').value = '';
-  // Reset footer — no delete button
   document.getElementById('catModalFooter').innerHTML = `
     <button class="btn-cancel" onclick="closeCatModal()">Cancel</button>
     <button class="btn-save" onclick="saveCategory()">Save</button>`;
-  buildIconGrid();
-  buildColorGrid();
-  updatePreview();
+  buildIconGrid(); buildColorGrid(); updatePreview();
   document.getElementById('catModalBackdrop').classList.add('open');
 }
 
 function openEditCustom(i) {
-  editingCustomIndex = i;
-  const cat = customCats[i];
+  editingIndex  = i;
+  const cat     = allCats[i];
   selectedIcon  = cat.icon;
   selectedColor = COLOR_OPTIONS.find(c => c.bg === cat.bg) || COLOR_OPTIONS[0];
   document.getElementById('catModalTitle').textContent = '✏️ Edit Category';
@@ -700,56 +682,99 @@ function openEditCustom(i) {
     <button class="btn-danger" onclick="deleteCustom(${i});closeCatModal()">Delete</button>
     <button class="btn-cancel" onclick="closeCatModal()">Cancel</button>
     <button class="btn-save" onclick="saveCategory()">Save</button>`;
-  buildIconGrid();
-  buildColorGrid();
-  updatePreview();
+  buildIconGrid(); buildColorGrid(); updatePreview();
   document.getElementById('catModalBackdrop').classList.add('open');
 }
 
 function closeCatModal() {
   document.getElementById('catModalBackdrop').classList.remove('open');
-  editingCustomIndex = null;
+  editingIndex = null;
 }
 
-function saveCategory() {
+async function saveCategory() {
   const name   = document.getElementById('catName').value.trim();
   const budget = parseFloat(document.getElementById('catBudget').value);
   if (!name) { showToast('❌ Please enter a name', 'error'); return; }
 
-  // Check for duplicate names across all categories
-  const allNames = [
-    ...CATEGORIES.map(c => (catSettings[c.value]?.name || c.value).toLowerCase()),
-    ...customCats.map((c, i) => i === editingCustomIndex ? '' : c.value.toLowerCase())
-  ];
-  if (allNames.includes(name.toLowerCase())) {
-    showToast('❌ Name already exists', 'error'); return;
-  }
+  // Check for duplicate names (excluding current editing)
+  const duplicate = allCats.some((c, i) => i !== editingIndex && c.value.toLowerCase() === name.toLowerCase());
+  if (duplicate) { showToast('❌ Name already exists', 'error'); return; }
 
-  const cat = {
-    value:  name,
-    icon:   selectedIcon,
-    bg:     selectedColor.bg,
-    chart:  selectedColor.chart,
-    budget: budget > 0 ? budget : null,
-    hidden: false,
-  };
-
-  if (editingCustomIndex !== null) {
-    cat.hidden = customCats[editingCustomIndex].hidden;
-    customCats[editingCustomIndex] = cat;
+  if (editingIndex !== null) {
+    // editing existing custom
+    allCats[editingIndex] = {
+      ...allCats[editingIndex],
+      value:  name,
+      icon:   selectedIcon,
+      bg:     selectedColor.bg,
+      chart:  selectedColor.chart,
+      budget: budget > 0 ? budget : null,
+    };
   } else {
-    customCats.push(cat);
+    allCats.push({
+      type: 'custom', originalValue: name, value: name,
+      icon: selectedIcon, bg: selectedColor.bg, chart: selectedColor.chart,
+      budget: budget > 0 ? budget : null, hidden: false,
+    });
   }
 
-  saveSettings();
-  render();
   closeCatModal();
-  showToast(editingCustomIndex !== null ? '✅ Category updated' : '✅ Category added');
+  render();
+  const ok = await persistToSheet();
+  if (ok) showToast(editingIndex !== null ? '✅ Category updated' : '✅ Category added');
 }
 
-// ── Init ──────────────────────────────────────────────────
-loadSettings();
-render();
+// ── GAPI bootstrap ─────────────────────────────────────────
+async function initGapiClient() {
+  await new Promise(resolve => {
+    if (gapi.client?.drive) { resolve(); return; }
+    gapi.load('client', resolve);
+  });
+  await gapi.client.init({ apiKey: '', discoveryDocs: DISCOVERY_DOCS });
+}
+
+function saveAccessToken(token) { sessionStorage.setItem('gapi_access_token', token); }
+function getSavedAccessToken()  { return sessionStorage.getItem('gapi_access_token'); }
+
+async function loadPage() {
+  const token = localStorage.getItem('google_token');
+  if (!token) { showToast('❌ Please sign in first', 'error'); setTimeout(() => window.location.href='Home.html', 1500); return; }
+  currentUserEmail = getUserEmailFromToken(token);
+  spreadsheetId    = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
+
+  document.getElementById('loadingOverlay').style.display = 'flex';
+
+  await initGapiClient();
+
+  const savedToken = getSavedAccessToken();
+  if (savedToken) {
+    currentAccessToken = savedToken;
+    gapi.client.setToken({ access_token: currentAccessToken });
+    try {
+      await gapi.client.drive.files.list({ q:'trashed=false', pageSize:1, fields:'files(id)' });
+      allCats = await ensureCategoriesTab(spreadsheetId);
+      render();
+      document.getElementById('loadingOverlay').style.display = 'none';
+      return;
+    } catch(e) { /* token expired */ }
+  }
+
+  const tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID, scope: SCOPES, prompt: '',
+    callback: async (resp) => {
+      if (!resp.access_token) return;
+      currentAccessToken = resp.access_token;
+      saveAccessToken(currentAccessToken);
+      gapi.client.setToken({ access_token: currentAccessToken });
+      allCats = await ensureCategoriesTab(spreadsheetId);
+      render();
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+  });
+  tokenClient.requestAccessToken();
+}
+
+loadPage();
 </script>
 
 <script>
