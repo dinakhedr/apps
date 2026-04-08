@@ -741,7 +741,7 @@ function updateBudgetOverview() {
   // Also merge legacy local budgets for backward compat
   Object.keys(budgets).forEach(k => { if (!budgetMap[k] && budgets[k] > 0) budgetMap[k] = budgets[k]; });
 
-  const cats = Object.keys(budgetMap);
+const cats = Object.keys(budgetMap).filter(cat => (spent[cat] || 0) > 0);
   if (!cats.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
 
