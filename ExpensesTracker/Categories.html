@@ -360,7 +360,18 @@
         <div class="cat-preview-sub" id="builtinPreviewBudget">No budget limit</div>
       </div>
     </div>
+<!-- Icon picker -->
+    <span class="icon-picker-label">Icon</span>
+    <div class="icon-grid" id="builtinIconGrid"></div>
 
+    <!-- Color picker -->
+    <span class="icon-picker-label">Background Color</span>
+    <div class="color-grid" id="builtinColorGrid"></div>
+
+    <div class="form-group">
+      <label>Display Name</label>
+      <input type="text" id="builtinName" placeholder="Rename…" maxlength="30" oninput="updateBuiltinPreview()">
+    </div>
     <div class="form-group">
       <label>Display Name</label>
       <input type="text" id="builtinName" placeholder="Rename…" maxlength="30" oninput="updateBuiltinPreview()">
@@ -417,7 +428,9 @@ const COLOR_OPTIONS = [
 let catSettings = {};
 let customCats  = [];
 let editingCustomIndex = null; // null = new, number = editing existing
-let editingBuiltinKey  = null;
+let editingBuiltinKey   = null;
+let builtinSelectedIcon  = null;
+let builtinSelectedColor = null;
 let selectedIcon  = ICON_OPTIONS[0];
 let selectedColor = COLOR_OPTIONS[0];
 
@@ -484,7 +497,7 @@ function renderDefaultList() {
     const budgetTxt = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
     return `
       <div class="cat-row ${hidden ? 'hidden-cat' : ''}" id="row-${cat.value.replace(/\s/g,'_')}">
-        <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
+        <div class="cat-icon-preview" style="background:${s.bg || cat.bg}">${s.icon || cat.icon}</div>
         <div class="cat-info">
           <div class="cat-name-text">${name}${s.name && s.name !== cat.value ? ` <span style="font-size:10px;color:var(--text-3)">(${cat.value})</span>` : ''}</div>
           <div class="cat-budget-text">${budgetTxt}</div>
@@ -549,28 +562,57 @@ function deleteCustom(i) {
 // ── Edit built-in ─────────────────────────────────────────
 function openEditBuiltin(originalValue) {
   editingBuiltinKey = originalValue;
-  const cat = CATEGORIES.find(c => c.value === originalValue);
+  const cat = DEFAULT_CATEGORIES.find(c => c.value === originalValue);
   const s   = catSettings[originalValue] || {};
 
+  builtinSelectedIcon  = s.icon  || cat.icon;
+  builtinSelectedColor = COLOR_OPTIONS.find(c => c.bg === (s.bg || cat.bg)) || COLOR_OPTIONS[0];
+
   document.getElementById('editBuiltinTitle').textContent = `✏️ Edit — ${originalValue}`;
-  document.getElementById('builtinPreviewIcon').textContent  = cat.icon;
-  document.getElementById('builtinPreviewIcon').style.background = cat.bg;
-  document.getElementById('builtinPreviewName').textContent  = s.name || originalValue;
-  document.getElementById('builtinPreviewBudget').textContent = s.budget ? `EGP ${Number(s.budget).toLocaleString('en-US')} / month` : 'No budget limit';
+  document.getElementById('builtinPreviewIcon').textContent         = builtinSelectedIcon;
+  document.getElementById('builtinPreviewIcon').style.background    = builtinSelectedColor.bg;
+  document.getElementById('builtinPreviewName').textContent         = s.name || originalValue;
+  document.getElementById('builtinPreviewBudget').textContent       = s.budget ? `EGP ${Number(s.budget).toLocaleString('en-US')} / month` : 'No budget limit';
   document.getElementById('builtinName').value   = s.name   || '';
   document.getElementById('builtinBudget').value = s.budget || '';
 
+  buildBuiltinIconGrid();
+  buildBuiltinColorGrid();
   document.getElementById('editBuiltinBackdrop').classList.add('open');
 }
 
 function updateBuiltinPreview() {
   const name   = document.getElementById('builtinName').value.trim();
   const budget = document.getElementById('builtinBudget').value;
-  const cat    = CATEGORIES.find(c => c.value === editingBuiltinKey);
-  document.getElementById('builtinPreviewName').textContent   = name || (cat ? cat.value : '');
-  document.getElementById('builtinPreviewBudget').textContent = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
+  const cat    = DEFAULT_CATEGORIES.find(c => c.value === editingBuiltinKey);
+  document.getElementById('builtinPreviewIcon').textContent      = builtinSelectedIcon || (cat ? cat.icon : '❓');
+  document.getElementById('builtinPreviewIcon').style.background = builtinSelectedColor ? builtinSelectedColor.bg : (cat ? cat.bg : '#eee');
+  document.getElementById('builtinPreviewName').textContent      = name || (cat ? cat.value : '');
+  document.getElementById('builtinPreviewBudget').textContent    = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
+}
+function buildBuiltinIconGrid() {
+  document.getElementById('builtinIconGrid').innerHTML = ICON_OPTIONS.map(icon => `
+    <button class="icon-option ${icon === builtinSelectedIcon ? 'selected' : ''}"
+      onclick="selectBuiltinIcon('${icon}')">${icon}</button>`).join('');
 }
 
+function buildBuiltinColorGrid() {
+  document.getElementById('builtinColorGrid').innerHTML = COLOR_OPTIONS.map((c, i) => `
+    <div class="color-option ${c.bg === builtinSelectedColor.bg ? 'selected' : ''}"
+      style="background:${c.bg}" onclick="selectBuiltinColor(${i})"></div>`).join('');
+}
+
+function selectBuiltinIcon(icon) {
+  builtinSelectedIcon = icon;
+  buildBuiltinIconGrid();
+  updateBuiltinPreview();
+}
+
+function selectBuiltinColor(i) {
+  builtinSelectedColor = COLOR_OPTIONS[i];
+  buildBuiltinColorGrid();
+  updateBuiltinPreview();
+}
 function closeBuiltinModal() {
   document.getElementById('editBuiltinBackdrop').classList.remove('open');
   editingBuiltinKey = null;
@@ -579,11 +621,19 @@ function closeBuiltinModal() {
 function saveBuiltin() {
   const name   = document.getElementById('builtinName').value.trim();
   const budget = parseFloat(document.getElementById('builtinBudget').value);
+  const cat    = DEFAULT_CATEGORIES.find(c => c.value === editingBuiltinKey);
   if (!catSettings[editingBuiltinKey]) catSettings[editingBuiltinKey] = {};
-  if (name) catSettings[editingBuiltinKey].name   = name;
+  if (name) catSettings[editingBuiltinKey].name = name;
   else      delete catSettings[editingBuiltinKey].name;
   if (budget > 0) catSettings[editingBuiltinKey].budget = budget;
   else            delete catSettings[editingBuiltinKey].budget;
+  // Save icon/color only if changed from default
+  if (builtinSelectedIcon !== cat.icon)           catSettings[editingBuiltinKey].icon = builtinSelectedIcon;
+  else                                            delete catSettings[editingBuiltinKey].icon;
+  if (builtinSelectedColor.bg !== cat.bg)         catSettings[editingBuiltinKey].bg   = builtinSelectedColor.bg;
+  else                                            delete catSettings[editingBuiltinKey].bg;
+  if (builtinSelectedColor.chart !== cat.chart)   catSettings[editingBuiltinKey].chart = builtinSelectedColor.chart;
+  else                                            delete catSettings[editingBuiltinKey].chart;
   saveSettings();
   render();
   closeBuiltinModal();
