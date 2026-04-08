@@ -119,7 +119,7 @@
     .add-btn:hover  { opacity: 0.92; }
     .add-btn:active { transform: scale(0.97); }
 
-    /* Recurring Expense row */
+    /* Recurring row with badge and next date */
     .sub-row {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 0; border-bottom: 1px solid var(--border);
@@ -131,26 +131,64 @@
       justify-content: center; font-size: 22px; flex-shrink: 0;
     }
     .sub-info { flex: 1; min-width: 0; }
-    .sub-name { font-weight: 700; font-size: 15px; color: var(--text); }
-    .sub-meta {
-      font-size: 11px; color: var(--text-3); margin-top: 4px;
-      display: flex; flex-wrap: nowrap; gap: 10px;
-      overflow-x: auto;
-      white-space: nowrap;
+    .sub-freq-badge {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--brand);
+      background: #ede9fe;
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
     }
-    .sub-amount { font-weight: 700; font-size: 14px; color: var(--brand); flex-shrink: 0; }
-    .sub-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .sub-name {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+    .sub-next {
+      font-size: 11px;
+      color: var(--text-2);
+    }
+    .sub-amount {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--brand);
+      flex-shrink: 0;
+    }
+    .sub-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
     .action-btn {
       background: none; border: none;
-      width: 32px; height: 32px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 15px; transition: background 0.15s;
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.15s;
     }
     .action-btn:hover { background: var(--surface-2); }
-    .inactive-row { opacity: 0.55; background: var(--surface-2); border-radius: 12px; margin-top: 4px; }
+    .inactive-row {
+      opacity: 0.55;
+      background: var(--surface-2);
+      border-radius: 12px;
+      margin-top: 4px;
+    }
     .badge-inactive {
-      background: #e2e2ea; color: #6e6e8a; font-size: 10px;
-      font-weight: 700; padding: 2px 8px; border-radius: 20px;
+      background: #e2e2ea;
+      color: #6e6e8a;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
       margin-left: 8px;
     }
 
@@ -453,33 +491,21 @@ function loadRecurringLocal() {
 // ======================= NEXT PAYMENT DATE CALCULATION =======================
 function getNextPaymentDate(sub, referenceDate = new Date()) {
   const { frequency, startMonth, paymentDay } = sub;
-  let year = referenceDate.getFullYear();
-  let month = referenceDate.getMonth() + 1; // 1-12
-  let day = referenceDate.getDate();
+  let targetDay = Math.min(paymentDay, 28);
 
-  // Normalize payment day (max 28/29/30/31 depending on month, but we'll cap)
-  let targetDay = Math.min(paymentDay, 28); // safe, will adjust later per month
-
-  // For monthly: find the next occurrence after today
   if (frequency === 'Monthly') {
-    // Determine if this Recurring Expense has already started (startMonth <= current month? but can start in future)
-    // Actually we consider startMonth as the month the first payment occurs (could be future)
-    // We'll compute candidate date: same year, startMonth, targetDay
-    let candidate = new Date(year, startMonth - 1, targetDay);
+    let candidate = new Date(referenceDate.getFullYear(), startMonth - 1, targetDay);
     if (candidate <= referenceDate) {
-      // move to next year? For monthly, add 1 month until > referenceDate
       while (candidate <= referenceDate) {
         candidate.setMonth(candidate.getMonth() + 1);
       }
     }
-    // Adjust day to paymentDay (clamp to month length)
     const lastDay = new Date(candidate.getFullYear(), candidate.getMonth() + 1, 0).getDate();
     candidate.setDate(Math.min(paymentDay, lastDay));
     return candidate;
   }
   else if (frequency === 'Quarterly') {
-    // Find next quarter start
-    let candidate = new Date(year, startMonth - 1, targetDay);
+    let candidate = new Date(referenceDate.getFullYear(), startMonth - 1, targetDay);
     if (candidate <= referenceDate) {
       while (candidate <= referenceDate) {
         candidate.setMonth(candidate.getMonth() + 3);
@@ -490,7 +516,7 @@ function getNextPaymentDate(sub, referenceDate = new Date()) {
     return candidate;
   }
   else if (frequency === 'Annual') {
-    let candidate = new Date(year, startMonth - 1, targetDay);
+    let candidate = new Date(referenceDate.getFullYear(), startMonth - 1, targetDay);
     if (candidate <= referenceDate) {
       candidate.setFullYear(candidate.getFullYear() + 1);
     }
@@ -529,11 +555,6 @@ function computeMonthlyTotal() {
   return total;
 }
 
-function getMonthName(monthNum) {
-  const names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  return names[monthNum-1] || '';
-}
-
 function render() {
   const active = recurringList.filter(s => s.active === true);
   const inactive = recurringList.filter(s => s.active === false);
@@ -547,17 +568,14 @@ function render() {
   } else {
     activeContainer.innerHTML = active.map((sub, idx) => {
       const globalIdx = recurringList.findIndex(s => s.id === sub.id);
-      const freqIcon = sub.frequency === 'Monthly' ? '📅' : (sub.frequency === 'Quarterly' ? '📆' : '🗓️');
       const nextDate = formatNextPaymentDate(sub);
       return `
         <div class="sub-row">
           <div class="sub-icon">${getIconForName(sub.name)}</div>
           <div class="sub-info">
+            <div class="sub-freq-badge">${sub.frequency}</div>
             <div class="sub-name">${escapeHtml(sub.name)}</div>
-            <div class="sub-meta">
-              <span>${freqIcon} ${sub.frequency}</span>
-              <span>📅 ${nextDate}</span>
-            </div>
+            <div class="sub-next">Next: ${nextDate}</div>
           </div>
           <div class="sub-amount">${formatMoney(sub.amount)}</div>
           <div class="sub-actions">
@@ -580,7 +598,7 @@ function render() {
           <div class="sub-icon">${getIconForName(sub.name)}</div>
           <div class="sub-info">
             <div class="sub-name">${escapeHtml(sub.name)} <span class="badge-inactive">cancelled</span></div>
-            <div class="sub-meta">${sub.frequency} · ${formatMoney(sub.amount)}</div>
+            <div class="sub-next" style="color:var(--text-3)">${sub.frequency} · ${formatMoney(sub.amount)}</div>
           </div>
           <div class="sub-actions">
             <button class="action-btn" onclick="toggleActive(${globalIdx})" title="Reactivate">▶️</button>
@@ -599,7 +617,6 @@ function render() {
     document.getElementById('monthTotal').textContent = formatMoney(monthly);
     activeCountSpan.textContent = `${active.length} active recurring expense${active.length !== 1 ? 's' : ''}`;
     
-    // Find earliest next payment among active recurring expenses
     let earliestDate = null;
     for (let sub of active) {
       const next = getNextPaymentDate(sub);
@@ -624,7 +641,7 @@ async function toggleActive(index) {
   recurringList[index].active = !recurringList[index].active;
   render();
   const ok = await saveRecurringToSheet();
-  if (ok) showToast(recurringList[index].active ? '✅ Recurring Expense resumed' : '⏸️ Recurring Expense paused');
+  if (ok) showToast(recurringList[index].active ? '✅ Recurring expense resumed' : '⏸️ Recurring expense paused');
   else { recurringList[index].active = !recurringList[index].active; render(); showToast('❌ Failed to update', 'error'); }
 }
 
@@ -701,7 +718,7 @@ async function saveRecurring() {
   }
   render();
   const ok = await saveRecurringToSheet();
-  if (ok) showToast(editingId !== null ? '✅ Updated' : '✅ Recurring Expense added');
+  if (ok) showToast(editingId !== null ? '✅ Updated' : '✅ Recurring expense added');
   else showToast('❌ Failed to save to sheet', 'error');
   closeModal();
 }
