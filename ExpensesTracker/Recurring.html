@@ -393,13 +393,13 @@ function formatMoney(amount) {
   return `EGP ${Number(amount).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
 }
 
-// Return badge color based on frequency (3 distinct brand theme colors)
+// Badge colors based on frequency (Palette 4: Teal, Purple, Coral)
 function getBadgeColor(frequency) {
   switch (frequency) {
-    case 'Monthly': return '#5b5ef4';   // brand primary
-    case 'Quarterly': return '#8b5cf6'; // brand secondary
-    case 'Annual': return '#a78bfa';    // lighter purple accent
-    default: return '#5b5ef4';
+    case 'Monthly': return '#14b8a6';   // teal
+    case 'Quarterly': return '#a855f7'; // purple
+    case 'Annual': return '#ec4899';    // pink/coral
+    default: return '#14b8a6';
   }
 }
 
