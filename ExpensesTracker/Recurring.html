@@ -1,3 +1,12 @@
+Here's the improved version of `Recurring.html` with the requested layout changes:
+
+- Starting month now uses a dropdown with month names (January–December) instead of a number field.
+- Frequency and amount are on the same line (using a two-column grid).
+- Starting month and payment day are on the same line.
+- Removed the optional category field entirely.
+- Updated all related JavaScript to handle month names properly (storing as month index internally).
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -186,6 +195,12 @@
     .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 18px; }
     .modal-title { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 20px; }
     .form-group { margin-bottom: 16px; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
     .form-group label {
       display: block; font-size: 11px; font-weight: 700; color: var(--text-2);
       text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
@@ -295,30 +310,46 @@
       <label>Name *</label>
       <input type="text" id="subName" placeholder="e.g. Netflix, iCloud, Gym" maxlength="50">
     </div>
-    <div class="form-group">
-      <label>Frequency</label>
-      <select id="subFreq">
-        <option value="Monthly">Monthly</option>
-        <option value="Quarterly">Quarterly</option>
-        <option value="Annual">Annual</option>
-      </select>
+    <!-- Row: Frequency + Amount -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Frequency</label>
+        <select id="subFreq">
+          <option value="Monthly">Monthly</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="Annual">Annual</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Amount (EGP) *</label>
+        <input type="number" id="subAmount" placeholder="0.00" step="0.01" min="0">
+      </div>
     </div>
-    <div class="form-group">
-      <label>Amount (EGP) *</label>
-      <input type="number" id="subAmount" placeholder="0.00" step="0.01" min="0">
+    <!-- Row: Starting Month (as month name) + Payment Day -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Starting Month</label>
+        <select id="subStartMonth">
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Payment Day (1–31)</label>
+        <input type="number" id="subPaymentDay" placeholder="15" min="1" max="31">
+      </div>
     </div>
-    <div class="form-group">
-      <label>Starting Month (1=Jan, 12=Dec)</label>
-      <input type="number" id="subStartMonth" placeholder="1" min="1" max="12" step="1">
-    </div>
-    <div class="form-group">
-      <label>Payment Day (1–31)</label>
-      <input type="number" id="subPaymentDay" placeholder="15" min="1" max="31">
-    </div>
-    <div class="form-group">
-      <label>Category (optional, for reference)</label>
-      <input type="text" id="subCategory" placeholder="Entertainment, Work, etc.">
-    </div>
+
     <div class="modal-footer" id="modalFooter">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-save" onclick="saveSubscription()">Save</button>
@@ -344,12 +375,10 @@ function showToast(msg, type = 'success') {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// Format number as EGP
 function formatMoney(amount) {
   return `EGP ${Number(amount).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
 }
 
-// Parse row from sheet to object
 function parseRecurringRow(row) {
   return {
     id:          row[0] ? parseInt(row[0]) : Date.now() + Math.random(),
@@ -358,12 +387,10 @@ function parseRecurringRow(row) {
     amount:      parseFloat(row[3]) || 0,
     startMonth:  parseInt(row[4]) || 1,
     paymentDay:  parseInt(row[5]) || 1,
-    category:    row[6] || '',
-    active:      row[7] === 'true' || row[7] === true,
+    active:      row[6] === 'true' || row[6] === true,
   };
 }
 
-// Serialize to sheet row
 function recurringToRow(sub) {
   return [
     sub.id,
@@ -372,22 +399,19 @@ function recurringToRow(sub) {
     sub.amount,
     sub.startMonth,
     sub.paymentDay,
-    sub.category || '',
     sub.active ? 'true' : 'false',
   ];
 }
 
-// Load recurring data from sheet tab
 async function loadRecurringFromSheet() {
   if (!spreadsheetId) return false;
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${RECURRING_SHEET}!A2:H`
+      range: `${RECURRING_SHEET}!A2:G`
     });
     const rows = res.result.values || [];
     recurringList = rows.map(parseRecurringRow);
-    // Ensure each has valid fields
     recurringList = recurringList.filter(s => s.name && s.name.trim() !== '');
     saveRecurringLocal();
     return true;
@@ -397,20 +421,18 @@ async function loadRecurringFromSheet() {
   }
 }
 
-// Save full recurring list to sheet (overwrite)
 async function saveRecurringToSheet() {
   if (!spreadsheetId) return false;
   try {
     const rows = recurringList.map(r => recurringToRow(r));
-    // Clear existing data and rewrite
     await gapi.client.sheets.spreadsheets.values.clear({
       spreadsheetId,
-      range: `${RECURRING_SHEET}!A2:H`,
+      range: `${RECURRING_SHEET}!A2:G`,
     });
     if (rows.length) {
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${RECURRING_SHEET}!A2:H`,
+        range: `${RECURRING_SHEET}!A2:G`,
         valueInputOption: 'RAW',
         resource: { values: rows }
       });
@@ -422,7 +444,6 @@ async function saveRecurringToSheet() {
   }
 }
 
-// Create Recurring tab if not exists
 async function ensureRecurringTab() {
   try {
     const sheetMeta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
@@ -432,18 +453,16 @@ async function ensureRecurringTab() {
         spreadsheetId,
         resource: { requests: [{ addSheet: { properties: { title: RECURRING_SHEET } } }] }
       });
-      // Add headers
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${RECURRING_SHEET}!A1:H1`,
+        range: `${RECURRING_SHEET}!A1:G1`,
         valueInputOption: 'RAW',
-        resource: { values: [['ID','Name','Frequency','Amount','StartMonth','PaymentDay','Category','Active']] }
+        resource: { values: [['ID','Name','Frequency','Amount','StartMonth','PaymentDay','Active']] }
       });
     }
   } catch(e) { console.warn(e); }
 }
 
-// Local storage fallback
 function saveRecurringLocal() {
   if (currentUserEmail) localStorage.setItem(`recurring_${currentUserEmail}`, JSON.stringify(recurringList));
 }
@@ -457,12 +476,11 @@ function loadRecurringLocal() {
 // ======================= UI RENDER =======================
 function computeMonthlyTotal() {
   const now = new Date();
-  const currentMonth = now.getMonth() + 1; // 1-12
+  const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
   let total = 0;
   for (let sub of recurringList) {
     if (!sub.active) continue;
-    // Determine if this subscription is due this month
     let due = false;
     if (sub.frequency === 'Monthly') {
       due = (sub.startMonth <= currentMonth);
@@ -475,6 +493,11 @@ function computeMonthlyTotal() {
     if (due) total += sub.amount;
   }
   return total;
+}
+
+function getMonthName(monthNum) {
+  const names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return names[monthNum-1] || '';
 }
 
 function render() {
@@ -495,11 +518,11 @@ function render() {
         <div class="sub-row">
           <div class="sub-icon">${getIconForName(sub.name)}</div>
           <div class="sub-info">
-            <div class="sub-name">${escapeHtml(sub.name)} ${sub.category ? `<span style="font-size:11px;color:var(--text-3)">(${escapeHtml(sub.category)})</span>` : ''}</div>
+            <div class="sub-name">${escapeHtml(sub.name)}</div>
             <div class="sub-meta">
               <span>${freqIcon} ${sub.frequency}</span>
               <span>💳 Day ${sub.paymentDay}</span>
-              <span>🚀 Start month ${sub.startMonth}</span>
+              <span>🚀 ${getMonthName(sub.startMonth)}</span>
             </div>
           </div>
           <div class="sub-amount">${formatMoney(sub.amount)}</div>
@@ -523,7 +546,7 @@ function render() {
           <div class="sub-icon">${getIconForName(sub.name)}</div>
           <div class="sub-info">
             <div class="sub-name">${escapeHtml(sub.name)} <span class="badge-inactive">cancelled</span></div>
-            <div class="sub-meta">${sub.frequency} · ${formatMoney(sub.amount)}</div>
+            <div class="sub-meta">${sub.frequency} · ${formatMoney(sub.amount)} · Day ${sub.paymentDay} · ${getMonthName(sub.startMonth)}</div>
           </div>
           <div class="sub-actions">
             <button class="action-btn" onclick="toggleActive(${globalIdx})" title="Reactivate">▶️</button>
@@ -535,15 +558,13 @@ function render() {
   
   // Update stats
   const monthly = computeMonthlyTotal();
-  const totalElem = document.getElementById('monthTotal');
   const statsRow = document.getElementById('statsRow');
   const activeCountSpan = document.getElementById('activeCount');
   if (active.length > 0) {
     statsRow.style.display = 'flex';
-    totalElem.textContent = formatMoney(monthly);
+    document.getElementById('monthTotal').textContent = formatMoney(monthly);
     activeCountSpan.textContent = `${active.length} active subscription${active.length !== 1 ? 's' : ''}`;
     
-    // Next payment day prediction: find earliest payment day among active
     const today = new Date();
     const currentDay = today.getDate();
     let nextDay = null;
@@ -555,7 +576,6 @@ function render() {
       }
     }
     if (nextDay === null) {
-      // find minimum day overall
       for (let sub of active) {
         let payDay = sub.paymentDay;
         if (payDay > 31) payDay = 31;
@@ -600,9 +620,9 @@ function openAddModal() {
   document.getElementById('subName').value = '';
   document.getElementById('subFreq').value = 'Monthly';
   document.getElementById('subAmount').value = '';
-  document.getElementById('subStartMonth').value = new Date().getMonth() + 1;
+  const currentMonth = new Date().getMonth() + 1;
+  document.getElementById('subStartMonth').value = currentMonth;
   document.getElementById('subPaymentDay').value = '15';
-  document.getElementById('subCategory').value = '';
   document.getElementById('modalFooter').innerHTML = `<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveSubscription()">Save</button>`;
   document.getElementById('subModal').classList.add('open');
 }
@@ -616,7 +636,6 @@ function openEditModal(index) {
   document.getElementById('subAmount').value = sub.amount;
   document.getElementById('subStartMonth').value = sub.startMonth;
   document.getElementById('subPaymentDay').value = sub.paymentDay;
-  document.getElementById('subCategory').value = sub.category || '';
   document.getElementById('modalFooter').innerHTML = `
     <button class="btn-cancel" onclick="closeModal()">Cancel</button>
     <button class="btn-danger" style="flex:1" onclick="deleteAndClose()">Delete</button>
@@ -640,16 +659,15 @@ async function saveSubscription() {
   const amount = parseFloat(document.getElementById('subAmount').value);
   const startMonth = parseInt(document.getElementById('subStartMonth').value);
   const paymentDay = parseInt(document.getElementById('subPaymentDay').value);
-  const category = document.getElementById('subCategory').value.trim();
 
   if (!name) { showToast('❌ Name required', 'error'); return; }
   if (isNaN(amount) || amount <= 0) { showToast('❌ Valid amount required', 'error'); return; }
-  if (startMonth < 1 || startMonth > 12) { showToast('❌ Start month 1-12', 'error'); return; }
+  if (startMonth < 1 || startMonth > 12) { showToast('❌ Start month invalid', 'error'); return; }
   if (paymentDay < 1 || paymentDay > 31) { showToast('❌ Payment day 1-31', 'error'); return; }
 
   const newSub = {
     id: editingId !== null ? recurringList[editingId].id : Date.now() + Math.random(),
-    name, frequency, amount, startMonth, paymentDay, category,
+    name, frequency, amount, startMonth, paymentDay,
     active: editingId !== null ? recurringList[editingId].active : true,
   };
 
@@ -688,7 +706,7 @@ async function loadPage() {
   document.getElementById('loadingOverlay').style.display = 'flex';
 
   await initGapiClient();
-  loadRecurringLocal(); // local fallback
+  loadRecurringLocal();
 
   const savedToken = getSavedAccessToken();
   if (savedToken) {
@@ -724,3 +742,4 @@ loadPage();
 </script>
 </body>
 </html>
+```
