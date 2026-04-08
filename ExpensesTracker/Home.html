@@ -926,16 +926,49 @@ function openBudgetModal() {
 function closeBudgetModal() {
   document.getElementById('budgetModalBackdrop').classList.remove('open');
 }
-function saveBudgets() {
+async function saveBudgets() {
+  const btn = document.getElementById('budgetSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
   document.querySelectorAll('#budgetModalList input[data-cat]').forEach(inp => {
     const val = parseFloat(inp.value);
-    if (val > 0) budgets[inp.dataset.cat] = val;
-    else delete budgets[inp.dataset.cat];
+    const cat = inp.dataset.cat;
+    // Update local budgets object (legacy)
+    if (val > 0) budgets[cat] = val;
+    else delete budgets[cat];
+    // Update CATEGORIES array so it reflects immediately
+    const catObj = CATEGORIES.find(c => c.value === cat);
+    if (catObj) catObj.budget = val > 0 ? val : null;
   });
+
   saveLocal();
+
+  // Persist to sheet if connected
+  if (spreadsheetId) {
+    try {
+      // Build full allCats list (including hidden) to write back
+      const fullRes = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId, range: `${CAT_SHEET_NAME}!A2:H`
+      });
+      const rows = (fullRes.result.values || []).map(parseCatRow);
+      // Update budget values in the full list
+      rows.forEach(r => {
+        const inp = document.querySelector(`#budgetModalList input[data-cat="${r.value}"]`);
+        if (inp) r.budget = parseFloat(inp.value) > 0 ? parseFloat(inp.value) : null;
+      });
+      await saveCategoriesToSheet(spreadsheetId, rows);
+      showToast('🎯 Budgets saved to sheet!');
+    } catch(e) {
+      console.error(e);
+      showToast('🎯 Budgets saved locally only', 'warn');
+    }
+  } else {
+    showToast('🎯 Budgets saved!');
+  }
+
   updateBudgetOverview();
   closeBudgetModal();
-  showToast('🎯 Budgets saved!');
+  btn.disabled = false; btn.textContent = 'Save Budgets';
 }
 
 // ── Sync strip ────────────────────────────────────────────
