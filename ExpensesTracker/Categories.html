@@ -491,9 +491,9 @@ function render() {
     const budget = cat.budget;
     const budgetTxt = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
     const origDef = DEFAULT_CATEGORIES.find(d => d.value === cat.originalValue) || {};
-    const displayName = cat.value !== cat.originalValue
-      ? `${cat.value} <span style="font-size:10px;color:var(--text-3)">(${cat.originalValue})</span>`
-      : cat.value;
+    
+    const displayName = cat.value;
+    
     return `
       <div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
         <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
