@@ -911,13 +911,7 @@ async function manualSync() {
 }
 
 // ── Load page ─────────────────────────────────────────────
-// ── Persist / restore access token across page navigations ─
-
-
-    gapi.load('client', resolve);
-  });
-  await gapi.client.init({ apiKey: '', discoveryDocs: DISCOVERY_DOCS });
-}
+// initGapiClient() is provided by utils.js
 
 async function showMain() {
   spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`) || await findExistingSpreadsheet();

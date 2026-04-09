@@ -15,23 +15,9 @@
   <script src="utils.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
-  <script>
-  (function() {
-    try {
-      const c = document.createElement('canvas');
-      ... (rest of the script)
-    } catch(e) {}
-  })();
-  </script>
+
 </head>
-  <style>
-
-    
-
-    
-    }
-
-    /* ── Layout ── */
+  <style>    /* ── Layout ── */
     
 
     /* ── Header ── */
@@ -57,13 +43,11 @@
       font-size: 13px;
       color: rgba(255,255,255,0.95);
       font-weight: 500;
-    }
     .compare-badge {
       font-size: 11px;
       font-weight: 700;
       padding: 2px 8px;
       border-radius: 20px;
-    }
     .compare-up   { background: rgba(239,68,68,0.25);   color: #fca5a5; }
     .compare-down { background: rgba(16,185,129,0.25);  color: #6ee7b7; }
     .compare-same { background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.7); }
@@ -93,7 +77,6 @@
       padding: 22px;
       margin-bottom: 20px;
       box-shadow: 0 8px 32px rgba(91,94,244,0.25);
-    }
     .stats-
     
     .stats-month { font-size: 13px; color: rgba(255,255,255,0.75); }
@@ -104,7 +87,6 @@
       font-size: 12px; font-weight: 600; cursor: pointer;
       font-family: 'DM Sans', sans-serif; white-space: nowrap;
       transition: background 0.15s; flex-shrink: 0;
-    }
     .sync-card-btn:hover  { background: rgba(255,255,255,0.28); }
     .sync-card-btn:active { transform: scale(0.96); }
 
@@ -120,7 +102,6 @@
       display: flex; justify-content: space-between; align-items: center;
       padding: 10px 0; border-bottom: 1px solid var(--border);
       font-size: 13px;
-    }
     .budget-row:last-child { border-bottom: none; }
     .budget-cat  { display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); }
     .budget-nums { font-size: 12px; color: var(--text-2); text-align: right; }
@@ -132,7 +113,6 @@
     .budget-bar.over    { background: var(--danger); }
     .budget-badge {
       font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
-    }
     .budget-badge.ok      { background: #d1fae5; color: #065f46; }
     .budget-badge.warning { background: #fef3c7; color: #92400e; }
     .budget-badge.over    { background: #fee2e2; color: #991b1b; }
@@ -143,7 +123,6 @@
       color: var(--text-2); padding: 5px 12px;
       border-radius: 20px; font-size: 12px; font-weight: 600;
       cursor: pointer; font-family: 'DM Sans', sans-serif;
-    }
     .budget-settings-btn:hover { border-color: var(--brand); color: var(--brand); }
 
     /* ── Recent Expenses list ── */
@@ -154,7 +133,6 @@
       color: var(--brand); font-size: 13px; font-weight: 600;
       cursor: pointer; padding: 4px 10px; border-radius: 20px;
       font-family: 'DM Sans', sans-serif;
-    }
     .see-all-btn:hover { background: #ededff; }
 
     /* ── Search bar ── */
@@ -165,33 +143,10 @@
     /* ── Expense item ── */
     
       to   { opacity: 1; transform: translateY(0); }
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    
-
     /* ── Toast ── */
     
 
     /* ── Full-screen Overlays ── */
-    
-    
-    
-    
-    
-    
-    
-    
-     }
-
     /* ── Modal (Edit Expense / Budget Settings) ── */
     
     
@@ -205,14 +160,12 @@
       display: grid; grid-template-columns: 1fr auto;
       align-items: center; gap: 10px;
       padding: 8px 0; border-bottom: 1px solid var(--border);
-    }
     .budget-modal-row:last-child { border-bottom: none; }
     .budget-cat-
     .budget-input-wrap { position: relative; width: 110px; }
     .budget-input-wrap input {
       padding: 8px 10px 8px 36px; font-size: 13px;
       border-radius: 8px; min-height: unset;
-    }
     .budget-curr { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-3); pointer-events: none; }
 
     /* ── Manage Categories button ── */
@@ -223,12 +176,7 @@
     /* ── Header icon buttons ── */
     
     
-    /* ── Bottom nav ── */
-    
-    
-    }
-    
-  </style>
+    /* ── Bottom nav ── */</style>
 </head>
 <body>
 

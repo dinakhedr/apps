@@ -627,11 +627,7 @@ async function saveCategory() {
   if (ok) showToast(editingIndex !== null ? '✅ Category updated' : '✅ Category added');
 }
 
-// ── GAPI bootstrap ─────────────────────────────────────────
-    gapi.load('client', resolve);
-  });
-  await gapi.client.init({ apiKey: '', discoveryDocs: DISCOVERY_DOCS });
-}
+// ── GAPI bootstrap provided by utils.js ───────────────────
 
 
 async function loadPage() {
