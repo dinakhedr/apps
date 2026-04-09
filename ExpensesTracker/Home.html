@@ -17,76 +17,41 @@
   <script src="https://apis.google.com/js/api.js"></script>
 
 </head>
-  <style>    /* ── Layout ── */
-    
-
-    /* ── Header ── */
- .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 8px; position: relative; }
-.header-left { flex: 1; text-align: center; min-width: 0; pointer-events: none; }
-    .header h1 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .header p  { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    
-    
+  <style>
+    /* ── Header (Home-specific centred layout) ── */
+    .header { position: relative; }
+    .header-left { flex: 1; text-align: center; min-width: 0; pointer-events: none; }
+    .header h1   { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
 
     /* ── Month comparison banner ── */
     .month-compare {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: rgba(255,255,255,0.14);
-      border: 1px solid rgba(255,255,255,0.22);
-      border-radius: 30px;
-      padding: 8px 18px;
-      margin: 0 auto 24px;
-      width: fit-content;
-      font-size: 13px;
-      color: rgba(255,255,255,0.95);
-      font-weight: 500;
-    .compare-badge {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 20px;
-    .compare-up   { background: rgba(239,68,68,0.25);   color: #fca5a5; }
-    .compare-down { background: rgba(16,185,129,0.25);  color: #6ee7b7; }
-    .compare-same { background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.7); }
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 30px; padding: 8px 18px;
+      margin: 0 auto 24px; width: fit-content;
+      font-size: 13px; color: rgba(255,255,255,0.95); font-weight: 500;
+    }
+    .compare-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .compare-up    { background: rgba(239,68,68,0.25);   color: #fca5a5; }
+    .compare-down  { background: rgba(16,185,129,0.25);  color: #6ee7b7; }
+    .compare-same  { background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.7); }
 
-    /* ── Cards ── */
-    
-
-    /* ── Form ── */
-    
-    
-    
-    
-
-    
-
-    
-
-    
-
-    /* ── Sync status strip ── */
-    
-
-    /* ── Stats ── */
+    /* ── Stats card ── */
     .stats-card {
-      background: var(--brand-grad);
-      border-radius: var(--radius-lg);
-      padding: 22px;
-      margin-bottom: 20px;
+      background: var(--brand-grad); border-radius: var(--radius-lg);
+      padding: 22px; margin-bottom: 20px;
       box-shadow: 0 8px 32px rgba(91,94,244,0.25);
-    .stats-
-    
+    }
+    .stats-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.70); text-transform: uppercase; letter-spacing: 0.06em; }
+    .stats-total { font-family: 'Sora', sans-serif; font-size: 38px; font-weight: 800; color: #fff; line-height: 1.1; margin: 6px 0 4px; }
     .stats-month { font-size: 13px; color: rgba(255,255,255,0.75); }
     .sync-card-btn {
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.30);
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.30);
       color: #fff; padding: 8px 14px; border-radius: 20px;
       font-size: 12px; font-weight: 600; cursor: pointer;
       font-family: 'DM Sans', sans-serif; white-space: nowrap;
       transition: background 0.15s; flex-shrink: 0;
+    }
     .sync-card-btn:hover  { background: rgba(255,255,255,0.28); }
     .sync-card-btn:active { transform: scale(0.96); }
 
@@ -97,11 +62,11 @@
     .legend-item  { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
     .legend-dot   { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 
-    /* ── Budget indicator ── */
+    /* ── Budget overview ── */
     .budget-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 0; border-bottom: 1px solid var(--border);
-      font-size: 13px;
+      padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
     .budget-row:last-child { border-bottom: none; }
     .budget-cat  { display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text); }
     .budget-nums { font-size: 12px; color: var(--text-2); text-align: right; }
@@ -111,28 +76,26 @@
     .budget-bar.ok      { background: var(--success); }
     .budget-bar.warning { background: var(--warning); }
     .budget-bar.over    { background: var(--danger); }
-    .budget-badge {
-      font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+    .budget-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
     .budget-badge.ok      { background: #d1fae5; color: #065f46; }
     .budget-badge.warning { background: #fef3c7; color: #92400e; }
     .budget-badge.over    { background: #fee2e2; color: #991b1b; }
-
-    /* ── Budget settings ── */
     .budget-settings-btn {
       background: none; border: 1.5px solid var(--border);
       color: var(--text-2); padding: 5px 12px;
       border-radius: 20px; font-size: 12px; font-weight: 600;
       cursor: pointer; font-family: 'DM Sans', sans-serif;
+    }
     .budget-settings-btn:hover { border-color: var(--brand); color: var(--brand); }
 
-    /* ── Recent Expenses list ── */
+    /* ── Recent expenses section header ── */
     .expenses-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
     .expenses-header h3 { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
     .see-all-btn {
-      background: none; border: none;
-      color: var(--brand); font-size: 13px; font-weight: 600;
-      cursor: pointer; padding: 4px 10px; border-radius: 20px;
-      font-family: 'DM Sans', sans-serif;
+      background: none; border: none; color: var(--brand);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      padding: 4px 10px; border-radius: 20px; font-family: 'DM Sans', sans-serif;
+    }
     .see-all-btn:hover { background: #ededff; }
 
     /* ── Search bar ── */
@@ -140,43 +103,22 @@
     .search-wrap input { padding-left: 36px; font-size: 14px; }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; }
 
-    /* ── Expense item ── */
-    
-      to   { opacity: 1; transform: translateY(0); }
-    /* ── Toast ── */
-    
-
-    /* ── Full-screen Overlays ── */
-    /* ── Modal (Edit Expense / Budget Settings) ── */
-    
-    
-    
-    
-    
-    
-
-    /* Budget modal specifics */
+    /* ── Budget modal specifics ── */
     .budget-modal-row {
       display: grid; grid-template-columns: 1fr auto;
       align-items: center; gap: 10px;
       padding: 8px 0; border-bottom: 1px solid var(--border);
+    }
     .budget-modal-row:last-child { border-bottom: none; }
-    .budget-cat-
+    .budget-cat-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--text); }
     .budget-input-wrap { position: relative; width: 110px; }
-    .budget-input-wrap input {
-      padding: 8px 10px 8px 36px; font-size: 13px;
-      border-radius: 8px; min-height: unset;
+    .budget-input-wrap input { padding: 8px 10px 8px 36px; font-size: 13px; border-radius: 8px; min-height: unset; }
     .budget-curr { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-3); pointer-events: none; }
 
-    /* ── Manage Categories button ── */
-    
-    
-    /* ── Logout bottom button ── */
-    
-    /* ── Header icon buttons ── */
-    
-    
-    /* ── Bottom nav ── */</style>
+    /* ── Edit modal grid ── */
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-grid .full { grid-column: 1 / -1; }
+  </style>
 </head>
 <body>
 

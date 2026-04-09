@@ -16,37 +16,13 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
     <style>
-
-    
-
-    
-    }
-
-    /* ── Layout ── */
-    
-
     /* ── Header ── */
-    .header {
-      display: flex; align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
     .header-left { display: flex; align-items: center; gap: 10px; }
-    
-    .header h1 {
-      font-family: 'Sora', sans-serif; font-size: 24px;
-      font-weight: 800; color: #fff; letter-spacing: -0.5px;
-    }
-    
-    
-
-    /* ── Cards ── */
-    
+    .header h1 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
 
     /* ── Filter bar ── */
     .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    
-    
 
     /* ── Search ── */
     .search-wrap { position: relative; margin-bottom: 12px; }
@@ -54,10 +30,7 @@
     .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
 
     /* ── Category filter chips ── */
-    .chip-row {
-      display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px;
-      scrollbar-width: none;
-    }
+    .chip-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
     .chip-row::-webkit-scrollbar { display: none; }
     .filter-chip {
       padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
@@ -68,10 +41,7 @@
     .filter-chip:hover  { border-color: var(--brand); color: var(--brand); background: #ededff; }
     .filter-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
 
-    /* ── Sync strip ── */
-    
-
-    /* ── Stats card ── */
+    /* ── Stats band ── */
     .stats-band {
       background: var(--brand-grad); border-radius: var(--radius-lg);
       padding: 20px 22px; margin-bottom: 18px;
@@ -84,10 +54,18 @@
     .stats-band-right .cnt { font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 600; }
     .stats-band-right .avg { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 3px; }
 
-    /* ── Tabs ── */
+    /* ── Pill-style tabs (Expenses page — override shared underline style) ── */
     .tabs { display: flex; gap: 6px; margin-bottom: 18px; }
-    
-    
+    .tabs .tab-btn {
+      flex: 1; padding: 11px 6px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.25) !important;
+      border-bottom: 1px solid rgba(255,255,255,0.25) !important;
+      border-radius: 30px; font-size: 13px; font-weight: 700;
+      color: rgba(255,255,255,0.85); cursor: pointer;
+      font-family: 'DM Sans', sans-serif; transition: all 0.2s; margin-bottom: 0;
+    }
+    .tabs .tab-btn.active { background: #fff; color: var(--brand); border-color: transparent !important; box-shadow: 0 4px 14px rgba(0,0,0,0.10); }
 
     /* ── Chart ── */
     .chart-container { position: relative; height: 190px; margin: 8px 0; }
@@ -97,96 +75,35 @@
     .legend-item   { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
     .legend-dot    { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 
-    /* ── Category rows ── */
+    /* ── Category summary rows ── */
     .category-row {
       display: flex; align-items: center; justify-content: space-between;
       padding: 11px 0; border-bottom: 1px solid var(--border);
-      cursor: pointer; border-radius: 8px;
-      transition: background 0.12s;
+      cursor: pointer; border-radius: 8px; transition: background 0.12s;
     }
     .category-row:hover  { background: var(--surface-2); padding-left: 6px; padding-right: 6px; }
     .category-row:active { background: #ededff; }
     .category-row:last-child { border-bottom: none; }
-
-    /* Drill-down modal expense item */
-    .detail-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 0; border-bottom: 1px solid var(--border);
-    }
-    .detail-item:last-child { border-bottom: none; }
-    .detail-right { text-align: right; flex-shrink: 0; }
-    .detail-amt  { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); }
-    .detail-date { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-    .detail-note { font-size: 11px; color: var(--text-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    
-    
-
-    .form-group-exp { display: flex; flex-direction: column; gap: 6px; }
-    .form-group-exp 
-    .form-group-exp input, .form-group-exp select {
-      padding: 11px 13px; border: 2px solid var(--border); border-radius: var(--radius-sm);
-      font-size: 15px; font-family: 'DM Sans', sans-serif;
-      background: var(--surface-2); color: var(--text);
-      -webkit-appearance: none; appearance: none; width: 100%;
-    }
-    .form-group-exp input:focus, .form-group-exp select:focus {
-      outline: none; border-color: var(--brand); background: #fff;
-    }
     .cat-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-    .cat-icon-sm {
-      width: 36px; height: 36px; border-radius: 11px;
-      display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
-    }
+    .cat-icon-sm { width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
     .cat-name  { font-weight: 600; font-size: 14px; color: var(--text); }
     .cat-count { font-size: 11px; color: var(--text-3); }
     .cat-amt   { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--brand); flex-shrink: 0; }
     .cat-bar-wrap { height: 3px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 4px; }
     .cat-bar      { height: 100%; border-radius: 3px; }
-
-    /* ── Budget badges in breakdown ── */
-    .cat-budget-badge {
-      font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
-      white-space: nowrap;
-    }
+    .cat-budget-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
     .cat-budget-over    { background: #fee2e2; color: #991b1b; }
     .cat-budget-warning { background: #fef3c7; color: #92400e; }
     .cat-budget-ok      { background: #d1fae5; color: #065f46; }
 
-    /* ── Day group ── */
-    .day-group { margin-bottom: 0; }
-    .day-header {
-      display: flex; justify-content: space-between; align-items: baseline;
-      padding: 13px 0 9px; border-bottom: 2px solid var(--border);
-    }
-    .day-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; color: var(--brand); }
-    .day-total { font-size: 12px; font-weight: 600; color: var(--text-2); }
-
-    /* ── Expense item ── */
-    
-    
-    
-    
-    
-    .exp-amt  { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); flex-shrink: 0; }
-
-    /* ── Empty state ── */
-    
-
-    /* ── Toast ── */
-    
-
-    /* ── Loading screen ── */
-    
-    
-    
-     }
-
-    /* ── Export modal ── */
-    
-    
-    
-    
-    
+    /* ── Drill-down modal ── */
+    .detail-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .detail-item:last-child { border-bottom: none; }
+    .detail-right { text-align: right; flex-shrink: 0; }
+    .detail-amt  { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); }
+    .detail-date { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .detail-note { font-size: 11px; color: var(--text-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Done / action buttons in modals */
     .btn-primary {
       flex: 2; padding: 13px; background: var(--brand-grad); color: #fff;
       border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700;
@@ -195,10 +112,26 @@
     }
     .btn-primary:hover { opacity: 0.90; }
 
-    /* Export month checkboxes */
-    .export-months-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px;
+    /* ── Edit modal form ── */
+    .form-group-exp { display: flex; flex-direction: column; gap: 6px; }
+    .form-group-exp label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; }
+    .form-group-exp input, .form-group-exp select {
+      padding: 11px 13px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 15px; font-family: 'DM Sans', sans-serif;
+      background: var(--surface-2); color: var(--text);
+      -webkit-appearance: none; appearance: none; width: 100%;
     }
+    .form-group-exp input:focus, .form-group-exp select:focus { outline: none; border-color: var(--brand); background: #fff; }
+    .exp-amt { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); flex-shrink: 0; }
+
+    /* ── Day group (By Day tab) ── */
+    .day-group { margin-bottom: 0; }
+    .day-header { display: flex; justify-content: space-between; align-items: baseline; padding: 13px 0 9px; border-bottom: 2px solid var(--border); }
+    .day-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; color: var(--brand); }
+    .day-total { font-size: 12px; font-weight: 600; color: var(--text-2); }
+
+    /* ── Export modal ── */
+    .export-months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
     .export-month-item {
       display: flex; align-items: center; gap: 7px;
       padding: 8px 10px; border-radius: var(--radius-sm);
@@ -208,26 +141,9 @@
     }
     .export-month-item.selected { border-color: var(--brand); background: #ededff; color: var(--brand); }
     .export-month-item input    { display: none; }
-    .export-section-
-    .export-select-all-btn {
-      background: none; border: none; color: var(--brand); font-size: 12px;
-      font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 0;
-    }
+    .export-section-label { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; margin: 12px 0 8px; }
+    .export-select-all-btn { background: none; border: none; color: var(--brand); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 0; }
     .export-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-
-    /* ── Manage Categories button ── */
-    
-    
-    /* ── Logout bottom button ── */
-    
-    /* ── Header icon buttons ── */
-    
-    
-    /* ── Bottom nav ── */
-    
-    
-    }
-    
   </style>
 </head>
 <body>
