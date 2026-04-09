@@ -20,9 +20,9 @@ const DISCOVERY_DOCS = [
 // ── Bank / BNPL providers (used by Installments page) ────
 // Add new banks here — all pages share this list via utils.js
 const BANK_PROVIDERS = [
-  { key: 'BM',     name: 'Banque Misr',         logo: 'Logos/BM.png'     },
   { key: 'AAIB',     name: 'Arab African International Bank',         logo: 'Logos/AAIB.png'     },
   { key: 'AlexBank',     name: 'Bank of Alexandria',         logo: 'Logos/AlexBank.png'     },
+  { key: 'BM',     name: 'Banque Misr',         logo: 'Logos/BM.png'     },
   { key: 'CairoBank',     name: 'Banque du Caire',         logo: 'Logos/CairoBank.png'     },
   { key: 'CIB',    name: 'CIB',        logo: 'Logos/CIB.png'    },
   { key: 'Halan',     name: 'Halan',         logo: 'Logos/Halan.png'     },
