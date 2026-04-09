@@ -457,7 +457,7 @@ nav, .bottom-nav, .nav-tabs { list-style: none; }
   cursor: pointer; transition: all 0.15s;
 }
 .nav-tab:active { background: rgba(255,255,255,0.22); }
-.nav-tab.active { background: rgba(255,255,255,0.35); color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.25); font-weight: 700; }
+.nav-tab.active { background: rgba(255,255,255,0.55); color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.30); font-weight: 700; }
 .nav-tab-icon   { font-size: 18px; line-height: 1; }
 
 /* ── Logout and manage-categories bottom buttons ── */
