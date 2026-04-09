@@ -166,10 +166,10 @@
       display: flex; align-items: center; justify-content: center;
       transition: all 0.15s; border: 1.5px solid;
     }
-    .pay-btn.can-pay   { border-color: var(--success); background: none; color: var(--success); }
+    .pay-btn.can-pay   { border-color: var(--success); background: #f0fdf4; color: var(--success); font-size: 16px; }
     .pay-btn.can-pay:active { transform: scale(0.92); background: #d1fae5; }
-    .pay-btn.paid      { border-color: var(--success); background: #d1fae5; color: var(--success); cursor: default; }
-    .pay-btn.future    { border-color: var(--border); background: none; color: var(--text-3); cursor: not-allowed; opacity: 0.5; }
+    .pay-btn.paid      { border-color: var(--success); background: #d1fae5; color: var(--success); cursor: default; font-size: 16px; }
+    .pay-btn.future    { border-color: var(--border); background: none; color: var(--text-3); cursor: not-allowed; opacity: 0.4; font-size: 16px; }
 
     /* More button */
     .more-btn {
@@ -278,7 +278,7 @@
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
     }
-    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; }
+    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; }
     .nav-tab {
       flex: 1; display: flex; flex-direction: column; align-items: center;
       gap: 3px; padding: 8px 4px; border-radius: 14px;
@@ -477,9 +477,6 @@
     <button class="sheet-action" onclick="sheetEdit()">
       <span class="sheet-action-icon">✏️</span>Edit
     </button>
-    <button class="sheet-action danger" onclick="sheetDelete()">
-      <span class="sheet-action-icon">🗑️</span>Delete permanently
-    </button>
   </div>
 </div>
 
@@ -613,7 +610,7 @@ function render() {
       const icon = categoryIcon[sub.category]||'🔄';
       const cardClass = si.state==='overdue' ? 'sub-card overdue' : si.state==='paid' ? 'sub-card paid-row' : 'sub-card';
       const payClass  = si.state==='paid' ? 'pay-btn paid' : si.payable ? 'pay-btn can-pay' : 'pay-btn future';
-      const payIcon   = '💳';
+      const payIcon   = si.state === 'paid' ? '✅' : si.payable ? '✅' : '⬜';
       const payClick  = si.payable && si.state!=='paid' ? `markAsPaid(${globalIdx})` : '';
       const payTitle  = si.state==='paid' ? 'Paid this month' : si.payable ? 'Mark as paid' : 'Not due yet';
       return `

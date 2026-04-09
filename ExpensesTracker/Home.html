@@ -460,7 +460,7 @@
     nav, nav * { list-style: none; }
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-      display: flex; flex-direction: column; align-items: center;
+      display: flex; align-items: center; justify-content: center;
       padding: 10px 18px 12px;
       background: rgba(60,50,140,0.82);
       backdrop-filter: blur(20px);
@@ -483,6 +483,20 @@
     .nav-tab:active { background: rgba(255,255,255,0.22); }
     .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     .nav-tab-icon { font-size: 18px; line-height: 1; }
+    /* ── Header icon buttons ── */
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .hdr-icon-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
+      color: #fff; font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .hdr-icon-btn:hover  { background: rgba(255,255,255,0.30); }
+    .hdr-icon-btn:active { transform: scale(0.93); }
+    .hdr-icon-btn.danger { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.45); color: #fca5a5; }
+    .hdr-icon-btn.danger:hover  { background: rgba(239,68,68,0.40); }
+    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
   </style>
 </head>
 <body>
@@ -540,8 +554,14 @@
 
   <!-- Header -->
   <div class="header">
-    <h1>💰 Expenses Tracker</h1>
-    <p id="userEmailDisplay">Track your spending</p>
+    <div>
+      <h1>💰 Expenses Tracker</h1>
+      <p id="userEmailDisplay" style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px"></p>
+    </div>
+    <div class="header-actions">
+      <button class="hdr-icon-btn" id="manualSyncBtn" title="Sync">↻</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+    </div>
   </div>
 
   <!-- Month comparison -->
@@ -558,7 +578,7 @@
         <div class="stats-total" id="totalAmount">EGP 0.00</div>
         <div class="stats-month" id="monthBadge"></div>
       </div>
-      <button class="sync-card-btn" id="manualSyncBtn">🔄 Sync</button>
+      
     </div>
   </div>
 
@@ -614,14 +634,11 @@
     </div>
     <div id="expensesList"></div>
   </div>
-  <!-- Manage Categories button -->
-  <button class="manage-cats-btn" onclick="window.location.href='Categories.html'">⚙️ Manage Categories</button>
-
   <!-- Recurring Expenses button -->
-  <button class="manage-cats-btn" style="border-color:#8b5cf6;color:#8b5cf6;" onmouseover="this.style.background='#f3f0ff'" onmouseout="this.style.background=''" onclick="window.location.href='Recurring.html'">🔄 Recurring Expenses</button>
+  </div><!-- /mainApp -->
 
-  <!-- Logout button — placed at bottom to prevent accidental taps -->
-  <button class="logout-bottom-btn" id="logoutBtn">⏻ Logout</button>
+<!-- ── Toast ── -->
+
 <nav class="bottom-nav">
   <div class="nav-tabs">
     <button class="nav-tab active">
@@ -639,9 +656,6 @@
   </div>
 </nav>
 
-</div><!-- /mainApp -->
-
-<!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
 <!-- ── Edit Expense Modal ── -->
@@ -1384,7 +1398,6 @@ window.onload = function () {
   document.getElementById('setupLogoutBtn').addEventListener('click',        logout);
   document.getElementById('folderMissingLogoutBtn').addEventListener('click',logout);
   document.getElementById('manualSyncBtn').addEventListener('click',         manualSync);
-  document.getElementById('logoutBtn').addEventListener('click',             logout);
   document.getElementById('seeAllBtn').addEventListener('click',             () => window.location.href = 'Expenses.html');
   document.getElementById('openBudgetBtn').addEventListener('click',         openBudgetModal);
 
