@@ -52,6 +52,18 @@
     /* ── Header ── */
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .header h1 { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .hdr-icon-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
+      color: #fff; font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .hdr-icon-btn:hover  { background: rgba(255,255,255,0.30); }
+    .hdr-icon-btn:active { transform: scale(0.93); }
+    .hdr-icon-btn.danger:active { background: rgba(239,68,68,0.35); }
+    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
 
     /* ── Stats banner ── */
     .stats-row {
@@ -311,6 +323,10 @@
 
   <div class="header">
     <h1>🔄 Recurring</h1>
+    <div class="header-actions">
+      <button class="hdr-icon-btn" id="syncBtn" onclick="syncAll()" title="Sync">↻</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+    </div>
   </div>
 
   <!-- Stats -->
@@ -838,6 +854,36 @@ async function loadRecurringLog() {
 
 function saveRecurringLocal() { if(currentUserEmail) localStorage.setItem(`recurring_${currentUserEmail}`,JSON.stringify(recurringList)); }
 function loadRecurringLocal() { if(currentUserEmail){const r=localStorage.getItem(`recurring_${currentUserEmail}`);if(r) recurringList=JSON.parse(r);} }
+
+// ── Sync & Logout ─────────────────────────────────────────
+async function syncAll() {
+  const btn = document.getElementById('syncBtn');
+  btn.classList.add('spinning'); btn.style.pointerEvents = 'none';
+  try {
+    await loadRecurringFromSheet();
+    render();
+    const entries = await loadRecurringLog();
+    renderLog(entries);
+    showToast('✅ Synced');
+  } catch(e) {
+    showToast('❌ Sync failed', 'error');
+  }
+  btn.classList.remove('spinning'); btn.style.pointerEvents = '';
+}
+
+function logout() {
+  if (!confirm('Log out?')) return;
+  clearAccessToken();
+  const keys = ['google_token'];
+  if (currentUserEmail) {
+    keys.push(`drive_setup_${currentUserEmail}`);
+    keys.push(`spreadsheet_id_${currentUserEmail}`);
+    keys.push(`recurring_${currentUserEmail}`);
+    keys.push(paidKey());
+  }
+  keys.forEach(k => localStorage.removeItem(k));
+  window.location.href = 'Home.html';
+}
 
 // ── Auth ───────────────────────────────────────────────────
 async function initGapiClient() {
