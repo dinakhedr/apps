@@ -533,7 +533,7 @@
     <span class="screen-icon">📁</span>
     <h2>Welcome!</h2>
     <p>We'll create a folder in your Google Drive to store all your expenses securely.</p>
-    <div class="info-box">📂 <b>Folder:</b> Expense Tracker<br>📊 <b>Sheet:</b> My Expenses<br>🔒 Only you can access this</div>
+    <div class="info-box">📂 <b>Folder:</b> Expense Tracker<br>📊 <b>Sheet:</b> Daily Log<br>🔒 Only you can access this</div>
     <button class="primary-btn" id="createFolderBtn">Get Started</button>
     <div id="setupError" class="screen-error"></div>
     <small>Please don't delete this folder from Google Drive.</small>
@@ -1046,7 +1046,7 @@ async function findExistingFolder() {
 }
 async function findExistingSpreadsheet() {
   const res = await gapi.client.drive.files.list({
-    q: `name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
+    q: `name='${FILE_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
     spaces: 'drive', fields: 'files(id)'
   });
   return res.result.files?.[0]?.id || null;
