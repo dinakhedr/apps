@@ -260,9 +260,11 @@ let _toastTimer;
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
   if (!t) return;
+  clearTimeout(_toastTimer);
+  t.className = 'toast'; // reset first to restart animation
+  void t.offsetWidth;    // force reflow so reset takes effect
   t.textContent = msg;
   t.className = `toast show ${type}`;
-  clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => t.classList.remove('show'), 1000);
 }
 
