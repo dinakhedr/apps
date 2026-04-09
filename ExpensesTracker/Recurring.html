@@ -268,20 +268,18 @@
 
     /* ── Bottom nav ── */
     nav { list-style: none !important; display: flex; flex-direction: column; align-items: center; }
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-      display: flex; flex-direction: column; align-items: center;
-      padding: 10px 18px 12px;
-      background: rgba(60,50,140,0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
-      list-style: none;
-    }
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-    }
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px 18px 20px;
+  background: rgb(55, 45, 130);
+  border-top: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+  list-style: none;
+}
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-nav { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+}
     .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; overflow: hidden; }
     .nav-tab {
       flex: 1; display: flex; flex-direction: column; align-items: center;
