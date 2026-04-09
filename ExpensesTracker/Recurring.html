@@ -56,13 +56,17 @@
     .hdr-icon-btn {
       width: 36px; height: 36px; border-radius: 50%;
       background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
-      color: #fff; font-size: 16px; cursor: pointer;
+      color: #fff; font-size: 17px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
+      transition: background 0.15s; flex-shrink: 0;
     }
     .hdr-icon-btn:hover  { background: rgba(255,255,255,0.30); }
     .hdr-icon-btn:active { transform: scale(0.93); }
-    .hdr-icon-btn.danger:active { background: rgba(239,68,68,0.35); }
+    .hdr-icon-btn.danger {
+      background: rgba(239,68,68,0.28); border-color: rgba(239,68,68,0.50);
+      color: #fca5a5;
+    }
+    .hdr-icon-btn.danger:hover  { background: rgba(239,68,68,0.42); }
     .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
 
     /* ── Stats banner ── */
@@ -166,10 +170,10 @@
       display: flex; align-items: center; justify-content: center;
       transition: all 0.15s; border: 1.5px solid;
     }
-    .pay-btn.can-pay   { border-color: var(--success); background: #f0fdf4; color: var(--success); font-size: 16px; }
-    .pay-btn.can-pay:active { transform: scale(0.92); background: #d1fae5; }
+    .pay-btn.can-pay   { border-color: #f59e0b; background: #fffbeb; color: #d97706; font-size: 16px; }
+    .pay-btn.can-pay:active { transform: scale(0.92); background: #fef3c7; }
     .pay-btn.paid      { border-color: var(--success); background: #d1fae5; color: var(--success); cursor: default; font-size: 16px; }
-    .pay-btn.future    { border-color: var(--border); background: none; color: var(--text-3); cursor: not-allowed; opacity: 0.4; font-size: 16px; }
+    .pay-btn.future    { border-color: #fde68a; background: #fffdf0; color: #d97706; cursor: not-allowed; opacity: 0.45; font-size: 15px; }
 
     /* More button */
     .more-btn {
@@ -263,9 +267,7 @@
     .btn-danger { flex: 1; background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
 
     /* ── Bottom nav ── */
-    nav { list-style: none; display: block; }
-    nav::before, nav::after { display: none; content: none; }
-    nav *, nav *::before, nav *::after { list-style: none; }
+    nav { list-style: none !important; display: flex; flex-direction: column; align-items: center; }
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
       display: flex; flex-direction: column; align-items: center;
@@ -280,7 +282,7 @@
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
     }
-    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; }
+    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; overflow: hidden; }
     .nav-tab {
       flex: 1; display: flex; flex-direction: column; align-items: center;
       gap: 3px; padding: 8px 4px; border-radius: 14px;
@@ -554,7 +556,7 @@ function getStatusInfo(sub) {
     return { state:'future',  label:lbl,  payable:false };
   }
   if (sub.paymentDay <= today) return { state:'overdue', label:`⚠️ Due ${MONTHS[now.getMonth()]} ${sub.paymentDay}`, payable:true };
-  return { state:'upcoming', label:`${MONTHS[now.getMonth()]} ${sub.paymentDay}`, payable:true };
+  return { state:'upcoming', label:`${MONTHS[now.getMonth()]} ${sub.paymentDay}`, payable:false };
 }
 
 // ── Next payment date ──────────────────────────────────────
@@ -614,7 +616,7 @@ function render() {
       const icon = categoryIcon[sub.category]||'🔄';
       const cardClass = si.state==='overdue' ? 'sub-card overdue' : si.state==='paid' ? 'sub-card paid-row' : 'sub-card';
       const payClass  = si.state==='paid' ? 'pay-btn paid' : si.payable ? 'pay-btn can-pay' : 'pay-btn future';
-      const payIcon   = si.state === 'paid' ? '✅' : si.payable ? '✅' : '⬜';
+      const payIcon   = si.state === 'paid' ? '✅' : si.payable ? '💰' : '🔒';
       const payClick  = si.payable && si.state!=='paid' ? `markAsPaid(${globalIdx})` : '';
       const payTitle  = si.state==='paid' ? 'Paid this month' : si.payable ? 'Mark as paid' : 'Not due yet';
       return `
