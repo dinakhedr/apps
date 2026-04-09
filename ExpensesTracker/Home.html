@@ -1289,15 +1289,34 @@ async function completeLoginAndSetup(tokenResponse) {
   expenses = localRaw ? JSON.parse(localRaw) : [];
   loadBudgets();
 
-  let folderOk = false;
-  for (let i = 0; i < 3 && !folderOk; i++) {
-    folderOk = await checkFolderExists();
-    if (!folderOk && i < 2) await new Promise(r => setTimeout(r, 600));
+  // 1. Try cached spreadsheetId first (fast path, survives most cases)
+  const cachedSheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
+  if (cachedSheetId) {
+    spreadsheetId = cachedSheetId;
+    try {
+      await ensureCategoriesTab(spreadsheetId);
+      await loadExpensesFromSheet(false);
+      document.getElementById('userEmailDisplay').textContent = currentUserEmail;
+      showScreen('mainApp');
+      setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
+      showToast(`✅ Welcome back, ${currentUserEmail.split('@')[0]}!`);
+      _setupRunning = false;
+      return;
+    } catch(e) {
+      console.warn('Cached sheet failed, searching Drive…', e);
+    }
   }
 
-  if (folderOk) {
-    folderId      = await findExistingFolder();
-    spreadsheetId = await findExistingSpreadsheet();
+  // 2. Search Drive by sheet name — handles iOS localStorage wipe
+  let foundSheetId = null;
+  for (let i = 0; i < 3 && !foundSheetId; i++) {
+    try { foundSheetId = await findExistingSpreadsheet(); } catch(e) {}
+    if (!foundSheetId && i < 2) await new Promise(r => setTimeout(r, 900));
+  }
+
+  if (foundSheetId) {
+    spreadsheetId = foundSheetId;
+    folderId = await findExistingFolder().catch(() => null);
     localStorage.setItem(`drive_setup_${currentUserEmail}`,    'complete');
     localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
     await ensureCategoriesTab(spreadsheetId);
@@ -1307,9 +1326,9 @@ async function completeLoginAndSetup(tokenResponse) {
     setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
     showToast(`✅ Welcome back, ${currentUserEmail.split('@')[0]}!`);
   } else {
-    const hadSetup = localStorage.getItem(`drive_setup_${currentUserEmail}`);
+    // Truly no spreadsheet in Drive — only show setup for real new users
     renderAll();
-    showScreen(hadSetup === 'complete' ? 'folderMissingScreen' : 'setupScreen');
+    showScreen('setupScreen');
   }
   _setupRunning = false;
 }
