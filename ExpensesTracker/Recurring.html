@@ -268,29 +268,21 @@
 
     /* ── Bottom nav ── */
     nav { list-style: none !important; display: flex; flex-direction: column; align-items: center; }
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-  display: flex; align-items: center; justify-content: center;
-  padding: 10px 18px 12px;
-  background: rgb(55, 45, 130);
-  border-top: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
-  list-style: none;
-}
-/* Fill the iOS home indicator area with the same color */
-.bottom-nav::after {
-  content: '';
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  height: env(safe-area-inset-bottom, 0px);
-  background: rgb(55, 45, 130);
-  z-index: 1999;
-  pointer-events: none;
-}
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-}
-    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; overflow: hidden; }
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 10px 18px 12px;
+      background: rgba(60,50,140,0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+      list-style: none;
+    }
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+    }
+    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; }
     .nav-tab {
       flex: 1; display: flex; flex-direction: column; align-items: center;
       gap: 3px; padding: 8px 4px; border-radius: 14px;
@@ -299,14 +291,8 @@
       cursor: pointer; transition: all 0.15s;
     }
     .nav-tab:active { background: rgba(255,255,255,0.22); }
-    .nav-tab.active {
-      background: rgba(255,255,255,0.22);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
+    .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     .nav-tab-icon { font-size: 18px; line-height: 1; }
-    .bottom-nav::before, .bottom-nav::after, .nav-tabs::before, .nav-tabs::after { display: none !important; content: none !important; }
-    nav::marker, .bottom-nav::marker, .nav-tabs::marker { display: none; }
 
     /* ── Toast ── */
     .toast {
@@ -413,7 +399,6 @@
       <span class="nav-tab-icon">⚙️</span>Categories
     </button>
   </div>
-  <div style="height: env(safe-area-inset-bottom, 0px); background: transparent;"></div>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -738,7 +723,9 @@ function renderLog(entries) {
   list.innerHTML = thisMonth.map(e => {
     const icon = categoryIcon[e.category] || '🔄';
     const d    = new Date(e.date + 'T00:00:00');
-    const ds   = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    const matchSub = recurringList.find(s => s.name === e.name);
+const payDay = matchSub ? Math.min(matchSub.paymentDay, new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()) : d.getDate();
+const ds = new Date(d.getFullYear(), d.getMonth(), payDay).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
     return `<div class="log-row"><div class="log-icon">${icon}</div><div class="log-info"><div class="log-name">${escapeHtml(e.name)}</div><div class="log-date">${ds} · ${e.category}</div></div><div class="log-amount">${formatMoney(e.amount)}</div></div>`;
   }).join('');
 }
