@@ -280,22 +280,23 @@
     .btn-danger { flex: 1; background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
 
     /* ── Bottom nav (fixed – no black rectangle) ── */
-    nav, .bottom-nav, .nav-tabs { list-style: none; }
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 2000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 18px 12px;
-      background: rgb(60, 50, 140);
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-      /* Extend background downward to cover iOS home indicator area */
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.18), 0 100px 0 100px rgb(60, 50, 140);
-    }
+nav, .bottom-nav, .nav-tabs { list-style: none; }
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px 12px;
+  background: rgba(60, 50, 140, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
+}
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .bottom-nav {
         padding-bottom: calc(12px + env(safe-area-inset-bottom));
