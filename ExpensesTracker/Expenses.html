@@ -596,15 +596,69 @@ function renderByDay(list) {
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
               <div class="exp-amt">EGP ${e.amount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
-              <div class="exp-actions">
-                <button class="action-icon" onclick="openDailyExpenseMenu('${e.id}')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3)">⋯</button>
-              </div>
+              <button class="action-icon" onclick="openDailyExpenseMenu('${e.id}')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3)">⋯</button>
             </div>
           </div>`).join('')}
       </div>`;
   }).join('');
 }
-
+function openDailyExpenseMenu(id) {
+  // Create sheet if it doesn't exist
+  let sheet = document.getElementById('dailyExpenseMenuSheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'dailyExpenseMenuSheet';
+    sheet.className = 'sheet-backdrop';
+    sheet.innerHTML = `
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">Options</div>
+        <button class="sheet-action" id="dailyExpenseMenuEdit">
+          <span class="sheet-action-icon">✏️</span> Edit
+        </button>
+        <button class="sheet-action danger" id="dailyExpenseMenuDelete">
+          <span class="sheet-action-icon">🗑️</span> Delete
+        </button>
+      </div>`;
+    document.body.appendChild(sheet);
+  }
+  
+  // Get buttons
+  const editBtn = document.getElementById('dailyExpenseMenuEdit');
+  const deleteBtn = document.getElementById('dailyExpenseMenuDelete');
+  
+  // Remove old listeners by cloning
+  const newEditBtn = editBtn.cloneNode(true);
+  const newDeleteBtn = deleteBtn.cloneNode(true);
+  editBtn.parentNode.replaceChild(newEditBtn, editBtn);
+  deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+  
+  // Add new listeners
+  newEditBtn.addEventListener('click', () => {
+    sheet.classList.remove('open');
+    setTimeout(() => {
+      openEditModal(id);
+    }, 100);
+  });
+  
+  newDeleteBtn.addEventListener('click', () => {
+    sheet.classList.remove('open');
+    setTimeout(() => {
+      deleteExpense(id);
+    }, 100);
+  });
+  
+  // Open the sheet
+  sheet.classList.add('open');
+  
+  // Close when clicking backdrop
+  sheet.addEventListener('click', function onClick(e) {
+    if (e.target === sheet) {
+      sheet.classList.remove('open');
+      sheet.removeEventListener('click', onClick);
+    }
+  });
+}
 // ── Render all ────────────────────────────────────────────
 function renderAll() {
   const filtered = getFilteredExpenses();
