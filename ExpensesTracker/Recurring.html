@@ -630,7 +630,7 @@ function render() {
           <div class="sub-info">
             <div class="sub-name">${escapeHtml(sub.name)}</div>
             <div class="sub-meta">
-              <span class="sub-freq">${sub.frequency}</span>
+                <span class="sub-freq ${sub.frequency.toLowerCase()}">${sub.frequency}</span>
               <span class="sub-dot">·</span>
               <span class="sub-status ${si.state==='overdue'?'overdue':si.state==='paid'?'paid':'upcoming'}">${si.label}</span>
             </div>
@@ -657,7 +657,8 @@ function render() {
           <div class="sub-icon">${icon}</div>
           <div class="sub-info">
             <div class="sub-name">${escapeHtml(sub.name)} <span class="badge-inactive">paused</span></div>
-            <div class="sub-meta"><span class="sub-freq">${sub.frequency}</span><span class="sub-dot">·</span><span class="sub-status upcoming">${formatMoney(sub.amount)}</span></div>
+            <div class="sub-meta"><span class="sub-freq ${sub.frequency.toLowerCase()}">${sub.frequency}</span>
+            <span class="sub-dot">·</span><span class="sub-status upcoming">${formatMoney(sub.amount)}</span></div>
           </div>
           <div class="sub-right">
             <button class="more-btn" onclick="openMoreSheet(${globalIdx})">···</button>
