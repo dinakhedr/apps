@@ -52,11 +52,11 @@
     .container { max-width: 520px; margin: 0 auto; padding: 0 18px; }
 
     /* ── Header ── */
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 8px; }
-    .header-left { flex: 1; text-align: center; min-width: 0; }
+ .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 8px; position: relative; }
+.header-left { flex: 1; text-align: center; min-width: 0; pointer-events: none; }
     .header h1 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
     .header p  { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .header-actions { position: absolute; top: 0; right: 0; display: flex; gap: 6px; }
+    .header-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .hdr-btn {
       background: rgba(255,255,255,0.18);
       border: 1px solid rgba(255,255,255,0.25);
