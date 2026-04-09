@@ -91,7 +91,7 @@
 
   <div class="stats-row" id="statsRow" style="display:none">
     <div><div class="stats-label">Active total remaining</div><div class="stats-total" id="totalRemaining">EGP 0</div></div>
-    <div style="text-align:right"><div class="stats-label">This month due</div><div class="stats-total" id="monthDueCount">0</div></div>
+    <div style="text-align:right"><div class="stats-label">This month due</div><div class="stats-total" id="monthDueAmount" style="font-size:18px">EGP 0</div></div>
   </div>
 
   <button class="add-btn" onclick="openAddModal()">➕ New Installment Plan</button>
@@ -338,7 +338,10 @@ function renderAll() {
   // ── Stats ────────────────────────────────────────────────
   const totalRemaining = installments.reduce((sum,i) => sum + getRemaining(i), 0);
   document.getElementById('totalRemaining').textContent  = formatMoney(totalRemaining);
-  document.getElementById('monthDueCount').textContent   = currentItems.filter(i => !hasPaidThisMonth(i.id)).length;
+  const monthDueTotal = currentItems
+    .filter(i => !hasPaidThisMonth(i.id))
+    .reduce((sum, i) => sum + i.monthlyAmount, 0);
+  document.getElementById('monthDueAmount').textContent = formatMoney(monthDueTotal);
   document.getElementById('statsRow').style.display      = installments.length ? 'flex' : 'none';
 
   // ── Render current month ──────────────────────────────────
