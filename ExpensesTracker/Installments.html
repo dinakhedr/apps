@@ -369,9 +369,9 @@ function renderAll() {
     allContainer.innerHTML = allItems.map(inst => {
       const row      = renderInstRow(inst, false, false, true);
       const dueLabel = getDueLabel(inst);
-      return row.replace(
-        `<div class="inst-meta">Left`,
-        `<div class="inst-meta"><span style="color:var(--brand);font-weight:700">${dueLabel}</span> · Left`
+return row.replace(
+        `<span></span>`,
+        `<span style="color:var(--brand);font-weight:700">${dueLabel}</span>`
       );
     }).join('');
   }
