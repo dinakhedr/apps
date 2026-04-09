@@ -263,7 +263,7 @@ function showToast(msg, type = 'success') {
   t.textContent = msg;
   t.className = `toast show ${type}`;
   clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 1000);
 }
 
 // ── Format money ──────────────────────────────────────────
