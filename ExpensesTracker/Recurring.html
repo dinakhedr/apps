@@ -102,59 +102,119 @@
       overflow: hidden;
     }
 
-    /* ── Tabs ── */
+    /* ── Tabs (now 3 tabs) ── */
     .tab-bar {
-      display: flex; border-bottom: 1px solid var(--border);
+      display: flex;
+      border-bottom: 1px solid var(--border);
     }
     .tab-btn {
-      flex: 1; padding: 13px 8px; border: none; background: none;
-      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
-      color: var(--text-3); cursor: pointer; border-bottom: 2px solid transparent;
-      margin-bottom: -1px; transition: all 0.15s; position: relative;
+      flex: 1;
+      padding: 13px 8px;
+      border: none;
+      background: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.15s;
+      position: relative;
     }
-    .tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
+    .tab-btn.active {
+      color: var(--brand);
+      border-bottom-color: var(--brand);
+    }
     .tab-badge {
-      display: inline-block; background: var(--danger); color: #fff;
-      font-size: 10px; font-weight: 700; border-radius: 20px;
-      padding: 1px 6px; margin-left: 5px; vertical-align: middle;
+      display: inline-block;
+      background: var(--danger);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: 1px 6px;
+      margin-left: 5px;
+      vertical-align: middle;
     }
-    .tab-content { padding: 16px; display: none; }
-    .tab-content.active { display: block; }
+    .tab-content {
+      padding: 16px;
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
 
-    /* ── Subscription row ── */
+    /* ── Subscription row (common for all tabs) ── */
     .sub-card {
-      display: flex; align-items: center; gap: 11px;
-      padding: 11px 0; border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
       position: relative;
     }
     .sub-card:last-child { border-bottom: none; padding-bottom: 0; }
     .sub-card:first-child { padding-top: 0; }
 
-    /* left status bar */
+    /* left status bar (only for active tab) */
     .sub-card::before {
-      content: ''; position: absolute; left: -16px; top: 50%; transform: translateY(-50%);
-      width: 3px; height: 34px; border-radius: 0 3px 3px 0; background: transparent;
+      content: '';
+      position: absolute;
+      left: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 34px;
+      border-radius: 0 3px 3px 0;
+      background: transparent;
     }
     .sub-card.overdue::before   { background: var(--danger); }
     .sub-card.paid-row::before  { background: var(--success); }
 
     .sub-icon {
-      width: 40px; height: 40px; border-radius: 12px; background: var(--surface-2);
-      display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
     }
     .sub-card.overdue  .sub-icon { background: #fef2f2; }
     .sub-card.paid-row .sub-icon { background: #f0fdf4; }
 
-    .sub-info { flex: 1; min-width: 0; }
+    .sub-info {
+      flex: 1;
+      min-width: 0;
+    }
     .sub-name {
-      font-weight: 700; font-size: 14px; color: var(--text);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .sub-card.paid-row .sub-name { color: var(--text-3); }
-    .sub-meta { font-size: 11px; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
-    .sub-freq  { font-weight: 600; }
-    .sub-dot   { color: var(--border); }
-    .sub-status { font-weight: 600; }
+    .sub-meta {
+      font-size: 11px;
+      margin-top: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .sub-freq {
+      font-weight: 600;
+    }
+    .sub-dot {
+      color: var(--border);
+    }
+    .sub-status {
+      font-weight: 600;
+    }
     .sub-status.overdue  { color: var(--danger); }
     .sub-status.upcoming { color: var(--text-3); }
     .sub-status.paid     { color: var(--success); }
@@ -172,37 +232,70 @@
     .sub-freq.quarterly { background-color: #f59e0b; }
     .sub-freq.annual { background-color: #3b82f6; }
 
-    .sub-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-    .sub-amount { font-weight: 700; font-size: 13px; color: var(--brand); min-width: 68px; text-align: right; }
+    .sub-right {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .sub-amount {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      min-width: 68px;
+      text-align: right;
+    }
     .sub-card.paid-row .sub-amount { color: var(--text-3); }
 
-    /* Pay button */
+    /* Pay button (only for active tab) */
     .pay-btn {
-      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-      font-size: 15px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s; border: 1.5px solid;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      border: 1.5px solid;
     }
     .pay-btn.can-pay   { border-color: #f59e0b; background: #fffbeb; color: #d97706; font-size: 16px; }
     .pay-btn.can-pay:active { transform: scale(0.92); background: #fef3c7; }
     .pay-btn.paid      { border-color: var(--success); background: #d1fae5; color: var(--success); cursor: default; font-size: 16px; }
     .pay-btn.future    { border-color: #fde68a; background: #fffdf0; color: #d97706; cursor: not-allowed; opacity: 0.45; font-size: 15px; }
 
-    /* More button */
+    /* More button (visible on all tabs) */
     .more-btn {
-      width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
-      border: none; background: none; color: var(--text-3);
-      font-size: 16px; cursor: pointer; letter-spacing: 1px;
-      display: flex; align-items: center; justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      border: none;
+      background: none;
+      color: var(--text-3);
+      font-size: 16px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: background 0.12s;
     }
     .more-btn:active { background: var(--surface-2); }
 
-    /* Inactive rows */
-    .sub-card.inactive { opacity: 0.55; }
+    /* Inactive rows (paused tab) */
+    .sub-card.inactive {
+      opacity: 0.55;
+    }
     .badge-inactive {
-      background: #e2e2ea; color: #6e6e8a;
-      font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 20px;
+      background: #e2e2ea;
+      color: #6e6e8a;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 20px;
     }
 
     /* ── More actions sheet ── */
@@ -280,23 +373,23 @@
     .btn-danger { flex: 1; background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
 
     /* ── Bottom nav (fixed – no black rectangle) ── */
-nav, .bottom-nav, .nav-tabs { list-style: none; }
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 18px 12px;
-  background: rgba(60, 50, 140, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
-}
+    nav, .bottom-nav, .nav-tabs { list-style: none; }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 18px 12px;
+      background: rgba(139, 92, 246, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
+    }
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .bottom-nav {
         padding-bottom: calc(12px + env(safe-area-inset-bottom));
@@ -404,11 +497,14 @@ nav, .bottom-nav, .nav-tabs { list-style: none; }
 
   <button class="add-btn" onclick="openAddModal()">➕ Add Recurring Expense</button>
 
-  <!-- Main card with tabs -->
+  <!-- Main card with tabs (now 3 tabs) -->
   <div class="card">
     <div class="tab-bar">
       <button class="tab-btn active" id="tabActiveBtn" onclick="switchTab('active')">
         Active <span class="tab-badge" id="overdueCount" style="display:none"></span>
+      </button>
+      <button class="tab-btn" id="tabAllBtn" onclick="switchTab('all')">
+        All
       </button>
       <button class="tab-btn" id="tabPausedBtn" onclick="switchTab('paused')">
         Paused / Cancelled
@@ -416,6 +512,9 @@ nav, .bottom-nav, .nav-tabs { list-style: none; }
     </div>
     <div class="tab-content active" id="tabActive">
       <div id="activeList"></div>
+    </div>
+    <div class="tab-content" id="tabAll">
+      <div id="allList"></div>
     </div>
     <div class="tab-content" id="tabPaused">
       <div id="inactiveList"></div>
@@ -566,12 +665,14 @@ function formatMoney(n) { return `EGP ${Number(n).toLocaleString('en-US',{minimu
 function escapeHtml(s)  { return (s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function todayYMD()     { return new Date().toISOString().split('T')[0]; }
 
-// ── Tab switch ─────────────────────────────────────────────
+// ── Tab switch (now includes 'all') ────────────────────────
 function switchTab(tab) {
   activeTab = tab;
   document.getElementById('tabActiveBtn').classList.toggle('active', tab==='active');
+  document.getElementById('tabAllBtn').classList.toggle('active', tab==='all');
   document.getElementById('tabPausedBtn').classList.toggle('active', tab==='paused');
   document.getElementById('tabActive').classList.toggle('active', tab==='active');
+  document.getElementById('tabAll').classList.toggle('active', tab==='all');
   document.getElementById('tabPaused').classList.toggle('active', tab==='paused');
 }
 
@@ -627,38 +728,30 @@ function getNextPaymentDate(sub, ref=new Date()) {
   return null;
 }
 
-// ── Render ─────────────────────────────────────────────────
+// ── Render all tabs ────────────────────────────────────────
 function render() {
-  // Filter: Active tab shows ONLY subscriptions due this month (or overdue/paid this month)
-  // Future ones (not due this month) are still active but not shown in this month's view
+  // Active tab logic (only due this month or paid this month)
   const allActive  = recurringList.filter(s=>s.active);
   const inactive   = recurringList.filter(s=>!s.active);
-
-  // This month's active = due this month OR already paid this month
   const thisMonthActive = allActive.filter(s => isDueThisMonth(s) || isPaid(s.id));
-
-  // Sort: overdue → upcoming → paid
   const order = { overdue:0, upcoming:1, future:2, paid:3 };
-  const sorted = [...thisMonthActive].sort((a,b) => {
+  const sortedActive = [...thisMonthActive].sort((a,b) => {
     const sa=getStatusInfo(a), sb=getStatusInfo(b);
     if (order[sa.state]!==order[sb.state]) return order[sa.state]-order[sb.state];
     return a.paymentDay-b.paymentDay;
   });
-
-  // Overdue badge
-  const overdueN = sorted.filter(s=>getStatusInfo(s).state==='overdue').length;
+  const overdueN = sortedActive.filter(s=>getStatusInfo(s).state==='overdue').length;
   const badge = document.getElementById('overdueCount');
   if (overdueN>0) { badge.textContent=overdueN; badge.style.display='inline-block'; }
   else badge.style.display='none';
 
-  // Active list
   const activeContainer = document.getElementById('activeList');
-  if (sorted.length===0) {
+  if (sortedActive.length===0) {
     activeContainer.innerHTML='<div class="empty-state">No recurring expenses due this month</div>';
   } else {
-    activeContainer.innerHTML = sorted.map(sub => {
+    activeContainer.innerHTML = sortedActive.map(sub => {
       const globalIdx = recurringList.findIndex(s=>s.id===sub.id);
-      const si   = getStatusInfo(sub);
+      const si = getStatusInfo(sub);
       const icon = categoryIcon[sub.category]||'🔄';
       const cardClass = si.state==='overdue' ? 'sub-card overdue' : si.state==='paid' ? 'sub-card paid-row' : 'sub-card';
       const payClass  = si.state==='paid' ? 'pay-btn paid' : si.payable ? 'pay-btn can-pay' : 'pay-btn future';
@@ -707,14 +800,46 @@ function render() {
     }).join('');
   }
 
-  // Stats
+  // ── NEW "All" tab: list all subscriptions (active + inactive) sorted by payment day ──
+  const allListContainer = document.getElementById('allList');
+  if (recurringList.length === 0) {
+    allListContainer.innerHTML = '<div class="empty-state">No recurring expenses found</div>';
+  } else {
+    // Create a copy and sort by payment day (1-31)
+    const allSorted = [...recurringList].sort((a,b) => a.paymentDay - b.paymentDay);
+    allListContainer.innerHTML = allSorted.map(sub => {
+      const globalIdx = recurringList.findIndex(s=>s.id===sub.id);
+      const icon = categoryIcon[sub.category]||'🔄';
+      // Show day only (no month)
+      const dayText = `Day ${sub.paymentDay}`;
+      // For paused subscriptions, add a small badge
+      const pausedMark = !sub.active ? '<span class="badge-inactive" style="margin-left:6px;">paused</span>' : '';
+      return `
+        <div class="sub-card" style="opacity: ${sub.active ? 1 : 0.7};">
+          <div class="sub-icon">${icon}</div>
+          <div class="sub-info">
+            <div class="sub-name">${escapeHtml(sub.name)}${pausedMark}</div>
+            <div class="sub-meta">
+              <span class="sub-freq ${sub.frequency.toLowerCase()}">${sub.frequency}</span>
+              <span class="sub-dot">·</span>
+              <span class="sub-status upcoming">${dayText}</span>
+            </div>
+          </div>
+          <div class="sub-right">
+            <div class="sub-amount">${formatMoney(sub.amount)}</div>
+            <button class="more-btn" onclick="openMoreSheet(${globalIdx})">···</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // Stats (same as before)
   const monthly = computeMonthlyTotal();
   const statsRow = document.getElementById('statsRow');
   if (allActive.length>0) {
     statsRow.style.display='flex';
     document.getElementById('monthTotal').textContent = formatMoney(monthly);
     document.getElementById('activeCount').textContent = `${allActive.length} active · ${overdueN} overdue`;
-    // Next unpaid
     let earliest=null;
     for (const sub of allActive) {
       if (isPaid(sub.id)) continue;
@@ -740,41 +865,34 @@ function computeMonthlyTotal() {
   },0);
 }
 
-// ── Recurring Log ──────────────────────────────────────────
+// ── Recurring Log (unchanged) ──────────────────────────────
 function renderLog(entries) {
   const now  = new Date();
   const card = document.getElementById('logCard');
   const list = document.getElementById('logList');
-
-  // Filter to current month
   const thisMonth = entries.filter(e => {
     if (!e.date) return false;
     const d = new Date(e.date + 'T00:00:00');
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
-
-  // Build _paidDates cache from log — source of truth (survives localStorage wipe)
   window._paidDates = {};
   thisMonth.forEach(e => {
-    const d         = new Date(e.date + 'T00:00:00');
+    const d = new Date(e.date + 'T00:00:00');
     const formatted = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-    const sub       = recurringList.find(s => s.name === e.name);
+    const sub = recurringList.find(s => s.name === e.name);
     if (sub) {
       window._paidDates[String(sub.id)] = formatted;
-      // Also ensure localStorage paid set is in sync
       const paidSet = getPaidSet();
       paidSet.add(String(sub.id));
       savePaidSet(paidSet);
     }
   });
-
   document.getElementById('logMonthLabel').textContent = MONTHS_FULL[now.getMonth()];
-
   if (!thisMonth.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
   list.innerHTML = thisMonth.map(e => {
     const icon = categoryIcon[e.category] || '🔄';
-    const d    = new Date(e.date + 'T00:00:00');
+    const d = new Date(e.date + 'T00:00:00');
     const matchSub = recurringList.find(s => s.name === e.name);
     const payDay = matchSub ? Math.min(matchSub.paymentDay, new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()) : d.getDate();
     const ds = new Date(d.getFullYear(), d.getMonth(), payDay).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
@@ -797,7 +915,7 @@ async function markAsPaid(index) {
   else   { showToast('❌ Failed to log payment','error'); paidSet.delete(String(sub.id)); savePaidSet(paidSet); render(); }
 }
 
-// ── More sheet ─────────────────────────────────────────────
+// ── More sheet (unchanged) ─────────────────────────────────
 function openMoreSheet(index) {
   sheetTargetIdx=index;
   const sub=recurringList[index];
@@ -824,7 +942,7 @@ async function sheetDelete() {
   showToast(ok?`🗑️ ${sub.name} deleted`:'❌ Delete failed',ok?'success':'error');
 }
 
-// ── CRUD Modals ────────────────────────────────────────────
+// ── CRUD Modals (unchanged) ────────────────────────────────
 function openAddModal() {
   editingId=null;
   document.getElementById('modalTitle').innerText='➕ New Recurring Expense';
@@ -874,14 +992,13 @@ async function saveRecurring() {
 document.getElementById('moreSheet').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMoreSheet();});
 document.getElementById('subModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
 
-// ── Sheet parsing ──────────────────────────────────────────
+// ── Sheet parsing (unchanged) ──────────────────────────────
 function parseRecurringRow(row) {
   if(row.length<8) return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:'Other', frequency:row[2]||'Monthly', amount:parseFloat(row[3])||0, startMonth:parseInt(row[4])||1, paymentDay:parseInt(row[5])||1, active:row[6]==='true' };
   return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:row[2]||'Other', frequency:row[3]||'Monthly', amount:parseFloat(row[4])||0, startMonth:parseInt(row[5])||1, paymentDay:parseInt(row[6])||1, active:row[7]==='true' };
 }
 function recurringToRow(s) { return [s.id,s.name,s.category,s.frequency,s.amount,s.startMonth,s.paymentDay,s.active?'true':'false']; }
 
-// ── Sheet I/O ──────────────────────────────────────────────
 async function loadRecurringFromSheet() {
   if(!spreadsheetId) return false;
   try {
@@ -935,21 +1052,10 @@ async function writeToRecurringLog(sub,paidDate) {
 }
 async function loadRecurringLog() {
   try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `${RECURRING_LOG_SHEET}!A2:F`
-    });
-    return (res.result.values || []).map(r => ({
-      timestamp: r[0] || '',
-      date:      r[1] || '',
-      name:      r[2] || '',
-      category:  r[3] || '',
-      amount:    parseFloat(r[4]) || 0,
-      notes:     r[5] || '',
-    }));
+    const res = await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_LOG_SHEET}!A2:F`});
+    return (res.result.values || []).map(r => ({ timestamp: r[0] || '', date: r[1] || '', name: r[2] || '', category: r[3] || '', amount: parseFloat(r[4]) || 0, notes: r[5] || '' }));
   } catch(e) {
     console.error('loadRecurringLog error:', e);
-    // Tab may not exist yet — try to create it then return empty
     try { await ensureRecurringLogTab(); } catch(e2) {}
     return [];
   }
@@ -964,10 +1070,9 @@ async function syncAll() {
   btn.classList.add('spinning'); btn.style.pointerEvents = 'none';
   try {
     await loadRecurringFromSheet();
-    // Load log FIRST so _paidDates is populated before render()
     const entries = await loadRecurringLog();
     renderLog(entries);
-    render(); // now render with correct paid states
+    render();
     showToast('✅ Synced');
   } catch(e) {
     console.error('syncAll error:', e);
@@ -1003,7 +1108,6 @@ async function initAndLoad() {
   await ensureRecurringTab();
   await ensureRecurringLogTab();
   await loadRecurringFromSheet();
-  // Load log FIRST so _paidDates is ready before render()
   const entries = await loadRecurringLog();
   renderLog(entries);
   render();
@@ -1018,7 +1122,6 @@ async function loadPage() {
   document.getElementById('loadingOverlay').style.display='flex';
   await initGapiClient();
   loadRecurringLocal();
-
   const saved=getSavedAccessToken();
   if(saved) {
     currentAccessToken=saved; gapi.client.setToken({access_token:currentAccessToken});
