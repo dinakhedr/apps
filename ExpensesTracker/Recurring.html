@@ -271,14 +271,24 @@
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
   display: flex; align-items: center; justify-content: center;
-  padding: 10px 18px 20px;
+  padding: 10px 18px 12px;
   background: rgb(55, 45, 130);
   border-top: 1px solid rgba(255,255,255,0.12);
   box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
   list-style: none;
 }
+/* Fill the iOS home indicator area with the same color */
+.bottom-nav::after {
+  content: '';
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: env(safe-area-inset-bottom, 0px);
+  background: rgb(55, 45, 130);
+  z-index: 1999;
+  pointer-events: none;
+}
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .bottom-nav { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+  .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 }
     .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; overflow: hidden; }
     .nav-tab {
