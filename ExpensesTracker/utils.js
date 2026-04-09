@@ -17,6 +17,46 @@ const DISCOVERY_DOCS = [
   'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
 ];
 
+// ── Bank / BNPL providers (used by Installments page) ────
+// Add new banks here — all pages share this list via utils.js
+const BANK_PROVIDERS = [
+  { key: 'CIB',    name: 'CIB Bank',   logo: 'Logos/CIB.png'    },
+  { key: 'NBE',    name: 'NBE',        logo: 'Logos/NBE.png'    },
+  { key: 'BM',     name: 'BM',         logo: 'Logos/BM.png'     },
+  // Add more banks here
+];
+
+// ── Recurring expense categories ─────────────────────────
+// Separate from expense categories — these are for subscriptions,
+// bills and recurring payments (Recurring page only).
+const RECURRING_CATEGORIES = [
+  { value: 'Entertainment', icon: '🎬' },
+  { value: 'Music',         icon: '🎵' },
+  { value: 'Podcasts',      icon: '🎙️' },
+  { value: 'Phone Bill',    icon: '📱' },
+  { value: 'Rent',          icon: '🏠' },
+  { value: 'Transportation',icon: '🚗' },
+  { value: 'Digital Tools', icon: '💻' },
+  { value: 'Utilities',     icon: '⚡' },
+  { value: 'Internet',      icon: '📶' },
+  { value: 'Insurance',     icon: '🛡️' },
+  { value: 'Other',         icon: '🔄' },
+];
+
+// Lookup icon for a recurring category
+function getRecurringCategoryIcon(cat) {
+  const found = RECURRING_CATEGORIES.find(c => c.value === cat);
+  return found ? found.icon : '🔄';
+}
+
+// ── Month name helpers ────────────────────────────────────
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_FULL  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function monthName(num) {  // 1-based
+  return MONTHS_FULL[(num - 1)] || '';
+}
+
 // ── Default Categories ────────────────────────────────────
 const DEFAULT_CATEGORIES = [
   { value: 'Car Repairs',   icon: '🚗', bg: '#ffd1d1', chart: '#e57373' },
@@ -226,6 +266,45 @@ function formatMoney(amount) {
 // ── Escape HTML ───────────────────────────────────────────
 function escapeHtml(str) {
   return (str || '').replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+}
+
+// ── Short alphanumeric ID (used by Installments) ─────────
+// Different from genId() which is a sequential numeric counter.
+// This generates a 6-char random ID suitable for installment records.
+function generateShortId(existingIds = []) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+  let id;
+  do {
+    id = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  } while (existingIds.includes(id));
+  return id;
+}
+
+// ── Today as YYYY-MM-DD ───────────────────────────────────
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+// ── Bottom navigation renderer ────────────────────────────
+// Injects the shared bottom nav into any element (default: #bottomNavMount).
+// activePage: 'home' | 'expenses' | 'recurring' | 'categories' | 'installments'
+const NAV_TABS = [
+  { id: 'home',         label: 'Home',         icon: '🏠', href: 'Home.html'         },
+  { id: 'expenses',     label: 'Expenses',     icon: '📋', href: 'Expenses.html'     },
+  { id: 'recurring',    label: 'Recurring',    icon: '🔄', href: 'Recurring.html'    },
+  { id: 'categories',   label: 'Categories',   icon: '⚙️', href: 'Categories.html'   },
+  { id: 'installments', label: 'Installments', icon: '📆', href: 'Installments.html' },
+];
+
+function renderBottomNav(activePage, mountId = 'bottomNavMount') {
+  const mount = document.getElementById(mountId);
+  if (!mount) return;
+  const tabs = NAV_TABS.map(t => {
+    const isActive = t.id === activePage;
+    const click = isActive ? '' : `onclick="window.location.href='${t.href}'"`;
+    return `<button class="nav-tab${isActive ? ' active' : ''}" ${click}>
+      <span class="nav-tab-icon">${t.icon}</span>${t.label}
+    </button>`;
+  }).join('');
+  mount.innerHTML = `<nav class="bottom-nav"><div class="nav-tabs">${tabs}</div></nav>`;
 }
 
 // ── Logout — clears ALL local cache then redirects ────────

@@ -9,46 +9,21 @@
   <title>📋 All Expenses</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script src="utils.js"></script>
+  <script src="auth.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
-  <script src="utils.js"></script>
-  <style>
-    /* ── Reset & Base ── */
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    <style>
 
-    :root {
-      --brand:      #5b5ef4;
-      --brand-2:    #8b5cf6;
-      --brand-grad: linear-gradient(135deg, #5b5ef4 0%, #8b5cf6 100%);
-      --surface:    #ffffff;
-      --surface-2:  #f5f5fa;
-      --border:     #e8e8f0;
-      --text:       #14142b;
-      --text-2:     #6e6e8a;
-      --text-3:     #a8a8c0;
-      --success:    #10b981;
-      --warning:    #f59e0b;
-      --danger:     #ef4444;
-      --radius-lg:  24px;
-      --radius-md:  16px;
-      --radius-sm:  10px;
-      --shadow:     0 8px 32px rgba(91,94,244,0.10);
-    }
+    
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--brand-grad);
-      min-height: 100vh;
-      padding-top: 60px;
-      padding-bottom: 88px;
-    }
-    @supports (padding-top: env(safe-area-inset-top)) {
-      body { padding-top: calc(60px + env(safe-area-inset-top)); }
+    
     }
 
     /* ── Layout ── */
-    .container { max-width: 520px; margin: 0 auto; padding: 0 18px; }
+    
 
     /* ── Header ── */
     .header {
@@ -57,62 +32,21 @@
       margin-bottom: 24px;
     }
     .header-left { display: flex; align-items: center; gap: 10px; }
-    .back-btn {
-      width: 38px; height: 38px; border-radius: 50%;
-      background: rgba(255,255,255,0.22);
-      border: 1px solid rgba(255,255,255,0.30);
-      color: #fff; font-size: 18px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-    .back-btn:hover { background: rgba(255,255,255,0.35); }
+    
     .header h1 {
       font-family: 'Sora', sans-serif; font-size: 24px;
       font-weight: 800; color: #fff; letter-spacing: -0.5px;
     }
-    .header-actions { display: flex; gap: 6px; }
-    .hdr-btn {
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.25);
-      color: #fff; padding: 7px 13px; border-radius: 30px;
-      font-size: 12px; font-weight: 600; cursor: pointer;
-      font-family: 'DM Sans', sans-serif; transition: background 0.15s;
-    }
-    .hdr-btn:hover  { background: rgba(255,255,255,0.28); }
-    .hdr-btn:active { transform: scale(0.96); }
+    
+    
 
     /* ── Cards ── */
-    .card {
-      background: var(--surface); border-radius: var(--radius-lg);
-      padding: 20px; margin-bottom: 18px; box-shadow: var(--shadow);
-    }
-    .card-title {
-      font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700;
-      color: var(--text); margin-bottom: 16px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .card-title-icon {
-      width: 28px; height: 28px; border-radius: 9px;
-      background: var(--brand-grad);
-      display: inline-flex; align-items: center; justify-content: center; font-size: 14px;
-    }
+    
 
     /* ── Filter bar ── */
     .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    label {
-      font-size: 11px; font-weight: 700; color: var(--text-2);
-      margin-bottom: 5px; display: block;
-      text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    select, input {
-      width: 100%; padding: 10px 12px;
-      border: 2px solid var(--border); border-radius: var(--radius-sm);
-      font-size: 14px; font-family: 'DM Sans', sans-serif;
-      background: var(--surface-2); color: var(--text);
-      -webkit-appearance: none; appearance: none;
-      transition: border-color 0.2s;
-    }
-    select:focus, input:focus { outline: none; border-color: var(--brand); background: #fff; }
+    
+    
 
     /* ── Search ── */
     .search-wrap { position: relative; margin-bottom: 12px; }
@@ -135,11 +69,7 @@
     .filter-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
 
     /* ── Sync strip ── */
-    .sync-strip {
-      font-size: 11px; font-weight: 600; color: var(--success);
-      text-align: center; margin-top: 8px;
-    }
-    .sync-strip.warn { color: var(--warning); }
+    
 
     /* ── Stats card ── */
     .stats-band {
@@ -156,17 +86,8 @@
 
     /* ── Tabs ── */
     .tabs { display: flex; gap: 6px; margin-bottom: 18px; }
-    .tab-btn {
-      flex: 1; padding: 11px 6px;
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 30px; font-size: 13px; font-weight: 700;
-      color: rgba(255,255,255,0.85); cursor: pointer;
-      font-family: 'DM Sans', sans-serif; transition: all 0.2s;
-    }
-    .tab-btn.active { background: #fff; color: var(--brand); border-color: transparent; box-shadow: 0 4px 14px rgba(0,0,0,0.10); }
-    .tab-content    { display: none; }
-    .tab-content.active { display: block; }
+    
+    
 
     /* ── Chart ── */
     .chart-container { position: relative; height: 190px; margin: 8px 0; }
@@ -197,20 +118,11 @@
     .detail-amt  { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); }
     .detail-date { font-size: 11px; color: var(--text-3); margin-top: 2px; }
     .detail-note { font-size: 11px; color: var(--text-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .action-btn {
-      background: none; border: none;
-      width: 30px; height: 30px; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 15px; transition: background 0.15s; flex-shrink: 0;
-    }
-    .action-btn:hover { background: var(--surface-2); }
-    .exp-actions { display: flex; gap: 2px; }
+    
+    
 
     .form-group-exp { display: flex; flex-direction: column; gap: 6px; }
-    .form-group-exp label {
-      font-size: 11px; font-weight: 700; color: var(--text-2);
-      text-transform: uppercase; letter-spacing: 0.05em;
-    }
+    .form-group-exp 
     .form-group-exp input, .form-group-exp select {
       padding: 11px 13px; border: 2px solid var(--border); border-radius: var(--radius-sm);
       font-size: 15px; font-family: 'DM Sans', sans-serif;
@@ -250,79 +162,31 @@
     .day-total { font-size: 12px; font-weight: 600; color: var(--text-2); }
 
     /* ── Expense item ── */
-    .expense-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 0; border-bottom: 1px solid var(--border);
-    }
-    .expense-item:last-child { border-bottom: none; }
-    .cat-icon {
-      width: 40px; height: 40px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0;
-    }
-    .exp-details { flex: 1; min-width: 0; }
-    .exp-cat  { font-weight: 600; font-size: 14px; color: var(--text); }
-    .exp-note { font-size: 11px; color: var(--text-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    
+    
+    
+    
     .exp-amt  { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); flex-shrink: 0; }
 
     /* ── Empty state ── */
-    .empty-state { text-align: center; padding: 36px 20px; color: var(--text-3); }
-    .empty-state .empty-icon { font-size: 44px; margin-bottom: 10px; }
-    .empty-state p { font-size: 13px; }
+    
 
     /* ── Toast ── */
-    .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-      background: var(--text); color: #fff; padding: 11px 22px; border-radius: 30px;
-      font-size: 13px; font-weight: 600; z-index: 9999; white-space: nowrap;
-      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
-      pointer-events: none; max-width: 90vw;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.success { background: var(--success); }
-    .toast.error   { background: var(--danger); }
+    
 
     /* ── Loading screen ── */
-    .screen {
-      position: fixed; inset: 0; background: var(--brand-grad);
-      z-index: 2000; display: flex; align-items: center; justify-content: center;
-    }
-    .screen-box {
-      background: #fff; border-radius: 28px; padding: 36px 28px;
-      text-align: center; width: 100%; max-width: 320px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.20);
-    }
-    .screen-box h2 { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
-    .screen-box p  { color: var(--text-2); font-size: 14px; margin-bottom: 16px; }
-    .spinner {
-      display: inline-block; width: 20px; height: 20px;
-      border: 2px solid rgba(91,94,244,0.25); border-top-color: var(--brand);
-      border-radius: 50%; animation: spin 0.6s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    
+    
+     }
 
     /* ── Export modal ── */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-      z-index: 3000; display: flex; align-items: flex-end; justify-content: center;
-      opacity: 0; transition: opacity 0.25s; pointer-events: none;
-    }
-    .modal-backdrop.open { opacity: 1; pointer-events: all; }
-    .modal {
-      background: #fff; border-radius: 28px 28px 0 0;
-      padding: 24px 20px 36px; width: 100%; max-width: 520px;
-      transform: translateY(40px);
-      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
-      max-height: 88vh; overflow-y: auto;
-    }
-    .modal-backdrop.open .modal { transform: translateY(0); }
-    .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 18px; }
-    .modal-title { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 16px; }
-    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-cancel {
-      flex: 1; padding: 13px; background: var(--surface-2); color: var(--text-2);
-      border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
-      cursor: pointer; font-family: 'DM Sans', sans-serif;
-    }
+    
+    
+    
+    
+    
     .btn-primary {
       flex: 2; padding: 13px; background: var(--brand-grad); color: #fff;
       border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700;
@@ -344,7 +208,7 @@
     }
     .export-month-item.selected { border-color: var(--brand); background: #ededff; color: var(--brand); }
     .export-month-item input    { display: none; }
-    .export-section-label { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; margin: 12px 0 8px; }
+    .export-section-
     .export-select-all-btn {
       background: none; border: none; color: var(--brand); font-size: 12px;
       font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 0;
@@ -352,82 +216,18 @@
     .export-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 
     /* ── Manage Categories button ── */
-    .manage-cats-btn {
-      display: block; width: 100%;
-      padding: 14px;
-      background: var(--surface);
-      color: var(--brand);
-      border: 1.5px solid var(--brand);
-      border-radius: var(--radius-sm);
-      font-size: 15px; font-weight: 700;
-      font-family: 'DM Sans', sans-serif;
-      cursor: pointer;
-      margin-bottom: 12px;
-      transition: background 0.15s;
-    }
-    .manage-cats-btn:hover  { background: #ededff; }
-    .manage-cats-btn:active { transform: scale(0.97); }
+    
     
     /* ── Logout bottom button ── */
-    .logout-bottom-btn {
-      display: block; width: 100%;
-      padding: 14px;
-      background: #fee2e2;
-      color: #991b1b;
-      border: 1.5px solid #fca5a5;
-      border-radius: var(--radius-sm);
-      font-size: 15px; font-weight: 700;
-      font-family: 'DM Sans', sans-serif;
-      cursor: pointer;
-      margin-bottom: 32px;
-      transition: background 0.15s;
-    }
-    .logout-bottom-btn:hover  { background: #fecaca; }
-    .logout-bottom-btn:active { transform: scale(0.97); }
+    
     /* ── Header icon buttons ── */
-    .header-actions { display: flex; gap: 8px; align-items: center; }
-    .hdr-icon-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
-      color: #fff; font-size: 17px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s; flex-shrink: 0;
-    }
-    .hdr-icon-btn:hover  { background: rgba(255,255,255,0.30); }
-    .hdr-icon-btn:active { transform: scale(0.93); }
-    .hdr-icon-btn.danger {
-      background: rgba(239,68,68,0.28); border-color: rgba(239,68,68,0.50);
-      color: #fca5a5;
-    }
-    .hdr-icon-btn.danger:hover { background: rgba(239,68,68,0.42); }
-    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
+    
+    
     /* ── Bottom nav ── */
-    nav, nav * { list-style: none; }
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-      display: flex; align-items: center; justify-content: center;
-      padding: 10px 18px 12px;
-      background: rgba(60,50,140,0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
-      list-style: none;
+    
+    
     }
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-    }
-    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; }
-    .nav-tab {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      gap: 3px; padding: 8px 4px; border-radius: 14px;
-      border: none; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
-      font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
-      cursor: pointer; transition: all 0.15s;
-    }
-    .nav-tab:active { background: rgba(255,255,255,0.22); }
-    .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-    .nav-tab-icon { font-size: 18px; line-height: 1; }
+    
   </style>
 </head>
 <body>
@@ -530,25 +330,7 @@
 
 <!-- Toast -->
 
-<nav class="bottom-nav">
-  <div class="nav-tabs">
-    <button class="nav-tab" onclick="window.location.href='Home.html'">
-      <span class="nav-tab-icon">🏠</span>Home
-    </button>
-    <button class="nav-tab active">
-      <span class="nav-tab-icon">📋</span>Expenses
-    </button>
-    <button class="nav-tab" onclick="window.location.href='Recurring.html'">
-      <span class="nav-tab-icon">🔄</span>Recurring
-    </button>
-    <button class="nav-tab" onclick="window.location.href='Categories.html'">
-      <span class="nav-tab-icon">⚙️</span>Categories
-    </button>
-    <button class="nav-tab" onclick="window.location.href='Installments.html'">
-  <span class="nav-tab-icon">📆</span>Installments
-</button>
-  </div>
-</nav>
+<div id="bottomNavMount"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -639,8 +421,6 @@ let activeCategory  = '';
 let searchQuery     = '';
 const MONTH_NAMES   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-// ── Toast ─────────────────────────────────────────────────
-let toastTimer;
 // ── Navigation ────────────────────────────────────────────
 function goBack()  { window.location.href = 'Home.html'; }
 
@@ -1178,52 +958,18 @@ function showIOSResumeScreen(onTap) {
 }
 
 async function loadSheetData() {
-  const token = localStorage.getItem('google_token');
-  if (!token) { showToast('❌ Please sign in first', 'error'); setTimeout(goBack, 1500); return; }
-
-  currentUserEmail = getUserEmailFromToken(token);
-
-  // Render local data immediately for instant display
-  const localRaw = localStorage.getItem(`expenses_${currentUserEmail}`);
-  if (localRaw) { expenses = JSON.parse(localRaw); renderAll(); }
-
-  await initGapiClient();
-
-  // ── Try reusing saved token first — no popup ─────────
-  const savedToken = getSavedAccessToken();
-  if (savedToken) {
-    currentAccessToken = savedToken;
-    gapi.client.setToken({ access_token: currentAccessToken });
-    try {
-      await gapi.client.drive.files.list({ q: 'trashed=false', pageSize: 1, fields: 'files(id)' });
+  await initPageAuth({
+    onLoadLocal: (email) => {
+      currentUserEmail = email;
+      const localRaw = localStorage.getItem(`expenses_${currentUserEmail}`);
+      if (localRaw) { expenses = JSON.parse(localRaw); renderAll(); }
+    },
+    onReady: async (sheetId, email, token) => {
+      currentUserEmail   = email;
+      currentAccessToken = token;
       await showMain();
-      return;
-    } catch (e) {
-      clearAccessToken(); // expired — re-auth
     }
-  }
-
-  const doTokenRequest = () => {
-    const tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID, scope: SCOPES,
-      prompt: '',   // silent — no popup if already granted
-      callback: async (tokenResponse) => {
-        if (!tokenResponse.access_token) return;
-        currentAccessToken = tokenResponse.access_token;
-        saveAccessToken(currentAccessToken);
-        gapi.client.setToken({ access_token: currentAccessToken });
-        await showMain();
-      }
-    });
-    tokenClient.requestAccessToken();
-  };
-
-  // ── iOS Safari: must come from a direct user tap ──────
-  if (isIOSSafari()) {
-    showIOSResumeScreen(doTokenRequest);
-  } else {
-    doTokenRequest();
-  }
+  });
 }
 
 // ── Wire up ───────────────────────────────────────────────
@@ -1262,6 +1008,7 @@ document.getElementById('editCancelBtn').addEventListener('click', closeEditModa
 document.getElementById('editSaveBtn').addEventListener('click',   saveEdit);
 document.getElementById('editModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditModal(); });
 
+renderBottomNav('expenses');
 loadSheetData();
 </script>
 

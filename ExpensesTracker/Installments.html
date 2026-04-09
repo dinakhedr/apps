@@ -2,118 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>📆 Installments Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
   <script src="utils.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="auth.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    
 
-    :root {
-      --brand:      #5b5ef4;
-      --brand-2:    #8b5cf6;
-      --brand-grad: linear-gradient(135deg, #5b5ef4 0%, #8b5cf6 100%);
-      --surface:    #ffffff;
-      --surface-2:  #f5f5fa;
-      --border:     #e8e8f0;
-      --text:       #14142b;
-      --text-2:     #6e6e8a;
-      --text-3:     #a8a8c0;
-      --success:    #10b981;
-      --warning:    #f59e0b;
-      --danger:     #ef4444;
-      --radius-lg:  24px;
-      --radius-sm:  10px;
+    
+
+    
     }
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--brand-grad);
-      min-height: 100vh;
-      padding-top: 60px;
-      padding-bottom: 88px;
-    }
-    @supports (padding-top: env(safe-area-inset-top)) {
-      body { padding-top: calc(60px + env(safe-area-inset-top)); }
-    }
-
-    .container { max-width: 520px; margin: 0 auto; padding: 0 18px; }
+    
 
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .header h1 { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .header-actions { display: flex; gap: 8px; align-items: center; }
-    .hdr-icon-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
-      color: #fff; font-size: 17px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-    .hdr-icon-btn:hover { background: rgba(255,255,255,0.30); }
-    .hdr-icon-btn.danger { background: rgba(239,68,68,0.28); border-color: rgba(239,68,68,0.50); color: #fca5a5; }
-    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    
+     }
 
-    .stats-row {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(8px);
-      border-radius: var(--radius-lg);
-      padding: 14px 20px;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: #fff;
-    }
-    .stats-total { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 800; }
-    .stats-label { font-size: 11px; opacity: 0.7; }
+    
+    .stats-
 
-    .add-btn {
-      width: 100%; padding: 13px;
-      background: #fff; color: var(--brand);
-      border: none; border-radius: var(--radius-sm);
-      font-size: 15px; font-weight: 700;
-      font-family: 'Sora', sans-serif; cursor: pointer;
-      margin-bottom: 16px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: 0.15s;
-    }
-    .add-btn:active { transform: scale(0.97); }
+    
 
-    .card {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      margin-bottom: 16px;
-      box-shadow: 0 8px 32px rgba(91,94,244,0.10);
-      overflow: hidden;
-    }
+    
 
-    .tab-bar {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 13px 8px;
-      background: none;
-      border: none;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-3);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: 0.15s;
-    }
-    .tab-btn.active {
-      color: var(--brand);
-      border-bottom-color: var(--brand);
-    }
-    .tab-content { padding: 16px; display: none; }
-    .tab-content.active { display: block; }
+    
 
     .inst-row {
       display: flex;
@@ -176,95 +100,31 @@
     .badge-active { background: #ede9fe; color: #6d28d9; font-size: 10px; padding: 2px 8px; border-radius: 20px; }
 
     /* Sheet menu */
-    .sheet-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.40);
-      z-index: 4000; display: flex; align-items: flex-end; justify-content: center;
-      opacity: 0; transition: opacity 0.2s; pointer-events: none;
-    }
-    .sheet-backdrop.open { opacity: 1; pointer-events: all; }
-    .sheet {
-      background: #fff; border-radius: 24px 24px 0 0;
-      padding: 14px 16px 36px; width: 100%; max-width: 520px;
-      transform: translateY(100%);
-      transition: transform 0.28s cubic-bezier(.34,1.2,.64,1);
-    }
-    .sheet-backdrop.open .sheet { transform: translateY(0); }
-    .sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 14px; }
-    .sheet-title { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 800; margin-bottom: 10px; }
-    .sheet-action {
-      display: flex; align-items: center; gap: 14px;
-      padding: 13px 4px; border-bottom: 1px solid var(--border);
-      cursor: pointer; font-size: 15px; background: none; width: 100%;
-      text-align: left; border-radius: 8px;
-    }
-    .sheet-action:active { background: var(--surface-2); }
-    .sheet-action.danger { color: var(--danger); }
+    
+    
 
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-      z-index: 3000; display: flex; align-items: flex-end; justify-content: center;
-      opacity: 0; transition: opacity 0.25s; pointer-events: none;
-    }
-    .modal-backdrop.open { opacity: 1; pointer-events: all; }
-    .modal {
-      background: #fff; border-radius: 28px 28px 0 0;
-      padding: 24px 20px 36px; width: 100%; max-width: 520px;
-      transform: translateY(40px);
-      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
-      max-height: 90vh; overflow-y: auto;
-    }
-    .modal-backdrop.open .modal { transform: translateY(0); }
-    .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 18px; }
-    .modal-title { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 20px; }
-    .form-group { margin-bottom: 14px; }
-    .form-group label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; display: block; margin-bottom: 5px; }
+    
+    
+    
+    
+    .form-group 
     .form-group input, .form-group select {
       width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius-sm);
       font-size: 14px; background: var(--surface-2);
     }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-cancel { flex:1; padding:12px; background:var(--surface-2); border:none; border-radius:var(--radius-sm); font-weight:600; }
-    .btn-save { flex:2; background:var(--brand-grad); color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; }
-    .btn-danger { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+    
+    
+    
 
-    .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-      background: var(--text); color: #fff; padding: 11px 22px; border-radius: 30px;
-      font-size: 13px; font-weight: 600; z-index: 9999; transition: transform 0.3s;
-      pointer-events: none; white-space: nowrap;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.success { background: var(--success); }
-    .toast.error { background: var(--danger); }
+    
 
-    .loading-overlay {
-      position: fixed; inset: 0; background: rgba(91,94,244,0.18);
-      backdrop-filter: blur(4px); z-index: 9000;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .loading-box { background: #fff; border-radius: 20px; padding: 28px 32px; text-align: center; }
-    .spinner { width: 24px; height: 24px; border: 3px solid #ededff; border-top-color: var(--brand); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 10px; }
+    
+    
 
-    .empty-state { text-align: center; padding: 28px; color: var(--text-3); }
+    
 
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-      display: flex; align-items: center; justify-content: center;
-      padding: 10px 18px 12px;
-      background: rgba(60,50,140,0.82);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255,255,255,0.12);
-    }
-    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 500px; }
-    .nav-tab {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      gap: 3px; padding: 8px 4px; border-radius: 14px;
-      background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
-      font-size: 11px; font-weight: 600; cursor: pointer; border: none;
-    }
-    .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; }
-    .nav-tab-icon { font-size: 18px; }
+    
+    
   </style>
 </head>
 <body>
@@ -301,15 +161,7 @@
   </div>
 </div>
 
-<nav class="bottom-nav">
-  <div class="nav-tabs">
-    <button class="nav-tab" onclick="window.location.href='Home.html'"><span class="nav-tab-icon">🏠</span>Home</button>
-    <button class="nav-tab" onclick="window.location.href='Expenses.html'"><span class="nav-tab-icon">📋</span>Expenses</button>
-    <button class="nav-tab" onclick="window.location.href='Recurring.html'"><span class="nav-tab-icon">🔄</span>Recurring</button>
-    <button class="nav-tab" onclick="window.location.href='Categories.html'"><span class="nav-tab-icon">⚙️</span>Categories</button>
-    <button class="nav-tab active"><span class="nav-tab-icon">📆</span>Installments</button>
-  </div>
-</nav>
+<div id="bottomNavMount"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -352,14 +204,7 @@
 
 <script>
 // ======================== CONFIG ==========================
-const INSTALLMENTS_SHEET = 'Installments';
-const INSTALLMENTS_LOG_SHEET = 'Installments Log';
-const BANK_PROVIDERS = [
-  { key: 'CIB', name: 'CIB Bank', logo: 'Logos/CIB.png' },
-  { key: 'NBE', name: 'NBE', logo: 'Logos/NBE.png' },
-  { key: 'BM', name: 'BM', logo: 'Logos/BM.png' }
-  // Add more banks here
-];
+// BANK_PROVIDERS is defined in utils.js
 
 let spreadsheetId = null, currentUserEmail = null, currentAccessToken = null;
 let installments = [];
@@ -367,14 +212,8 @@ let paymentLogs = [];
 let sheetTargetId = null; // for the menu
 
 // ======================== HELPERS =========================
-function formatMoney(amt) { return `EGP ${Number(amt).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`; }
-function showToast(msg, type='success') { const t=document.getElementById('toast'); t.textContent=msg; t.className=`toast show ${type}`; clearTimeout(window.toastTimer); window.toastTimer=setTimeout(()=>t.classList.remove('show'),3000); }
 
-function generateShortId() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
-  let id; do { id = Array.from({length:6},()=>chars[Math.floor(Math.random()*chars.length)]).join(''); } while(installments.some(i=>i.id===id));
-  return id;
-}
+// generateShortId() is provided by utils.js
 
 function computeMonthlyAmount(total, months) { return months > 0 ? total / months : 0; }
 
@@ -676,7 +515,7 @@ async function saveInstallment() {
   if(monthsCount<1) { showToast('Months must be >=1','error'); return; }
   const monthly = computeMonthlyAmount(totalAmount, monthsCount);
   const newInst = {
-    id: editingId || generateShortId(),
+    id: editingId || generateShortId(installments.map(i=>i.id)),
     itemName, bankKey, totalAmount, monthsCount, startYear, startMonth,
     monthlyAmount: monthly
   };
@@ -749,32 +588,21 @@ async function fullRefresh() {
 async function syncAll() { await fullRefresh(); showToast('Synced with Google Drive'); }
 
 async function initPage() {
-  const token = localStorage.getItem('google_token');
-  if(!token){ showToast('Please sign in first','error'); setTimeout(()=>window.location.href='Home.html',1500); return; }
-  currentUserEmail = getUserEmailFromToken(token);
-  spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
-  if(!spreadsheetId){ showToast('Spreadsheet not found','error'); return; }
-  await initGapiClient();
-  const savedToken = getSavedAccessToken();
-  if(savedToken) {
-    currentAccessToken = savedToken;
-    gapi.client.setToken({ access_token: currentAccessToken });
-    try {
-      await gapi.client.drive.files.list({q:'trashed=false',pageSize:1});
-      await ensureInstallmentsTab(); await ensureLogTab();
+  await initPageAuth({
+    onLoadLocal: (email, sheetId) => {
+      currentUserEmail = email;
+      spreadsheetId    = sheetId;
+      if(!spreadsheetId){ showToast('Spreadsheet not found','error'); }
+    },
+    onReady: async (sheetId, email, token) => {
+      currentUserEmail   = email;
+      spreadsheetId      = sheetId;
+      currentAccessToken = token;
+      await ensureInstallmentsTab();
+      await ensureLogTab();
       await fullRefresh();
-      return;
-    } catch(e){ clearAccessToken(); }
-  }
-  const tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, prompt: '', callback: async resp => {
-    if(!resp.access_token) return;
-    currentAccessToken = resp.access_token;
-    saveAccessToken(currentAccessToken);
-    gapi.client.setToken({ access_token: currentAccessToken });
-    await ensureInstallmentsTab(); await ensureLogTab();
-    await fullRefresh();
-  }});
-  tokenClient.requestAccessToken();
+    }
+  });
 }
 
 function populateSelects() {
@@ -803,6 +631,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 });
 document.getElementById('actionSheet').addEventListener('click', e => { if(e.target === e.currentTarget) closeActionSheet(); });
 populateSelects();
+renderBottomNav('installments');
 initPage();
 </script>
 </body>
