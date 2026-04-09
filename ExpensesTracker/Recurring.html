@@ -657,12 +657,6 @@ const categoryIcon = { 'Entertainment':'🎬','Music':'🎵','Podcasts':'🎙️
 
 // ── Helpers ────────────────────────────────────────────────
 let toastTimer;
-function showToast(msg, type='success') {
-  const t=document.getElementById('toast'); t.textContent=msg; t.className=`toast show ${type}`;
-  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
-}
-function formatMoney(n) { return `EGP ${Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`; }
-function escapeHtml(s)  { return (s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function todayYMD()     { return new Date().toISOString().split('T')[0]; }
 
 // ── Tab switch (now includes 'all') ────────────────────────
@@ -1081,28 +1075,8 @@ async function syncAll() {
   btn.classList.remove('spinning'); btn.style.pointerEvents = '';
 }
 
-function logout() {
-  if (!confirm('Log out?')) return;
-  clearAccessToken();
-  const keys = ['google_token'];
-  if (currentUserEmail) {
-    keys.push(`drive_setup_${currentUserEmail}`);
-    keys.push(`spreadsheet_id_${currentUserEmail}`);
-    keys.push(`recurring_${currentUserEmail}`);
-    keys.push(paidKey());
-  }
-  keys.forEach(k => localStorage.removeItem(k));
-  window.location.href = 'Home.html';
-}
 
 // ── Auth ───────────────────────────────────────────────────
-async function initGapiClient() {
-  await new Promise(resolve=>{if(gapi.client?.drive) resolve(); else gapi.load('client',resolve);});
-  await gapi.client.init({apiKey:'',discoveryDocs:DISCOVERY_DOCS});
-}
-function saveAccessToken(t)    { sessionStorage.setItem('gapi_access_token',t); }
-function getSavedAccessToken() { return sessionStorage.getItem('gapi_access_token'); }
-function clearAccessToken()    { sessionStorage.removeItem('gapi_access_token'); }
 
 async function initAndLoad() {
   await ensureRecurringTab();

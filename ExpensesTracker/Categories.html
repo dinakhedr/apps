@@ -535,13 +535,6 @@ let isSaving = false;
 
 // ── Toast ─────────────────────────────────────────────────
 let toastTimer;
-function showToast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast show ${type}`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
-}
 
 // ── Render ────────────────────────────────────────────────
 function render() {
@@ -798,16 +791,11 @@ async function saveCategory() {
 }
 
 // ── GAPI bootstrap ─────────────────────────────────────────
-async function initGapiClient() {
-  await new Promise(resolve => {
-    if (gapi.client?.drive) { resolve(); return; }
     gapi.load('client', resolve);
   });
   await gapi.client.init({ apiKey: '', discoveryDocs: DISCOVERY_DOCS });
 }
 
-function saveAccessToken(token) { sessionStorage.setItem('gapi_access_token', token); }
-function getSavedAccessToken()  { return sessionStorage.getItem('gapi_access_token'); }
 
 async function loadPage() {
   const token = localStorage.getItem('google_token');
@@ -845,13 +833,6 @@ async function loadPage() {
     }
   });
   tokenClient.requestAccessToken();
-}
-
-function logout() {
-  if (!confirm('Log out?')) return;
-  sessionStorage.removeItem('gapi_access_token');
-  localStorage.removeItem('google_token');
-  window.location.href = 'Home.html';
 }
 
 loadPage();

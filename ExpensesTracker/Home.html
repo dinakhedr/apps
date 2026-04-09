@@ -744,14 +744,6 @@ function loadBudgets() {
 
 // ── Toast ─────────────────────────────────────────────────
 let toastTimer;
-function showToast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast show ${type}`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
-}
-
 // ── Date helpers (from utils.js) ──────────────────────────
 function isInCurrentMonth(dateStr) {
   const now = new Date();
@@ -1227,13 +1219,6 @@ function showScreen(id) {
 }
 
 // ── GAPI init helper ──────────────────────────────────────
-async function initGapi() {
-  await new Promise(resolve => {
-    if (gapi.client?.drive) { resolve(); return; }
-    gapi.load('client', resolve);
-  });
-  await gapi.client.init({ apiKey: '', discoveryDocs: DISCOVERY_DOCS });
-}
 
 function makeTokenClient(callback, silent = false) {
   const cfg = { client_id: CLIENT_ID, scope: SCOPES, callback };
@@ -1242,16 +1227,7 @@ function makeTokenClient(callback, silent = false) {
 }
 
 // ── Persist / restore access token across page navigations ─
-function saveAccessToken(token) { sessionStorage.setItem('gapi_access_token', token); }
-function getSavedAccessToken()  { return sessionStorage.getItem('gapi_access_token'); }
-function clearAccessToken()     { sessionStorage.removeItem('gapi_access_token'); }
 
-// ── Detect iOS Safari (blocks programmatic popups) ───────
-function isIOSSafari() {
-  const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent) && /WebKit/.test(navigator.userAgent) && !/CriOS|FxiOS|OPiOS|mercury/.test(navigator.userAgent);
-  const isPWA = window.navigator.standalone === true;
-  return isIOS || isPWA;
-}
 
 // ── Show a tap-to-continue screen (required for iOS Safari) ─
 function showResumeScreen(onTap) {
@@ -1341,25 +1317,12 @@ async function handleCredentialResponse(response) {
   localStorage.setItem('google_token', token);
 
   showScreen('loadingScreen');
-  await initGapi();
+  await initGapiClient();
   // On iOS Safari the token request must come from a direct tap — the
   // Google sign-in button IS already a direct tap so this path is fine.
   makeTokenClient(completeLoginAndSetup).requestAccessToken();
 }
 
-// ── Logout ────────────────────────────────────────────────
-function logout() {
-  clearAccessToken();
-  ['google_token'].concat(
-    currentUserEmail
-      ? [`drive_setup_${currentUserEmail}`, `spreadsheet_id_${currentUserEmail}`]
-      : []
-  ).forEach(k => localStorage.removeItem(k));
-  currentUserEmail = currentAccessToken = spreadsheetId = folderId = null;
-  expenses = []; budgets = {};
-  showScreen('loginScreen');
-  showToast('👋 Logged out');
-}
 
 // ── Check existing login on load ──────────────────────────
 async function checkLogin() {
@@ -1377,7 +1340,7 @@ async function checkLogin() {
   if (savedToken) {
     currentAccessToken = savedToken;
     showScreen('loadingScreen');
-    await initGapi();
+    await initGapiClient();
     gapi.client.setToken({ access_token: currentAccessToken });
     spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
     try {
@@ -1395,7 +1358,7 @@ async function checkLogin() {
 
   // ── iOS Safari: must request token from a direct user tap ──
   if (isIOSSafari()) {
-    await initGapi();
+    await initGapiClient();
     showResumeScreen(() => {
       makeTokenClient(completeLoginAndSetup, true).requestAccessToken();
     });
@@ -1404,7 +1367,7 @@ async function checkLogin() {
 
   // ── Desktop / other browsers: request silently (no popup if already granted) ──
   showScreen('loadingScreen');
-  await initGapi();
+  await initGapiClient();
   makeTokenClient(completeLoginAndSetup, true).requestAccessToken();
 }
 
