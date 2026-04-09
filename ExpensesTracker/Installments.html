@@ -265,7 +265,19 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
       <div class="inst-action">${actionColInner}</div>
     </div>`;
 }
+function getLastPaymentDate(inst) {
+  const lastMonthIndex = (inst.startMonth - 1) + (inst.monthsCount - 1);
+  const lastYear  = inst.startYear + Math.floor(lastMonthIndex / 12);
+  const lastMonth = lastMonthIndex % 12;
+  return new Date(lastYear, lastMonth, 1);
+}
 
+function getDueLabel(inst) {
+  const status   = getStatus(inst);
+  const lastDate = getLastPaymentDate(inst);
+  const prefix   = status === 'completed' ? 'Last: ' : 'Due: ';
+  return prefix + lastDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+}
 function renderAll() {
   const now = new Date();
   const currentYear  = now.getFullYear();
@@ -346,38 +358,19 @@ function renderAll() {
   }).join('');
   }
 
-  // ── Render all ────────────────────────────────────────────
+// ── Render all ────────────────────────────────────────────
   const allContainer = document.getElementById('allList');
   if (!allItems.length) {
     allContainer.innerHTML = '<div class="empty-state">No installment plans added</div>';
   } else {
     allContainer.innerHTML = allItems.map(inst => {
-    const row = renderInstRow(inst, false, false, true);
-    // Find next due month (or last month if completed)
-    const status = getStatus(inst);
-    let dueLabel = '';
-    if (status === 'completed') {
-      const endDate = getEndDate(inst);
-      endDate.setMonth(endDate.getMonth() - 1); // last payment month
-      dueLabel = 'Last: ' + endDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-    } else {
-      const now = new Date();
-      let checkMonth = now.getMonth(), checkYear = now.getFullYear();
-      for (let steps = 0; steps < inst.monthsCount + 2; steps++) {
-        const checkDate = new Date(checkYear, checkMonth, 1);
-        if (checkDate >= getEndDate(inst)) break;
-        if (checkDate < getStartDate(inst)) { checkMonth++; if (checkMonth > 11) { checkMonth = 0; checkYear++; } continue; }
-        if (isDueInMonth(inst, checkYear, checkMonth)) {
-          dueLabel = 'Due: ' + checkDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-          break;
-        }
-        checkMonth++; if (checkMonth > 11) { checkMonth = 0; checkYear++; }
-      }
-    }
-    return dueLabel
-      ? row.replace(`<div class="inst-meta">Left`, `<div class="inst-meta"><span style="color:var(--brand);font-weight:700">${dueLabel}</span> · Left`)
-      : row;
-  }).join('');
+      const row      = renderInstRow(inst, false, false, true);
+      const dueLabel = getDueLabel(inst);
+      return row.replace(
+        `<div class="inst-meta">Left`,
+        `<div class="inst-meta"><span style="color:var(--brand);font-weight:700">${dueLabel}</span> · Left`
+      );
+    }).join('');
   }
 }
 
