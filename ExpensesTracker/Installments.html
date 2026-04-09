@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>📆 Installments Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <script src="utils.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brand:      #5b5ef4;
+      --brand-2:    #8b5cf6;
+      --brand-grad: linear-gradient(135deg, #5b5ef4 0%, #8b5cf6 100%);
+      --surface:    #ffffff;
+      --surface-2:  #f5f5fa;
+      --border:     #e8e8f0;
+      --text:       #14142b;
+      --text-2:     #6e6e8a;
+      --text-3:     #a8a8c0;
+      --success:    #10b981;
+      --warning:    #f59e0b;
+      --danger:     #ef4444;
+      --radius-lg:  24px;
+      --radius-sm:  10px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--brand-grad);
+      min-height: 100vh;
+      padding-top: 60px;
+      padding-bottom: 88px;
+    }
+    @supports (padding-top: env(safe-area-inset-top)) {
+      body { padding-top: calc(60px + env(safe-area-inset-top)); }
+    }
+
+    .container { max-width: 520px; margin: 0 auto; padding: 0 18px; }
+
+    /* Header */
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .header h1 { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .hdr-icon-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
+      color: #fff; font-size: 17px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .hdr-icon-btn:hover { background: rgba(255,255,255,0.30); }
+    .hdr-icon-btn.danger { background: rgba(239,68,68,0.28); border-color: rgba(239,68,68,0.50); color: #fca5a5; }
+    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Stats banner */
+    .stats-row {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius-lg);
+      padding: 14px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+    }
+    .stats-total { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 800; }
+    .stats-label { font-size: 11px; opacity: 0.7; }
+
+    .add-btn {
+      width: 100%; padding: 13px;
+      background: #fff; color: var(--brand);
+      border: none; border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 700;
+      font-family: 'Sora', sans-serif; cursor: pointer;
+      margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: 0.15s;
+    }
+    .add-btn:active { transform: scale(0.97); }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      margin-bottom: 16px;
+      box-shadow: 0 8px 32px rgba(91,94,244,0.10);
+      overflow: hidden;
+    }
+
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 13px 8px;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: 0.15s;
+    }
+    .tab-btn.active {
+      color: var(--brand);
+      border-bottom-color: var(--brand);
+    }
+    .tab-content { padding: 16px; display: none; }
+    .tab-content.active { display: block; }
+
+    /* Installment row */
+    .inst-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .inst-row:last-child { border-bottom: none; }
+    .bank-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .bank-logo img { width: 70%; height: auto; object-fit: contain; }
+    .inst-info { flex: 1; min-width: 0; }
+    .inst-name { font-weight: 700; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .inst-meta { font-size: 11px; color: var(--text-2); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .inst-progress { margin-top: 6px; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .inst-progress-bar { height: 100%; background: var(--brand); border-radius: 4px; width: 0%; }
+    .inst-right { text-align: right; flex-shrink: 0; }
+    .inst-amount { font-weight: 700; font-size: 14px; color: var(--brand); }
+    .inst-remaining { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+    .pay-btn {
+      background: #fef3c7;
+      border: none;
+      border-radius: 24px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #d97706;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: 0.1s;
+    }
+    .pay-btn:active { transform: scale(0.95); }
+    .pay-btn.disabled { opacity: 0.5; cursor: not-allowed; background: #e5e7eb; color: #6b7280; }
+    .action-group { display: flex; gap: 6px; align-items: center; }
+    .action-icon {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      transition: background 0.1s;
+    }
+    .action-icon:hover { background: var(--surface-2); }
+    .badge-completed { background: #d1fae5; color: #065f46; font-size: 10px; padding: 2px 8px; border-radius: 20px; }
+    .badge-active { background: #ede9fe; color: #6d28d9; font-size: 10px; padding: 2px 8px; border-radius: 20px; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 3000; display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; transition: opacity 0.25s; pointer-events: none;
+    }
+    .modal-backdrop.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: #fff; border-radius: 28px 28px 0 0;
+      padding: 24px 20px 36px; width: 100%; max-width: 520px;
+      transform: translateY(40px);
+      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 18px; }
+    .modal-title { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; display: block; margin-bottom: 5px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 14px; background: var(--surface-2);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-cancel { flex:1; padding:12px; background:var(--surface-2); border:none; border-radius:var(--radius-sm); font-weight:600; }
+    .btn-save { flex:2; background:var(--brand-grad); color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; }
+    .btn-danger { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--text); color: #fff; padding: 11px 22px; border-radius: 30px;
+      font-size: 13px; font-weight: 600; z-index: 9999; transition: transform 0.3s;
+      pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(91,94,244,0.18);
+      backdrop-filter: blur(4px); z-index: 9000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .loading-box { background: #fff; border-radius: 20px; padding: 28px 32px; text-align: center; }
+    .spinner { width: 24px; height: 24px; border: 3px solid #ededff; border-top-color: var(--brand); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 10px; }
+
+    .empty-state { text-align: center; padding: 28px; color: var(--text-3); }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 10px 18px 12px;
+      background: rgba(60,50,140,0.82);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.12);
+    }
+    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 500px; }
+    .nav-tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 3px; padding: 8px 4px; border-radius: 14px;
+      background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
+      font-size: 11px; font-weight: 600; cursor: pointer; border: none;
+    }
+    .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; }
+    .nav-tab-icon { font-size: 18px; }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box"><div class="spinner"></div><p>Loading installments...</p></div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1>📆 Installments</h1>
+    <div class="header-actions">
+      <button class="hdr-icon-btn" id="syncBtn" title="Sync">↻</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+
+  <div class="stats-row" id="statsRow" style="display:none">
+    <div><div class="stats-label">Active total remaining</div><div class="stats-total" id="totalRemaining">EGP 0</div></div>
+    <div style="text-align:right"><div class="stats-label">This month due</div><div class="stats-total" id="monthDueCount">0</div></div>
+  </div>
+
+  <button class="add-btn" onclick="openAddModal()">➕ New Installment Plan</button>
+
+  <div class="card">
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="current">📅 Current Month</button>
+      <button class="tab-btn" data-tab="upcoming">⏳ Upcoming</button>
+      <button class="tab-btn" data-tab="all">📋 All Installments</button>
+    </div>
+    <div class="tab-content active" id="tabCurrent"><div id="currentList"></div></div>
+    <div class="tab-content" id="tabUpcoming"><div id="upcomingList"></div></div>
+    <div class="tab-content" id="tabAll"><div id="allList"></div></div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="window.location.href='Home.html'"><span class="nav-tab-icon">🏠</span>Home</button>
+    <button class="nav-tab" onclick="window.location.href='Expenses.html'"><span class="nav-tab-icon">📋</span>Expenses</button>
+    <button class="nav-tab" onclick="window.location.href='Recurring.html'"><span class="nav-tab-icon">🔄</span>Recurring</button>
+    <button class="nav-tab" onclick="window.location.href='Categories.html'"><span class="nav-tab-icon">⚙️</span>Categories</button>
+    <button class="nav-tab active"><span class="nav-tab-icon">📆</span>Installments</button>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-backdrop" id="instModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">➕ New Installment</div>
+    <div class="form-group"><label>Item Name</label><input type="text" id="itemName" placeholder="e.g. iPhone 15" maxlength="50"></div>
+    <div class="form-group"><label>Bank / BNPL</label><select id="bankProvider"></select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Total Amount (EGP)</label><input type="number" id="totalAmount" step="0.01" min="1" value="0"></div>
+      <div class="form-group"><label># Months</label><input type="number" id="monthsCount" min="1" max="36" value="6"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Start Month</label><select id="startMonth"></select></div>
+      <div class="form-group"><label>Start Year</label><select id="startYear"></select></div>
+    </div>
+    <div class="form-group"><label>Monthly Amount (auto)</label><input type="text" id="monthlyAmount" readonly disabled style="background:#f0f0f0;"></div>
+    <div class="modal-footer" id="modalFooter">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveInstallment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ======================== CONFIG ==========================
+const INSTALLMENTS_SHEET = 'Installments';
+const INSTALLMENTS_LOG_SHEET = 'Installments Log';
+const BANK_PROVIDERS = [
+  { key: 'CIB', name: 'CIB Bank', logo: 'Logos/CIB.png' },
+  { key: 'NBE', name: 'NBE', logo: 'Logos/NBE.png' },
+  { key: 'BM', name: 'BM', logo: 'Logos/BM.png' }
+];
+
+let spreadsheetId = null, currentUserEmail = null, currentAccessToken = null;
+let installments = [];     // { id, itemName, bankKey, totalAmount, monthsCount, startYear, startMonth, monthlyAmount }
+let paymentLogs = [];      // { timestamp, installmentId, datePaid, amountPaid, notes }
+
+// ======================== HELPERS =========================
+function formatMoney(amt) { return `EGP ${Number(amt).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`; }
+function showToast(msg, type='success') { const t=document.getElementById('toast'); t.textContent=msg; t.className=`toast show ${type}`; clearTimeout(window.toastTimer); window.toastTimer=setTimeout(()=>t.classList.remove('show'),3000); }
+
+function generateShortId() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+  let id; do { id = Array.from({length:6},()=>chars[Math.floor(Math.random()*chars.length)]).join(''); } while(installments.some(i=>i.id===id));
+  return id;
+}
+
+function computeMonthlyAmount(total, months) { return months > 0 ? total / months : 0; }
+
+function getPaidSumForInstallment(instId) {
+  return paymentLogs.filter(log => log.installmentId === instId).reduce((s,log)=>s+log.amountPaid,0);
+}
+
+function getRemaining(inst) {
+  const paid = getPaidSumForInstallment(inst.id);
+  return Math.max(0, inst.totalAmount - paid);
+}
+
+function getStatus(inst) { return getRemaining(inst) <= 0 ? 'completed' : 'active'; }
+
+function getStartDate(inst) { return new Date(inst.startYear, inst.startMonth-1, 1); }
+function getEndDate(inst) { let d = new Date(inst.startYear, inst.startMonth-1, 1); d.setMonth(d.getMonth() + inst.monthsCount); return d; }
+
+function isDueThisMonth(inst) {
+  if (getStatus(inst) === 'completed') return false;
+  const now = new Date();
+  const start = getStartDate(inst);
+  const end = getEndDate(inst);
+  if (now < start || now >= end) return false;
+  // already paid this month? -> we show in current but pay disabled
+  return true;
+}
+
+function hasPaidThisMonth(instId) {
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  return paymentLogs.some(log => {
+    if (log.installmentId !== instId) return false;
+    const d = new Date(log.datePaid);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+}
+
+function calculateDueCount() { return installments.filter(i => isDueThisMonth(i) && getStatus(i)==='active' && !hasPaidThisMonth(i.id)).length; }
+
+// ======================== RENDER ==========================
+function renderAll() {
+  const currentContainer = document.getElementById('currentList');
+  const upcomingContainer = document.getElementById('upcomingList');
+  const allContainer = document.getElementById('allList');
+
+  const now = new Date();
+  const currentItems = installments.filter(i => isDueThisMonth(i) && getStatus(i)==='active');
+  const upcomingItems = installments.filter(i => getStatus(i)==='active' && !isDueThisMonth(i));
+  const allItems = [...installments];
+
+  // stats
+  const totalRemaining = installments.reduce((sum,i)=> sum + getRemaining(i),0);
+  document.getElementById('totalRemaining').textContent = formatMoney(totalRemaining);
+  document.getElementById('monthDueCount').textContent = currentItems.filter(i=>!hasPaidThisMonth(i.id)).length;
+  document.getElementById('statsRow').style.display = installments.length ? 'flex' : 'none';
+
+  // render current month
+  if(currentItems.length===0) currentContainer.innerHTML='<div class="empty-state">No installments due this month</div>';
+  else currentContainer.innerHTML = currentItems.map(inst => renderInstRow(inst, true, hasPaidThisMonth(inst.id))).join('');
+
+  // upcoming
+  if(upcomingItems.length===0) upcomingContainer.innerHTML='<div class="empty-state">No upcoming installments</div>';
+  else upcomingContainer.innerHTML = upcomingItems.map(inst => renderInstRow(inst, false, false)).join('');
+
+  // all
+  if(allItems.length===0) allContainer.innerHTML='<div class="empty-state">No installment plans added</div>';
+  else allContainer.innerHTML = allItems.map(inst => {
+    const status = getStatus(inst);
+    const statusBadge = status === 'completed' ? '<span class="badge-completed">✅ Completed</span>' : '<span class="badge-active">🔄 Active</span>';
+    const remaining = getRemaining(inst);
+    const progress = ((inst.totalAmount - remaining) / inst.totalAmount) * 100;
+    const bank = BANK_PROVIDERS.find(b=>b.key===inst.bankKey) || BANK_PROVIDERS[0];
+    return `
+      <div class="inst-row">
+        <div class="bank-logo"><img src="${bank.logo}" alt="${bank.name}" onerror="this.style.display='none';this.parentElement.innerText='🏦'"></div>
+        <div class="inst-info">
+          <div class="inst-name">${escapeHtml(inst.itemName)} ${statusBadge}</div>
+          <div class="inst-meta">${bank.name} · ${inst.monthsCount} months · start ${monthName(inst.startMonth)} ${inst.startYear}</div>
+          <div class="inst-progress"><div class="inst-progress-bar" style="width:${progress}%"></div></div>
+        </div>
+        <div class="inst-right">
+          <div class="inst-amount">${formatMoney(inst.monthlyAmount)}/mo</div>
+          <div class="inst-remaining">rem: ${formatMoney(remaining)}</div>
+          <div class="action-group">
+            <button class="action-icon" onclick="openEditModal('${inst.id}')" title="Edit">✏️</button>
+            <button class="action-icon" onclick="deleteInstallment('${inst.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderInstRow(inst, showPayButton, alreadyPaidThisMonth) {
+  const bank = BANK_PROVIDERS.find(b=>b.key===inst.bankKey) || BANK_PROVIDERS[0];
+  const remaining = getRemaining(inst);
+  const progress = ((inst.totalAmount - remaining) / inst.totalAmount) * 100;
+  let payButtonHtml = '';
+  if(showPayButton && getStatus(inst) !== 'completed') {
+    if(alreadyPaidThisMonth) payButtonHtml = `<button class="pay-btn disabled" disabled>✅ Paid this month</button>`;
+    else payButtonHtml = `<button class="pay-btn" onclick="payInstallment('${inst.id}')">💰 Pay now</button>`;
+  }
+  return `
+    <div class="inst-row">
+      <div class="bank-logo"><img src="${bank.logo}" onerror="this.style.display='none';this.parentElement.innerText='🏦'"></div>
+      <div class="inst-info">
+        <div class="inst-name">${escapeHtml(inst.itemName)}</div>
+        <div class="inst-meta">${bank.name} · ${inst.monthlyAmount.toFixed(2)} EGP/mo · ${inst.monthsCount} months</div>
+        <div class="inst-progress"><div class="inst-progress-bar" style="width:${progress}%"></div></div>
+      </div>
+      <div class="inst-right">
+        <div class="inst-amount">${formatMoney(inst.monthlyAmount)}</div>
+        <div class="inst-remaining">left: ${formatMoney(remaining)}</div>
+        ${payButtonHtml}
+      </div>
+    </div>`;
+}
+
+function monthName(m) { return new Date(0, m-1).toLocaleString('default',{month:'long'}); }
+
+// ======================== PAYMENT LOGIC ====================
+async function payInstallment(id) {
+  const inst = installments.find(i=>i.id===id);
+  if(!inst) return;
+  if(hasPaidThisMonth(id)) { showToast('Already paid this month','error'); return; }
+  const remaining = getRemaining(inst);
+  if(remaining <= 0) { showToast('Installment already completed','error'); return; }
+  let amountToPay = Math.min(inst.monthlyAmount, remaining);
+  if(amountToPay <= 0) return;
+  const today = new Date().toISOString().slice(0,10);
+  const newLog = {
+    timestamp: new Date().toISOString(),
+    installmentId: inst.id,
+    datePaid: today,
+    amountPaid: amountToPay,
+    notes: `Installment payment for ${inst.itemName}`
+  };
+  try {
+    await addLogToSheet(newLog);
+    paymentLogs.push(newLog);
+    showToast(`💰 Paid ${formatMoney(amountToPay)} for ${inst.itemName}`);
+    renderAll();
+    await persistInstallmentsToSheet(); // update sheet? not needed but saves any future changes
+  } catch(e) { showToast('Failed to record payment','error'); }
+}
+
+// ======================== SHEET OPERATIONS =================
+function installmentsToRow(i) { return [i.id, i.itemName, i.bankKey, i.totalAmount, i.monthsCount, i.startYear, i.startMonth, i.monthlyAmount]; }
+function parseInstallmentRow(row) {
+  if(!row || row.length<8) return null;
+  return { id: row[0], itemName: row[1], bankKey: row[2], totalAmount: parseFloat(row[3]), monthsCount: parseInt(row[4]), startYear: parseInt(row[5]), startMonth: parseInt(row[6]), monthlyAmount: parseFloat(row[7]) };
+}
+function logToRow(l) { return [l.timestamp, l.installmentId, l.datePaid, l.amountPaid, l.notes || '']; }
+function parseLogRow(r) { return { timestamp: r[0], installmentId: r[1], datePaid: r[2], amountPaid: parseFloat(r[3]), notes: r[4]||'' }; }
+
+async function ensureInstallmentsTab() {
+  try {
+    const meta = await gapi.client.sheets.spreadsheets.get({spreadsheetId});
+    const exists = meta.result.sheets.some(s=>s.properties.title===INSTALLMENTS_SHEET);
+    if(!exists) {
+      await gapi.client.sheets.spreadsheets.batchUpdate({spreadsheetId, resource:{requests:[{addSheet:{properties:{title:INSTALLMENTS_SHEET}}}]}});
+      await gapi.client.sheets.spreadsheets.values.update({spreadsheetId, range:`${INSTALLMENTS_SHEET}!A1:H1`, valueInputOption:'RAW', resource:{values:[['ID','ItemName','BankKey','TotalAmount','MonthsCount','StartYear','StartMonth','MonthlyAmount']]}});
+    }
+  } catch(e){ console.warn(e);}
+}
+async function ensureLogTab() {
+  try {
+    const meta = await gapi.client.sheets.spreadsheets.get({spreadsheetId});
+    const exists = meta.result.sheets.some(s=>s.properties.title===INSTALLMENTS_LOG_SHEET);
+    if(!exists) {
+      await gapi.client.sheets.spreadsheets.batchUpdate({spreadsheetId, resource:{requests:[{addSheet:{properties:{title:INSTALLMENTS_LOG_SHEET}}}]}});
+      await gapi.client.sheets.spreadsheets.values.update({spreadsheetId, range:`${INSTALLMENTS_LOG_SHEET}!A1:E1`, valueInputOption:'RAW', resource:{values:[['Timestamp','InstallmentID','DatePaid','AmountPaid','Notes']]}});
+    }
+  } catch(e){}
+}
+async function loadInstallmentsFromSheet() {
+  if(!spreadsheetId) return;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({spreadsheetId, range:`${INSTALLMENTS_SHEET}!A2:H`});
+    installments = (res.result.values||[]).map(parseInstallmentRow).filter(i=>i && i.id);
+  } catch(e){ console.error(e); installments=[]; }
+}
+async function loadLogsFromSheet() {
+  if(!spreadsheetId) return;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({spreadsheetId, range:`${INSTALLMENTS_LOG_SHEET}!A2:E`});
+    paymentLogs = (res.result.values||[]).map(parseLogRow).filter(l=>l.installmentId);
+  } catch(e){ paymentLogs=[]; }
+}
+async function persistInstallmentsToSheet() {
+  if(!spreadsheetId) return false;
+  await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId, range:`${INSTALLMENTS_SHEET}!A2:H`});
+  if(installments.length) {
+    await gapi.client.sheets.spreadsheets.values.update({spreadsheetId, range:`${INSTALLMENTS_SHEET}!A2:H`, valueInputOption:'RAW', resource:{values:installments.map(installmentsToRow)}});
+  }
+  return true;
+}
+async function addLogToSheet(log) {
+  if(!spreadsheetId) return;
+  await gapi.client.sheets.spreadsheets.values.append({spreadsheetId, range:`${INSTALLMENTS_LOG_SHEET}!A2:E`, valueInputOption:'RAW', resource:{values:[[log.timestamp, log.installmentId, log.datePaid, log.amountPaid, log.notes]]}});
+}
+async function deleteAllLogsForInstallment(instId) {
+  if(!spreadsheetId) return;
+  const res = await gapi.client.sheets.spreadsheets.values.get({spreadsheetId, range:`${INSTALLMENTS_LOG_SHEET}!A2:E`});
+  const rows = res.result.values||[];
+  let toDelete = [];
+  for(let i=0;i<rows.length;i++) if(rows[i][1]===instId) toDelete.push(i+2);
+  for(let idx of toDelete.reverse()) {
+    await gapi.client.sheets.spreadsheets.batchUpdate({spreadsheetId, resource:{requests:[{deleteDimension:{range:{sheetId:0, dimension:'ROWS', startIndex:idx-1, endIndex:idx}}}]}});
+  }
+}
+
+// ======================== CRUD ============================
+async function saveInstallment() {
+  const itemName = document.getElementById('itemName').value.trim();
+  const bankKey = document.getElementById('bankProvider').value;
+  const totalAmount = parseFloat(document.getElementById('totalAmount').value);
+  const monthsCount = parseInt(document.getElementById('monthsCount').value);
+  const startMonth = parseInt(document.getElementById('startMonth').value);
+  const startYear = parseInt(document.getElementById('startYear').value);
+  if(!itemName) { showToast('Enter item name','error'); return; }
+  if(isNaN(totalAmount)||totalAmount<=0) { showToast('Valid total amount','error'); return; }
+  if(monthsCount<1) { showToast('Months must be >=1','error'); return; }
+  const monthly = computeMonthlyAmount(totalAmount, monthsCount);
+  const newInst = {
+    id: editingId || generateShortId(),
+    itemName, bankKey, totalAmount, monthsCount, startYear, startMonth,
+    monthlyAmount: monthly
+  };
+  if(editingId) {
+    const idx = installments.findIndex(i=>i.id===editingId);
+    if(idx!==-1) installments[idx] = newInst;
+  } else installments.push(newInst);
+  await persistInstallmentsToSheet();
+  renderAll();
+  closeModal();
+  showToast(editingId ? 'Updated' : 'Added successfully');
+  editingId = null;
+}
+
+let editingId = null;
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modalTitle').innerText = '➕ New Installment';
+  document.getElementById('itemName').value = '';
+  document.getElementById('totalAmount').value = '';
+  document.getElementById('monthsCount').value = 6;
+  const now = new Date();
+  document.getElementById('startMonth').value = now.getMonth()+1;
+  document.getElementById('startYear').value = now.getFullYear();
+  updateMonthlyPreview();
+  document.getElementById('modalFooter').innerHTML = `<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveInstallment()">Save</button>`;
+  document.getElementById('instModal').classList.add('open');
+}
+function openEditModal(id) {
+  editingId = id;
+  const inst = installments.find(i=>i.id===id);
+  if(!inst) return;
+  document.getElementById('modalTitle').innerText = '✏️ Edit Installment';
+  document.getElementById('itemName').value = inst.itemName;
+  document.getElementById('bankProvider').value = inst.bankKey;
+  document.getElementById('totalAmount').value = inst.totalAmount;
+  document.getElementById('monthsCount').value = inst.monthsCount;
+  document.getElementById('startMonth').value = inst.startMonth;
+  document.getElementById('startYear').value = inst.startYear;
+  updateMonthlyPreview();
+  document.getElementById('modalFooter').innerHTML = `<button class="btn-danger" onclick="deleteInstallment('${id}');closeModal()">Delete</button><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveInstallment()">Update</button>`;
+  document.getElementById('instModal').classList.add('open');
+}
+async function deleteInstallment(id) {
+  if(!confirm('Delete this installment and all payment logs?')) return;
+  installments = installments.filter(i=>i.id!==id);
+  await deleteAllLogsForInstallment(id);
+  await persistInstallmentsToSheet();
+  paymentLogs = paymentLogs.filter(l=>l.installmentId!==id);
+  renderAll();
+  showToast('Deleted permanently');
+}
+function closeModal() { document.getElementById('instModal').classList.remove('open'); editingId=null; }
+
+function updateMonthlyPreview() {
+  const total = parseFloat(document.getElementById('totalAmount').value) || 0;
+  const months = parseInt(document.getElementById('monthsCount').value) || 1;
+  const monthly = total / months;
+  document.getElementById('monthlyAmount').value = monthly.toFixed(2);
+}
+
+// ======================== AUTH & LOAD =====================
+async function fullRefresh() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  await loadInstallmentsFromSheet();
+  await loadLogsFromSheet();
+  renderAll();
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+async function syncAll() { await fullRefresh(); showToast('Synced with Google Drive'); }
+
+async function initPage() {
+  const token = localStorage.getItem('google_token');
+  if(!token){ showToast('Please sign in first','error'); setTimeout(()=>window.location.href='Home.html',1500); return; }
+  currentUserEmail = getUserEmailFromToken(token);
+  spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
+  if(!spreadsheetId){ showToast('Spreadsheet not found','error'); return; }
+  await initGapiClient();
+  const savedToken = getSavedAccessToken();
+  if(savedToken) {
+    currentAccessToken = savedToken;
+    gapi.client.setToken({ access_token: currentAccessToken });
+    try {
+      await gapi.client.drive.files.list({q:'trashed=false',pageSize:1});
+      await ensureInstallmentsTab(); await ensureLogTab();
+      await fullRefresh();
+      return;
+    } catch(e){ clearAccessToken(); }
+  }
+  const tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, prompt: '', callback: async resp => {
+    if(!resp.access_token) return;
+    currentAccessToken = resp.access_token;
+    saveAccessToken(currentAccessToken);
+    gapi.client.setToken({ access_token: currentAccessToken });
+    await ensureInstallmentsTab(); await ensureLogTab();
+    await fullRefresh();
+  }});
+  tokenClient.requestAccessToken();
+}
+
+// populate bank & month/year selects
+function populateSelects() {
+  const bankSelect = document.getElementById('bankProvider');
+  bankSelect.innerHTML = BANK_PROVIDERS.map(b=>`<option value="${b.key}">${b.name}</option>`).join('');
+  const monthSelect = document.getElementById('startMonth');
+  for(let i=1;i<=12;i++) monthSelect.innerHTML += `<option value="${i}">${monthName(i)}</option>`;
+  const yearSelect = document.getElementById('startYear');
+  const currYear = new Date().getFullYear();
+  for(let y=currYear-1; y<=currYear+2; y++) yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+  document.getElementById('totalAmount').addEventListener('input', updateMonthlyPreview);
+  document.getElementById('monthsCount').addEventListener('input', updateMonthlyPreview);
+}
+
+document.getElementById('syncBtn').addEventListener('click', syncAll);
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    if(tab==='current') document.getElementById('tabCurrent').classList.add('active');
+    else if(tab==='upcoming') document.getElementById('tabUpcoming').classList.add('active');
+    else document.getElementById('tabAll').classList.add('active');
+  });
+});
+populateSelects();
+initPage();
+</script>
+</body>
+</html>
