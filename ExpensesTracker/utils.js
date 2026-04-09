@@ -228,7 +228,6 @@ function escapeHtml(str) {
 // Call with the page to redirect to after logout (default: Home.html)
 function logout(redirectTo = 'Home.html') {
   if (!confirm('Log out?')) return;
-  clearAccessToken();
   // Always clear base keys
   const keys = ['google_token', 'expense_id_counter'];
   // Clear all user-scoped keys if we know the email
