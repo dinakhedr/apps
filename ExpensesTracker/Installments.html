@@ -3,9 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>📆 Installments Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -45,7 +42,6 @@
 
     .container { max-width: 520px; margin: 0 auto; padding: 0 18px; }
 
-    /* Header */
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .header h1 { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
     .header-actions { display: flex; gap: 8px; align-items: center; }
@@ -61,7 +57,6 @@
     .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Stats banner */
     .stats-row {
       background: rgba(255,255,255,0.15);
       backdrop-filter: blur(8px);
@@ -120,7 +115,6 @@
     .tab-content { padding: 16px; display: none; }
     .tab-content.active { display: block; }
 
-    /* Installment row */
     .inst-row {
       display: flex;
       align-items: center;
@@ -148,7 +142,7 @@
     .inst-progress-bar { height: 100%; background: var(--brand); border-radius: 4px; width: 0%; }
     .inst-right { text-align: right; flex-shrink: 0; }
     .inst-amount { font-weight: 700; font-size: 14px; color: var(--brand); }
-    .inst-remaining { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+    .inst-remaining { font-size: 10px; color: var(--danger); margin-top: 2px; font-weight: 600; }
     .pay-btn {
       background: #fef3c7;
       border: none;
@@ -162,7 +156,11 @@
       transition: 0.1s;
     }
     .pay-btn:active { transform: scale(0.95); }
-    .pay-btn.disabled { opacity: 0.5; cursor: not-allowed; background: #e5e7eb; color: #6b7280; }
+    .pay-btn.paid {
+      background: #d1fae5;
+      color: #065f46;
+      cursor: default;
+    }
     .action-group { display: flex; gap: 6px; align-items: center; }
     .action-icon {
       background: none;
@@ -177,7 +175,31 @@
     .badge-completed { background: #d1fae5; color: #065f46; font-size: 10px; padding: 2px 8px; border-radius: 20px; }
     .badge-active { background: #ede9fe; color: #6d28d9; font-size: 10px; padding: 2px 8px; border-radius: 20px; }
 
-    /* Modal */
+    /* Sheet menu */
+    .sheet-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.40);
+      z-index: 4000; display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .sheet-backdrop.open { opacity: 1; pointer-events: all; }
+    .sheet {
+      background: #fff; border-radius: 24px 24px 0 0;
+      padding: 14px 16px 36px; width: 100%; max-width: 520px;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(.34,1.2,.64,1);
+    }
+    .sheet-backdrop.open .sheet { transform: translateY(0); }
+    .sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 14px; }
+    .sheet-title { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 800; margin-bottom: 10px; }
+    .sheet-action {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 4px; border-bottom: 1px solid var(--border);
+      cursor: pointer; font-size: 15px; background: none; width: 100%;
+      text-align: left; border-radius: 8px;
+    }
+    .sheet-action:active { background: var(--surface-2); }
+    .sheet-action.danger { color: var(--danger); }
+
     .modal-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.45);
       z-index: 3000; display: flex; align-items: flex-end; justify-content: center;
@@ -226,7 +248,6 @@
 
     .empty-state { text-align: center; padding: 28px; color: var(--text-3); }
 
-    /* Bottom nav */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
       display: flex; align-items: center; justify-content: center;
@@ -315,6 +336,20 @@
   </div>
 </div>
 
+<!-- Sheet menu for All tab -->
+<div class="sheet-backdrop" id="actionSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheetTitle">Options</div>
+    <button class="sheet-action" id="sheetEditBtn" onclick="sheetEdit()">
+      <span class="sheet-action-icon">✏️</span> Edit
+    </button>
+    <button class="sheet-action danger" id="sheetDeleteBtn" onclick="sheetDelete()">
+      <span class="sheet-action-icon">🗑️</span> Delete
+    </button>
+  </div>
+</div>
+
 <script>
 // ======================== CONFIG ==========================
 const INSTALLMENTS_SHEET = 'Installments';
@@ -322,20 +357,14 @@ const INSTALLMENTS_LOG_SHEET = 'Installments Log';
 const BANK_PROVIDERS = [
   { key: 'CIB', name: 'CIB Bank', logo: 'Logos/CIB.png' },
   { key: 'NBE', name: 'NBE', logo: 'Logos/NBE.png' },
-  { key: 'BM', name: 'BM', logo: 'Logos/BM.png' },
-  { key: 'AAIB', name: 'AAIB', logo: 'Logos/AAIB.png' },
-  { key: 'AlexBank', name: 'AlexBank', logo: 'Logos/AlexBank.png' },
-  { key: 'CairoBank', name: 'CairoBank', logo: 'Logos/CairoBank.png' },
-  { key: 'Halan', name: 'Halan', logo: 'Logos/Halan.png' },
-  { key: 'HSBC', name: 'HSBC', logo: 'Logos/HSBC.png' },
-  { key: 'QNB', name: 'QNB', logo: 'Logos/QNB.png' },
-  { key: 'Valu', name: 'Valu', logo: 'Logos/Valu.png' },
-  { key: 'Sympl', name: 'Sympl', logo: 'Logos/Sympl.png' }
+  { key: 'BM', name: 'BM', logo: 'Logos/BM.png' }
+  // Add more banks here
 ];
 
 let spreadsheetId = null, currentUserEmail = null, currentAccessToken = null;
-let installments = [];     // { id, itemName, bankKey, totalAmount, monthsCount, startYear, startMonth, monthlyAmount }
-let paymentLogs = [];      // { timestamp, installmentId, datePaid, amountPaid, notes }
+let installments = [];
+let paymentLogs = [];
+let sheetTargetId = null; // for the menu
 
 // ======================== HELPERS =========================
 function formatMoney(amt) { return `EGP ${Number(amt).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`; }
@@ -358,6 +387,14 @@ function getRemaining(inst) {
   return Math.max(0, inst.totalAmount - paid);
 }
 
+function getPaidMonthsCount(instId) {
+  return paymentLogs.filter(log => log.installmentId === instId).length;
+}
+
+function getRemainingMonths(inst) {
+  return Math.max(0, inst.monthsCount - getPaidMonthsCount(inst.id));
+}
+
 function getStatus(inst) { return getRemaining(inst) <= 0 ? 'completed' : 'active'; }
 
 function getStartDate(inst) { return new Date(inst.startYear, inst.startMonth-1, 1); }
@@ -369,8 +406,22 @@ function isDueThisMonth(inst) {
   const start = getStartDate(inst);
   const end = getEndDate(inst);
   if (now < start || now >= end) return false;
-  // already paid this month? -> we show in current but pay disabled
   return true;
+}
+
+function isDueInMonth(inst, year, month) {
+  if (getStatus(inst) === 'completed') return false;
+  const start = getStartDate(inst);
+  const end = getEndDate(inst);
+  const checkDate = new Date(year, month, 1);
+  if (checkDate < start || checkDate >= end) return false;
+  // Also check if already paid for that specific month
+  const alreadyPaid = paymentLogs.some(log => {
+    if (log.installmentId !== inst.id) return false;
+    const d = new Date(log.datePaid);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+  return !alreadyPaid;
 }
 
 function hasPaidThisMonth(instId) {
@@ -383,89 +434,124 @@ function hasPaidThisMonth(instId) {
   });
 }
 
-function calculateDueCount() { return installments.filter(i => isDueThisMonth(i) && getStatus(i)==='active' && !hasPaidThisMonth(i.id)).length; }
+function calculateDueCount() {
+  const now = new Date();
+  return installments.filter(i => isDueThisMonth(i) && getStatus(i)==='active' && !hasPaidThisMonth(i.id)).length;
+}
 
 // ======================== RENDER ==========================
+function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = false) {
+  const bank = BANK_PROVIDERS.find(b=>b.key===inst.bankKey) || BANK_PROVIDERS[0];
+  const remaining = getRemaining(inst);
+  const progress = ((inst.totalAmount - remaining) / inst.totalAmount) * 100;
+  const remainingMonths = getRemainingMonths(inst);
+  const status = getStatus(inst);
+  
+  let payButtonHtml = '';
+  if (showPayButton && status !== 'completed') {
+    if (isPaidThisMonth) {
+      payButtonHtml = `<button class="pay-btn paid" disabled>✅ Paid</button>`;
+    } else {
+      payButtonHtml = `<button class="pay-btn" onclick="payInstallment('${inst.id}')">💰 Pay now</button>`;
+    }
+  }
+  
+  let actionHtml = '';
+  if (showMenu) {
+    actionHtml = `<button class="action-icon" onclick="openActionSheet('${inst.id}')">⋯</button>`;
+  } else if (!showPayButton && !showMenu) {
+    // For upcoming tab: no actions
+    actionHtml = '';
+  } else if (!showMenu && !showPayButton && status === 'completed') {
+    actionHtml = '';
+  } else if (!showMenu && showPayButton === false && status !== 'completed') {
+    // All tab also uses menu, so this branch is for upcoming only
+  }
+  
+  // For All tab, we use menu instead of separate icons
+  const rightColumn = showMenu ? `
+    <div class="inst-right">
+      <div class="inst-amount">${formatMoney(inst.monthlyAmount)}/mo</div>
+      <div class="inst-remaining">left: ${formatMoney(remaining)}</div>
+      <div>${actionHtml}</div>
+    </div>
+  ` : `
+    <div class="inst-right">
+      <div class="inst-amount">${formatMoney(inst.monthlyAmount)}/mo</div>
+      <div class="inst-remaining">left: ${formatMoney(remaining)}</div>
+      <div>${payButtonHtml} ${actionHtml}</div>
+    </div>
+  `;
+  
+  return `
+    <div class="inst-row">
+      <div class="bank-logo"><img src="${bank.logo}" alt="${bank.name}" onerror="this.style.display='none';this.parentElement.innerText='🏦'"></div>
+      <div class="inst-info">
+        <div class="inst-name">${escapeHtml(inst.itemName)} ${status === 'completed' ? '<span class="badge-completed">✅ Completed</span>' : '<span class="badge-active">🔄 Active</span>'}</div>
+        <div class="inst-meta">Remaining ${remainingMonths} out of ${inst.monthsCount} months</div>
+        <div class="inst-progress"><div class="inst-progress-bar" style="width:${progress}%"></div></div>
+      </div>
+      ${rightColumn}
+    </div>`;
+}
+
 function renderAll() {
-  const currentContainer = document.getElementById('currentList');
-  const upcomingContainer = document.getElementById('upcomingList');
-  const allContainer = document.getElementById('allList');
-
   const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  
+  // Current month: due this month and not yet paid this month + active
   const currentItems = installments.filter(i => isDueThisMonth(i) && getStatus(i)==='active');
-  const upcomingItems = installments.filter(i => getStatus(i)==='active' && !isDueThisMonth(i));
+  // Upcoming: due in future months (not current month) and active, not completed
+  const upcomingItems = installments.filter(i => {
+    if (getStatus(i) !== 'active') return false;
+    if (isDueThisMonth(i)) return false;
+    // Check if there is any future month where it's due
+    const start = getStartDate(i);
+    const end = getEndDate(i);
+    if (now >= end) return false;
+    // If start is in future, it's upcoming
+    if (now < start) return true;
+    // Otherwise, find next due month after current
+    let checkYear = currentYear, checkMonth = currentMonth + 1;
+    if (checkMonth > 11) { checkMonth = 0; checkYear++; }
+    while (true) {
+      const checkDate = new Date(checkYear, checkMonth, 1);
+      if (checkDate >= end) break;
+      if (isDueInMonth(i, checkYear, checkMonth)) return true;
+      checkMonth++;
+      if (checkMonth > 11) { checkMonth = 0; checkYear++; }
+    }
+    return false;
+  });
+  
   const allItems = [...installments];
-
+  
   // stats
   const totalRemaining = installments.reduce((sum,i)=> sum + getRemaining(i),0);
   document.getElementById('totalRemaining').textContent = formatMoney(totalRemaining);
   document.getElementById('monthDueCount').textContent = currentItems.filter(i=>!hasPaidThisMonth(i.id)).length;
   document.getElementById('statsRow').style.display = installments.length ? 'flex' : 'none';
-
+  
   // render current month
+  const currentContainer = document.getElementById('currentList');
   if(currentItems.length===0) currentContainer.innerHTML='<div class="empty-state">No installments due this month</div>';
-  else currentContainer.innerHTML = currentItems.map(inst => renderInstRow(inst, true, hasPaidThisMonth(inst.id))).join('');
-
+  else currentContainer.innerHTML = currentItems.map(inst => renderInstRow(inst, true, hasPaidThisMonth(inst.id), false)).join('');
+  
   // upcoming
+  const upcomingContainer = document.getElementById('upcomingList');
   if(upcomingItems.length===0) upcomingContainer.innerHTML='<div class="empty-state">No upcoming installments</div>';
-  else upcomingContainer.innerHTML = upcomingItems.map(inst => renderInstRow(inst, false, false)).join('');
-
+  else upcomingContainer.innerHTML = upcomingItems.map(inst => renderInstRow(inst, false, false, false)).join('');
+  
   // all
+  const allContainer = document.getElementById('allList');
   if(allItems.length===0) allContainer.innerHTML='<div class="empty-state">No installment plans added</div>';
-  else allContainer.innerHTML = allItems.map(inst => {
-    const status = getStatus(inst);
-    const statusBadge = status === 'completed' ? '<span class="badge-completed">✅ Completed</span>' : '<span class="badge-active">🔄 Active</span>';
-    const remaining = getRemaining(inst);
-    const progress = ((inst.totalAmount - remaining) / inst.totalAmount) * 100;
-    const bank = BANK_PROVIDERS.find(b=>b.key===inst.bankKey) || BANK_PROVIDERS[0];
-    return `
-      <div class="inst-row">
-        <div class="bank-logo"><img src="${bank.logo}" alt="${bank.name}" onerror="this.style.display='none';this.parentElement.innerText='🏦'"></div>
-        <div class="inst-info">
-          <div class="inst-name">${escapeHtml(inst.itemName)} ${statusBadge}</div>
-          <div class="inst-meta">${bank.name} · ${inst.monthsCount} months · start ${monthName(inst.startMonth)} ${inst.startYear}</div>
-          <div class="inst-progress"><div class="inst-progress-bar" style="width:${progress}%"></div></div>
-        </div>
-        <div class="inst-right">
-          <div class="inst-amount">${formatMoney(inst.monthlyAmount)}/mo</div>
-          <div class="inst-remaining">rem: ${formatMoney(remaining)}</div>
-          <div class="action-group">
-            <button class="action-icon" onclick="openEditModal('${inst.id}')" title="Edit">✏️</button>
-            <button class="action-icon" onclick="deleteInstallment('${inst.id}')" title="Delete">🗑️</button>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function renderInstRow(inst, showPayButton, alreadyPaidThisMonth) {
-  const bank = BANK_PROVIDERS.find(b=>b.key===inst.bankKey) || BANK_PROVIDERS[0];
-  const remaining = getRemaining(inst);
-  const progress = ((inst.totalAmount - remaining) / inst.totalAmount) * 100;
-  let payButtonHtml = '';
-  if(showPayButton && getStatus(inst) !== 'completed') {
-    if(alreadyPaidThisMonth) payButtonHtml = `<button class="pay-btn disabled" disabled>✅ Paid this month</button>`;
-    else payButtonHtml = `<button class="pay-btn" onclick="payInstallment('${inst.id}')">💰 Pay now</button>`;
-  }
-  return `
-    <div class="inst-row">
-      <div class="bank-logo"><img src="${bank.logo}" onerror="this.style.display='none';this.parentElement.innerText='🏦'"></div>
-      <div class="inst-info">
-        <div class="inst-name">${escapeHtml(inst.itemName)}</div>
-        <div class="inst-meta">${bank.name} · ${inst.monthlyAmount.toFixed(2)} EGP/mo · ${inst.monthsCount} months</div>
-        <div class="inst-progress"><div class="inst-progress-bar" style="width:${progress}%"></div></div>
-      </div>
-      <div class="inst-right">
-        <div class="inst-amount">${formatMoney(inst.monthlyAmount)}</div>
-        <div class="inst-remaining">left: ${formatMoney(remaining)}</div>
-        ${payButtonHtml}
-      </div>
-    </div>`;
+  else allContainer.innerHTML = allItems.map(inst => renderInstRow(inst, false, false, true)).join('');
 }
 
 function monthName(m) { return new Date(0, m-1).toLocaleString('default',{month:'long'}); }
 
-// ======================== PAYMENT LOGIC ====================
+// ======================== PAYMENT ====================
 async function payInstallment(id) {
   const inst = installments.find(i=>i.id===id);
   if(!inst) return;
@@ -487,8 +573,28 @@ async function payInstallment(id) {
     paymentLogs.push(newLog);
     showToast(`💰 Paid ${formatMoney(amountToPay)} for ${inst.itemName}`);
     renderAll();
-    await persistInstallmentsToSheet(); // update sheet? not needed but saves any future changes
+    await persistInstallmentsToSheet();
   } catch(e) { showToast('Failed to record payment','error'); }
+}
+
+// ======================== SHEET MENU ====================
+function openActionSheet(id) {
+  sheetTargetId = id;
+  const inst = installments.find(i=>i.id===id);
+  if(!inst) return;
+  document.getElementById('sheetTitle').textContent = inst.itemName;
+  document.getElementById('actionSheet').classList.add('open');
+}
+function closeActionSheet() { document.getElementById('actionSheet').classList.remove('open'); sheetTargetId = null; }
+function sheetEdit() {
+  if(!sheetTargetId) return;
+  closeActionSheet();
+  openEditModal(sheetTargetId);
+}
+async function sheetDelete() {
+  if(!sheetTargetId) return;
+  closeActionSheet();
+  await deleteInstallment(sheetTargetId);
 }
 
 // ======================== SHEET OPERATIONS =================
@@ -671,7 +777,6 @@ async function initPage() {
   tokenClient.requestAccessToken();
 }
 
-// populate bank & month/year selects
 function populateSelects() {
   const bankSelect = document.getElementById('bankProvider');
   bankSelect.innerHTML = BANK_PROVIDERS.map(b=>`<option value="${b.key}">${b.name}</option>`).join('');
@@ -696,6 +801,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     else document.getElementById('tabAll').classList.add('active');
   });
 });
+document.getElementById('actionSheet').addEventListener('click', e => { if(e.target === e.currentTarget) closeActionSheet(); });
 populateSelects();
 initPage();
 </script>
