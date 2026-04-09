@@ -52,9 +52,10 @@
     .container { max-width: 520px; margin: 0 auto; padding: 0 18px; }
 
     /* ── Header ── */
-    .header { text-align: center; margin-bottom: 28px; position: relative; }
-    .header h1 { font-family: 'Sora', sans-serif; font-size: 30px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .header p  { color: rgba(255,255,255,0.80); font-size: 13px; margin-top: 4px; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .header-left { flex: 1; min-width: 0; }
+    .header h1 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .header p  { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .header-actions { position: absolute; top: 0; right: 0; display: flex; gap: 6px; }
     .hdr-btn {
       background: rgba(255,255,255,0.18);
@@ -456,6 +457,23 @@
     }
     .logout-bottom-btn:hover  { background: #fecaca; }
     .logout-bottom-btn:active { transform: scale(0.97); }
+    /* ── Header icon buttons ── */
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .hdr-icon-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
+      color: #fff; font-size: 17px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .hdr-icon-btn:hover  { background: rgba(255,255,255,0.30); }
+    .hdr-icon-btn:active { transform: scale(0.93); }
+    .hdr-icon-btn.danger {
+      background: rgba(239,68,68,0.28); border-color: rgba(239,68,68,0.50);
+      color: #fca5a5;
+    }
+    .hdr-icon-btn.danger:hover { background: rgba(239,68,68,0.42); }
+    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
     /* ── Bottom nav ── */
     nav, nav * { list-style: none; }
     .bottom-nav {
@@ -472,7 +490,7 @@
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
     }
-    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; }
+    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; }
     .nav-tab {
       flex: 1; display: flex; flex-direction: column; align-items: center;
       gap: 3px; padding: 8px 4px; border-radius: 14px;
@@ -483,20 +501,6 @@
     .nav-tab:active { background: rgba(255,255,255,0.22); }
     .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     .nav-tab-icon { font-size: 18px; line-height: 1; }
-    /* ── Header icon buttons ── */
-    .header-actions { display: flex; gap: 8px; align-items: center; }
-    .hdr-icon-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
-      color: #fff; font-size: 16px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-    .hdr-icon-btn:hover  { background: rgba(255,255,255,0.30); }
-    .hdr-icon-btn:active { transform: scale(0.93); }
-    .hdr-icon-btn.danger { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.45); color: #fca5a5; }
-    .hdr-icon-btn.danger:hover  { background: rgba(239,68,68,0.40); }
-    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
   </style>
 </head>
 <body>
@@ -554,9 +558,9 @@
 
   <!-- Header -->
   <div class="header">
-    <div>
+    <div class="header-left">
       <h1>💰 Expenses Tracker</h1>
-      <p id="userEmailDisplay" style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px"></p>
+      <p id="userEmailDisplay"></p>
     </div>
     <div class="header-actions">
       <button class="hdr-icon-btn" id="manualSyncBtn" title="Sync">↻</button>
@@ -578,7 +582,6 @@
         <div class="stats-total" id="totalAmount">EGP 0.00</div>
         <div class="stats-month" id="monthBadge"></div>
       </div>
-      
     </div>
   </div>
 
@@ -634,8 +637,11 @@
     </div>
     <div id="expensesList"></div>
   </div>
+  <!-- Manage Categories button -->
+
   <!-- Recurring Expenses button -->
-  </div><!-- /mainApp -->
+
+</div><!-- /mainApp -->
 
 <!-- ── Toast ── -->
 

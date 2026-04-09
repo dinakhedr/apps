@@ -263,7 +263,9 @@
     .btn-danger { flex: 1; background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
 
     /* ── Bottom nav ── */
-    nav, nav * { list-style: none; }
+    nav { list-style: none; display: block; }
+    nav::before, nav::after { display: none; content: none; }
+    nav *, nav *::before, nav *::after { list-style: none; }
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
       display: flex; flex-direction: column; align-items: center;
@@ -293,6 +295,8 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     .nav-tab-icon { font-size: 18px; line-height: 1; }
+    .bottom-nav::before, .bottom-nav::after, .nav-tabs::before, .nav-tabs::after { display: none !important; content: none !important; }
+    nav::marker, .bottom-nav::marker, .nav-tabs::marker { display: none; }
 
     /* ── Toast ── */
     .toast {

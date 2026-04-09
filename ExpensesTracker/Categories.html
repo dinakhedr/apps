@@ -299,6 +299,23 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Header icon buttons ── */
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .hdr-icon-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
+      color: #fff; font-size: 17px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .hdr-icon-btn:hover  { background: rgba(255,255,255,0.30); }
+    .hdr-icon-btn:active { transform: scale(0.93); }
+    .hdr-icon-btn.danger {
+      background: rgba(239,68,68,0.28); border-color: rgba(239,68,68,0.50);
+      color: #fca5a5;
+    }
+    .hdr-icon-btn.danger:hover { background: rgba(239,68,68,0.42); }
+    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
     /* ── Bottom nav ── */
     nav, nav * { list-style: none; }
     .bottom-nav {
@@ -315,7 +332,7 @@
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
     }
-    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; }
+    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; }
     .nav-tab {
       flex: 1; display: flex; flex-direction: column; align-items: center;
       gap: 3px; padding: 8px 4px; border-radius: 14px;
@@ -326,20 +343,6 @@
     .nav-tab:active { background: rgba(255,255,255,0.22); }
     .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     .nav-tab-icon { font-size: 18px; line-height: 1; }
-    /* ── Header icon buttons ── */
-    .header-actions { display: flex; gap: 8px; align-items: center; }
-    .hdr-icon-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
-      color: #fff; font-size: 16px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-    .hdr-icon-btn:hover  { background: rgba(255,255,255,0.30); }
-    .hdr-icon-btn:active { transform: scale(0.93); }
-    .hdr-icon-btn.danger { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.45); color: #fca5a5; }
-    .hdr-icon-btn.danger:hover  { background: rgba(239,68,68,0.40); }
-    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
   </style>
 </head>
 <body>

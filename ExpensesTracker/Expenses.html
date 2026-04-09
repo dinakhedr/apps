@@ -292,47 +292,6 @@
     }
     .screen-box h2 { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
     .screen-box p  { color: var(--text-2); font-size: 14px; margin-bottom: 16px; }
-    /* ── Bottom nav ── */
-    nav, nav * { list-style: none; }
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-      display: flex; align-items: center; justify-content: center;
-      padding: 10px 18px 12px;
-      background: rgba(60,50,140,0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
-      list-style: none;
-    }
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-    }
-    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; }
-    .nav-tab {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      gap: 3px; padding: 8px 4px; border-radius: 14px;
-      border: none; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
-      font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
-      cursor: pointer; transition: all 0.15s;
-    }
-    .nav-tab:active { background: rgba(255,255,255,0.22); }
-    .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-    .nav-tab-icon { font-size: 18px; line-height: 1; }
-    /* ── Header icon buttons ── */
-    .header-actions { display: flex; gap: 8px; align-items: center; }
-    .hdr-icon-btn {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
-      color: #fff; font-size: 16px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-    .hdr-icon-btn:hover  { background: rgba(255,255,255,0.30); }
-    .hdr-icon-btn:active { transform: scale(0.93); }
-    .hdr-icon-btn.danger { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.45); color: #fca5a5; }
-    .hdr-icon-btn.danger:hover  { background: rgba(239,68,68,0.40); }
-    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
     .spinner {
       display: inline-block; width: 20px; height: 20px;
       border: 2px solid rgba(91,94,244,0.25); border-top-color: var(--brand);
@@ -424,6 +383,50 @@
     }
     .logout-bottom-btn:hover  { background: #fecaca; }
     .logout-bottom-btn:active { transform: scale(0.97); }
+    /* ── Header icon buttons ── */
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .hdr-icon-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
+      color: #fff; font-size: 17px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .hdr-icon-btn:hover  { background: rgba(255,255,255,0.30); }
+    .hdr-icon-btn:active { transform: scale(0.93); }
+    .hdr-icon-btn.danger {
+      background: rgba(239,68,68,0.28); border-color: rgba(239,68,68,0.50);
+      color: #fca5a5;
+    }
+    .hdr-icon-btn.danger:hover { background: rgba(239,68,68,0.42); }
+    .hdr-icon-btn.spinning { animation: spin 0.7s linear infinite; }
+    /* ── Bottom nav ── */
+    nav, nav * { list-style: none; }
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 10px 18px 12px;
+      background: rgba(60,50,140,0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+      list-style: none;
+    }
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+    }
+    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; }
+    .nav-tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 3px; padding: 8px 4px; border-radius: 14px;
+      border: none; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
+      font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .nav-tab:active { background: rgba(255,255,255,0.22); }
+    .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .nav-tab-icon { font-size: 18px; line-height: 1; }
   </style>
 </head>
 <body>
@@ -447,7 +450,7 @@
     <div class="header-actions">
       <button class="hdr-icon-btn" id="refreshBtn" title="Sync">↻</button>
       <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
-      <button class="hdr-icon-btn" id="exportBtn" title="Export" style="font-size:11px;font-weight:700;width:auto;padding:0 10px;border-radius:20px;">Export</button>
+      <button class="hdr-icon-btn" id="exportBtn" title="Export" style="font-size:11px;font-weight:700;width:auto;padding:0 10px;border-radius:20px;letter-spacing:0;">Export</button>
     </div>
   </div>
 
@@ -521,7 +524,8 @@
       <div id="bydayList"></div>
     </div>
   </div>
-  </div><!-- /mainApp -->
+
+</div><!-- /mainApp -->
 
 <!-- Toast -->
 
