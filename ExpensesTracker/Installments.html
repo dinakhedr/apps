@@ -240,7 +240,7 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
   } else if (showPayButton && status !== 'completed') {
     actionColInner = isPaidThisMonth
       ? `<button class="pay-btn paid" disabled>✅ Paid</button>`
-      : `<button class="pay-btn" onclick="payInstallment('${inst.id}')">💰 Pay now</button>`;
+      : `<button class="pay-btn" onclick="payInstallment('${inst.id}')">💰 Pay</button>`;
   } else if (status === 'completed') {
     actionColInner = `<span class="badge-completed">✅ Done</span>`;
   }
