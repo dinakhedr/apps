@@ -263,6 +263,7 @@
     .btn-danger { flex: 1; background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
 
     /* ── Bottom nav ── */
+    nav, nav * { list-style: none; }
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
       display: flex; flex-direction: column; align-items: center;
@@ -272,6 +273,7 @@
       -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid rgba(255,255,255,0.12);
       box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+      list-style: none;
     }
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
@@ -537,7 +539,13 @@ function isDueThisMonth(sub) {
 // Returns { state: 'paid'|'overdue'|'upcoming'|'future', label, payable }
 function getStatusInfo(sub) {
   const now=new Date(); const today=now.getDate();
-  if (isPaid(sub.id)) return { state:'paid',    label:`✅ Paid`,                    payable:false };
+  if (isPaid(sub.id)) {
+    const paidSet = getPaidSet();
+    // Try to get the actual paid date from the log entries cache
+    const paidDate = window._paidDates && window._paidDates[String(sub.id)];
+    const label = paidDate ? paidDate : `${MONTHS[new Date().getMonth()]} ${sub.paymentDay}`;
+    return { state:'paid', label:`${label}`, payable:false };
+  }
   if (!isDueThisMonth(sub)) {
     // find next due month
     const next = getNextPaymentDate(sub);
@@ -605,7 +613,7 @@ function render() {
       const icon = categoryIcon[sub.category]||'🔄';
       const cardClass = si.state==='overdue' ? 'sub-card overdue' : si.state==='paid' ? 'sub-card paid-row' : 'sub-card';
       const payClass  = si.state==='paid' ? 'pay-btn paid' : si.payable ? 'pay-btn can-pay' : 'pay-btn future';
-      const payIcon   = si.state==='paid' ? '✅' : '💳';
+      const payIcon   = '💳';
       const payClick  = si.payable && si.state!=='paid' ? `markAsPaid(${globalIdx})` : '';
       const payTitle  = si.state==='paid' ? 'Paid this month' : si.payable ? 'Mark as paid' : 'Not due yet';
       return `
@@ -685,21 +693,40 @@ function computeMonthlyTotal() {
 
 // ── Recurring Log ──────────────────────────────────────────
 function renderLog(entries) {
-  const card=document.getElementById('logCard');
-  const list=document.getElementById('logList');
-  const now=new Date();
-  const thisMonth=entries.filter(e=>{
-    if(!e.date) return false;
-    const d=new Date(e.date+'T00:00:00');
-    return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
+  const now  = new Date();
+  const card = document.getElementById('logCard');
+  const list = document.getElementById('logList');
+
+  // Filter to current month
+  const thisMonth = entries.filter(e => {
+    if (!e.date) return false;
+    const d = new Date(e.date + 'T00:00:00');
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
-  document.getElementById('logMonthLabel').textContent=MONTHS_FULL[now.getMonth()];
-  if(!thisMonth.length){card.style.display='none';return;}
-  card.style.display='block';
-  list.innerHTML=thisMonth.map(e=>{
-    const icon=categoryIcon[e.category]||'🔄';
-    const d=new Date(e.date+'T00:00:00');
-    const ds=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+
+  // Build _paidDates cache from log — source of truth (survives localStorage wipe)
+  window._paidDates = {};
+  thisMonth.forEach(e => {
+    const d         = new Date(e.date + 'T00:00:00');
+    const formatted = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    const sub       = recurringList.find(s => s.name === e.name);
+    if (sub) {
+      window._paidDates[String(sub.id)] = formatted;
+      // Also ensure localStorage paid set is in sync
+      const paidSet = getPaidSet();
+      paidSet.add(String(sub.id));
+      savePaidSet(paidSet);
+    }
+  });
+
+  document.getElementById('logMonthLabel').textContent = MONTHS_FULL[now.getMonth()];
+
+  if (!thisMonth.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  list.innerHTML = thisMonth.map(e => {
+    const icon = categoryIcon[e.category] || '🔄';
+    const d    = new Date(e.date + 'T00:00:00');
+    const ds   = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
     return `<div class="log-row"><div class="log-icon">${icon}</div><div class="log-info"><div class="log-name">${escapeHtml(e.name)}</div><div class="log-date">${ds} · ${e.category}</div></div><div class="log-amount">${formatMoney(e.amount)}</div></div>`;
   }).join('');
 }
@@ -853,9 +880,24 @@ async function writeToRecurringLog(sub,paidDate) {
 }
 async function loadRecurringLog() {
   try {
-    const res=await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_LOG_SHEET}!A2:F`});
-    return (res.result.values||[]).map(r=>({timestamp:r[0]||'',date:r[1]||'',name:r[2]||'',category:r[3]||'',amount:parseFloat(r[4])||0,notes:r[5]||''}));
-  } catch(e){return[];}
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${RECURRING_LOG_SHEET}!A2:F`
+    });
+    return (res.result.values || []).map(r => ({
+      timestamp: r[0] || '',
+      date:      r[1] || '',
+      name:      r[2] || '',
+      category:  r[3] || '',
+      amount:    parseFloat(r[4]) || 0,
+      notes:     r[5] || '',
+    }));
+  } catch(e) {
+    console.error('loadRecurringLog error:', e);
+    // Tab may not exist yet — try to create it then return empty
+    try { await ensureRecurringLogTab(); } catch(e2) {}
+    return [];
+  }
 }
 
 function saveRecurringLocal() { if(currentUserEmail) localStorage.setItem(`recurring_${currentUserEmail}`,JSON.stringify(recurringList)); }
@@ -867,11 +909,13 @@ async function syncAll() {
   btn.classList.add('spinning'); btn.style.pointerEvents = 'none';
   try {
     await loadRecurringFromSheet();
-    render();
+    // Load log FIRST so _paidDates is populated before render()
     const entries = await loadRecurringLog();
     renderLog(entries);
+    render(); // now render with correct paid states
     showToast('✅ Synced');
   } catch(e) {
+    console.error('syncAll error:', e);
     showToast('❌ Sync failed', 'error');
   }
   btn.classList.remove('spinning'); btn.style.pointerEvents = '';
@@ -904,9 +948,10 @@ async function initAndLoad() {
   await ensureRecurringTab();
   await ensureRecurringLogTab();
   await loadRecurringFromSheet();
-  render();
-  const entries=await loadRecurringLog();
+  // Load log FIRST so _paidDates is ready before render()
+  const entries = await loadRecurringLog();
   renderLog(entries);
+  render();
   document.getElementById('loadingOverlay').style.display='none';
 }
 
