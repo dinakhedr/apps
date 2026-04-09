@@ -152,12 +152,25 @@
     }
     .sub-card.paid-row .sub-name { color: var(--text-3); }
     .sub-meta { font-size: 11px; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
-    .sub-freq  { font-weight: 600; color: var(--text-3); }
+    .sub-freq  { font-weight: 600; }
     .sub-dot   { color: var(--border); }
     .sub-status { font-weight: 600; }
     .sub-status.overdue  { color: var(--danger); }
     .sub-status.upcoming { color: var(--text-3); }
     .sub-status.paid     { color: var(--success); }
+
+    /* Frequency badge colors (Palette 2) */
+    .sub-freq.monthly, .sub-freq.quarterly, .sub-freq.annual {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      color: white;
+    }
+    .sub-freq.monthly { background-color: #c224d4; }
+    .sub-freq.quarterly { background-color: #f59e0b; }
+    .sub-freq.annual { background-color: #3b82f6; }
 
     .sub-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
     .sub-amount { font-weight: 700; font-size: 13px; color: var(--brand); min-width: 68px; text-align: right; }
@@ -266,33 +279,72 @@
     .btn-save   { flex: 2; padding: 13px; background: var(--brand-grad); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(91,94,244,0.28); }
     .btn-danger { flex: 1; background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
 
-    /* ── Bottom nav ── */
-    nav { list-style: none !important; display: flex; flex-direction: column; align-items: center; }
+    /* ── Bottom nav (fixed – no black rectangle) ── */
+    nav, .bottom-nav, .nav-tabs { list-style: none; }
     .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-      display: flex; align-items: center; justify-content: center;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 10px 18px 12px;
-      background: rgba(60,50,140,0.82);
+      background: rgba(60, 50, 140, 0.85);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
-      list-style: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
     }
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+      .bottom-nav {
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      }
     }
-    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; list-style: none; }
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      max-width: 420px;
+    }
     .nav-tab {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      gap: 3px; padding: 8px 4px; border-radius: 14px;
-      border: none; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
-      font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
-      cursor: pointer; transition: all 0.15s;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 4px;
+      border-radius: 14px;
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.75);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
     }
-    .nav-tab:active { background: rgba(255,255,255,0.22); }
-    .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-    .nav-tab-icon { font-size: 18px; line-height: 1; }
+    .nav-tab:active {
+      background: rgba(255, 255, 255, 0.22);
+    }
+    .nav-tab.active {
+      background: rgba(255, 255, 255, 0.22);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    .nav-tab-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+    /* Remove any stray pseudo‑elements that could cause a black rectangle */
+    .bottom-nav::before,
+    .bottom-nav::after,
+    .nav-tabs::before,
+    .nav-tabs::after {
+      display: none !important;
+      content: none !important;
+    }
 
     /* ── Toast ── */
     .toast {
@@ -316,17 +368,6 @@
     .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #ededff; border-top-color: var(--brand); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .empty-state { text-align: center; padding: 28px 20px; color: var(--text-3); font-size: 14px; }
-  .sub-freq.monthly, .sub-freq.quarterly, .sub-freq.annual {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: 700;
-  color: white;
-}
-.sub-freq.monthly { background-color: #10b981; }
-.sub-freq.quarterly { background-color: #f59e0b; }
-.sub-freq.annual { background-color: #3b82f6; }
   </style>
 </head>
 <body>
@@ -630,7 +671,7 @@ function render() {
           <div class="sub-info">
             <div class="sub-name">${escapeHtml(sub.name)}</div>
             <div class="sub-meta">
-                <span class="sub-freq ${sub.frequency.toLowerCase()}">${sub.frequency}</span>
+              <span class="sub-freq ${sub.frequency.toLowerCase()}">${sub.frequency}</span>
               <span class="sub-dot">·</span>
               <span class="sub-status ${si.state==='overdue'?'overdue':si.state==='paid'?'paid':'upcoming'}">${si.label}</span>
             </div>
@@ -657,8 +698,7 @@ function render() {
           <div class="sub-icon">${icon}</div>
           <div class="sub-info">
             <div class="sub-name">${escapeHtml(sub.name)} <span class="badge-inactive">paused</span></div>
-            <div class="sub-meta"><span class="sub-freq ${sub.frequency.toLowerCase()}">${sub.frequency}</span>
-            <span class="sub-dot">·</span><span class="sub-status upcoming">${formatMoney(sub.amount)}</span></div>
+            <div class="sub-meta"><span class="sub-freq ${sub.frequency.toLowerCase()}">${sub.frequency}</span><span class="sub-dot">·</span><span class="sub-status upcoming">${formatMoney(sub.amount)}</span></div>
           </div>
           <div class="sub-right">
             <button class="more-btn" onclick="openMoreSheet(${globalIdx})">···</button>
@@ -736,8 +776,8 @@ function renderLog(entries) {
     const icon = categoryIcon[e.category] || '🔄';
     const d    = new Date(e.date + 'T00:00:00');
     const matchSub = recurringList.find(s => s.name === e.name);
-const payDay = matchSub ? Math.min(matchSub.paymentDay, new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()) : d.getDate();
-const ds = new Date(d.getFullYear(), d.getMonth(), payDay).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    const payDay = matchSub ? Math.min(matchSub.paymentDay, new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()) : d.getDate();
+    const ds = new Date(d.getFullYear(), d.getMonth(), payDay).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
     return `<div class="log-row"><div class="log-icon">${icon}</div><div class="log-info"><div class="log-name">${escapeHtml(e.name)}</div><div class="log-date">${ds} · ${e.category}</div></div><div class="log-amount">${formatMoney(e.amount)}</div></div>`;
   }).join('');
 }
@@ -749,10 +789,10 @@ async function markAsPaid(index) {
   const paidSet=getPaidSet(); paidSet.add(String(sub.id)); savePaidSet(paidSet);
   render();
   const now = new Date();
-const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-const actualDay = Math.min(sub.paymentDay, lastDay);
-const actualPaidDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(actualDay).padStart(2,'0')}`;
-const ok=await writeToRecurringLog(sub, actualPaidDate);
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const actualDay = Math.min(sub.paymentDay, lastDay);
+  const actualPaidDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(actualDay).padStart(2,'0')}`;
+  const ok=await writeToRecurringLog(sub, actualPaidDate);
   if(ok) { showToast(`✅ ${sub.name} logged as paid`); const e=await loadRecurringLog(); renderLog(e); }
   else   { showToast('❌ Failed to log payment','error'); paidSet.delete(String(sub.id)); savePaidSet(paidSet); render(); }
 }
