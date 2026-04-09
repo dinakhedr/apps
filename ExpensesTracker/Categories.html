@@ -15,32 +15,17 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <style>
-    
-
-    
-
-    
-    }
-
-    
-
-    /* ── Header ── */
+    /* ── Page layout ── */
     .header {
       display: flex; align-items: center;
       justify-content: space-between;
       margin-bottom: 24px;
     }
     .header-left { display: flex; align-items: center; gap: 10px; }
-    
     .header h1 {
       font-family: 'Sora', sans-serif; font-size: 22px;
       font-weight: 800; color: #fff; letter-spacing: -0.5px;
     }
-
-    /* ── Header action button ── */
-    
-    /* ── Cards ── */
-    
 
     /* ── Add custom category button ── */
     .add-cat-btn {
@@ -72,8 +57,9 @@
     .cat-name-text { font-weight: 600; font-size: 14px; color: var(--text); }
     .cat-budget-text { font-size: 11px; color: var(--text-3); margin-top: 2px; }
     .cat-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .cat-row.hidden-cat { opacity: 0.4; }
 
-    /* toggle switch */
+    /* ── Toggle switch ── */
     .toggle-wrap { display: flex; align-items: center; }
     .toggle {
       position: relative; width: 40px; height: 22px;
@@ -91,24 +77,13 @@
     }
     .toggle.on::after { transform: translateX(18px); }
 
-    
-
-    /* hidden / faded row */
-    .cat-row.hidden-cat { opacity: 0.4; }
-
-    /* ── Toast ── */
-    
-
-    /* ── Modal ── */
-    
-    
-    
-    
-    
-
     /* ── Form inside modal ── */
-    
-    .form-group 
+    .form-group { display: flex; flex-direction: column; margin-bottom: 14px; }
+    .form-group label {
+      font-size: 11px; font-weight: 700; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+      display: block;
+    }
     .form-group input, .form-group select {
       width: 100%; padding: 11px 13px;
       border: 2px solid var(--border); border-radius: var(--radius-sm);
@@ -121,7 +96,10 @@
     }
 
     /* ── Icon picker ── */
-    .icon-picker-
+    .icon-picker-label {
+      font-size: 11px; font-weight: 700; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: block;
+    }
     .icon-grid {
       display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px;
     }
@@ -152,12 +130,15 @@
     }
     .color-option.selected { border-color: var(--text); }
 
-    /* ── Budget input ── */
+    /* ── Budget input (with EGP prefix) ── */
     .budget-input-wrap { position: relative; }
     .budget-input-wrap input { padding-left: 44px; }
-    .budget-curr-
+    .budget-curr-label {
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      font-size: 12px; color: var(--text-3); pointer-events: none; font-weight: 600;
+    }
 
-    /* ── Preview ── */
+    /* ── Category preview ── */
     .cat-preview {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 14px; background: var(--surface-2);
@@ -178,23 +159,12 @@
       margin-bottom: 4px;
     }
 
-    /* ── Loading overlay ── */
-    
+    /* ── Spinner (brand colour, used inside loading-box) ── */
     .spinner-brand {
       display: inline-block; width: 28px; height: 28px;
       border: 3px solid #ededff; border-top-color: var(--brand);
       border-radius: 50%; animation: spin 0.7s linear infinite;
     }
-     }
-
-    /* ── Header icon buttons ── */
-    
-    
-    /* ── Bottom nav ── */
-    
-    
-    }
-    
   </style>
 </head>
 <body>

@@ -656,7 +656,7 @@ function renderLog(entries) {
   if (!thisMonth.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
   list.innerHTML = thisMonth.map(e => {
-    const icon = categoryIcon[e.category] || '🔄';
+    const icon = getRecurringCategoryIcon(e.category);
     const d = new Date(e.date + 'T00:00:00');
     const matchSub = recurringList.find(s => s.name === e.name);
     const payDay = matchSub ? Math.min(matchSub.paymentDay, new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()) : d.getDate();
