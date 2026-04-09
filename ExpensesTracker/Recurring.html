@@ -413,6 +413,7 @@
       <span class="nav-tab-icon">⚙️</span>Categories
     </button>
   </div>
+  <div style="height: env(safe-area-inset-bottom, 0px); background: transparent;"></div>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -748,7 +749,11 @@ async function markAsPaid(index) {
   if(isPaid(sub.id)) return;
   const paidSet=getPaidSet(); paidSet.add(String(sub.id)); savePaidSet(paidSet);
   render();
-  const ok=await writeToRecurringLog(sub,todayYMD());
+  const now = new Date();
+const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+const actualDay = Math.min(sub.paymentDay, lastDay);
+const actualPaidDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(actualDay).padStart(2,'0')}`;
+const ok=await writeToRecurringLog(sub, actualPaidDate);
   if(ok) { showToast(`✅ ${sub.name} logged as paid`); const e=await loadRecurringLog(); renderLog(e); }
   else   { showToast('❌ Failed to log payment','error'); paidSet.delete(String(sub.id)); savePaidSet(paidSet); render(); }
 }
