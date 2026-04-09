@@ -457,32 +457,32 @@
     .logout-bottom-btn:hover  { background: #fecaca; }
     .logout-bottom-btn:active { transform: scale(0.97); }
     /* ── Bottom nav ── */
-nav, nav * { list-style: none; }
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-  display: flex; flex-direction: column; align-items: center;
-  padding: 10px 18px 12px;
-  background: rgba(60,50,140,0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
-  list-style: none;
-}
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-}
-.nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; }
-.nav-tab {
-  flex: 1; display: flex; flex-direction: column; align-items: center;
-  gap: 3px; padding: 8px 4px; border-radius: 14px;
-  border: none; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
-  font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
-  cursor: pointer; transition: all 0.15s;
-}
-.nav-tab:active { background: rgba(255,255,255,0.22); }
-.nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-.nav-tab-icon { font-size: 18px; line-height: 1; }
+    nav, nav * { list-style: none; }
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 10px 18px 12px;
+      background: rgba(60,50,140,0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+      list-style: none;
+    }
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+    }
+    .nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; }
+    .nav-tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 3px; padding: 8px 4px; border-radius: 14px;
+      border: none; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
+      font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .nav-tab:active { background: rgba(255,255,255,0.22); }
+    .nav-tab.active { background: rgba(255,255,255,0.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .nav-tab-icon { font-size: 18px; line-height: 1; }
   </style>
 </head>
 <body>
@@ -638,6 +638,7 @@ nav, nav * { list-style: none; }
     </button>
   </div>
 </nav>
+
 </div><!-- /mainApp -->
 
 <!-- ── Toast ── -->
@@ -1268,35 +1269,15 @@ async function completeLoginAndSetup(tokenResponse) {
   expenses = localRaw ? JSON.parse(localRaw) : [];
   loadBudgets();
 
-  // ── 1. Try cached spreadsheetId first (fast, survives iOS localStorage wipe) ──
-  const cachedSheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
-  if (cachedSheetId) {
-    spreadsheetId = cachedSheetId;
-    try {
-      await ensureCategoriesTab(spreadsheetId);
-      await loadExpensesFromSheet(false);
-      document.getElementById('userEmailDisplay').textContent = currentUserEmail;
-      showScreen('mainApp');
-      setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
-      showToast(`✅ Welcome back, ${currentUserEmail.split('@')[0]}!`);
-      _setupRunning = false;
-      return;
-    } catch(e) {
-      console.warn('Cached sheet inaccessible, searching Drive…', e);
-    }
+  let folderOk = false;
+  for (let i = 0; i < 3 && !folderOk; i++) {
+    folderOk = await checkFolderExists();
+    if (!folderOk && i < 2) await new Promise(r => setTimeout(r, 600));
   }
 
-  // ── 2. Search Drive directly by sheet name (handles iOS localStorage wipe) ──
-  // Retry up to 3 times — Drive can be slow on first mobile load
-  let foundSheetId = null;
-  for (let i = 0; i < 3 && !foundSheetId; i++) {
-    try { foundSheetId = await findExistingSpreadsheet(); } catch(e) { /* retry */ }
-    if (!foundSheetId && i < 2) await new Promise(r => setTimeout(r, 900));
-  }
-
-  if (foundSheetId) {
-    spreadsheetId = foundSheetId;
-    folderId = await findExistingFolder().catch(() => null);
+  if (folderOk) {
+    folderId      = await findExistingFolder();
+    spreadsheetId = await findExistingSpreadsheet();
     localStorage.setItem(`drive_setup_${currentUserEmail}`,    'complete');
     localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
     await ensureCategoriesTab(spreadsheetId);
@@ -1306,9 +1287,9 @@ async function completeLoginAndSetup(tokenResponse) {
     setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
     showToast(`✅ Welcome back, ${currentUserEmail.split('@')[0]}!`);
   } else {
-    // ── 3. Truly no spreadsheet found — new user only ──
+    const hadSetup = localStorage.getItem(`drive_setup_${currentUserEmail}`);
     renderAll();
-    showScreen('setupScreen');
+    showScreen(hadSetup === 'complete' ? 'folderMissingScreen' : 'setupScreen');
   }
   _setupRunning = false;
 }
@@ -1362,11 +1343,6 @@ async function checkLogin() {
     spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
     try {
       await gapi.client.drive.files.list({ q: 'trashed=false', pageSize: 1, fields: 'files(id)' });
-      // If spreadsheetId missing from localStorage (iOS wipe), find it from Drive
-      if (!spreadsheetId) {
-        spreadsheetId = await findExistingSpreadsheet().catch(() => null);
-        if (spreadsheetId) localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
-      }
       await ensureCategoriesTab(spreadsheetId);
       await loadExpensesFromSheet(false);
       document.getElementById('userEmailDisplay').textContent = currentUserEmail;
