@@ -231,13 +231,13 @@ textarea { resize: vertical; min-height: 72px; }
 /* ── Toast ── */
 .toast {
   position: fixed;
-  top: 24px;
+  bottom: 24px;
   left: 0;
   right: 0;
   margin: 0 auto;
   width: fit-content;
   max-width: 80vw;
-  transform: translateY(-120px);
+  transform: translateY(120px);
   background: var(--text); color: #fff;
   padding: 11px 22px; border-radius: 30px;
   font-size: 13px; font-weight: 600;
