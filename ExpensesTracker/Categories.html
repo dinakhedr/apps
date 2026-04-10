@@ -270,13 +270,14 @@
     </div>
   </div>
 
-  <!-- Header -->
-  <div class="header">
-    <h1>⚙️ Categories</h1>
-    <div class="header-actions">
-      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
-    </div>
+<!-- Header -->
+<div class="header">
+  <h1>⚙️ Categories</h1>
+  <div class="header-actions">
+    <button class="hdr-icon-btn" id="syncBtn" title="Sync">↻</button>
+    <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
   </div>
+</div>
 
   <!-- Add custom category -->
   <button class="add-cat-btn" onclick="openAddModal()">＋ Add Custom Category</button>
@@ -846,7 +847,21 @@ function initTabs() {
     });
   });
 }
+// Sync function
+async function syncCategories() {
+  showToast('Syncing...', 'info');
+  try {
+    allCats = await ensureCategoriesTab(spreadsheetId);
+    render();
+    showToast('✅ Synced with Google Drive');
+  } catch(e) {
+    console.error(e);
+    showToast('❌ Sync failed', 'error');
+  }
+}
 
+// Add event listener for sync button
+document.getElementById('syncBtn')?.addEventListener('click', syncCategories);
 // Load page
 async function loadPage() {
   await initPageAuth({
