@@ -292,9 +292,16 @@ function getUserNameFromToken(token) {
   } catch { return null; }
 }
 
-// ── ID generator ──────────────────────────────────────────
-function genId() {
+// ── ID generator for expenses and incomes ────
+function genExpenseId() {
   const key = 'expense_id_counter';
+  const next = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, next);
+  return next;
+}
+
+function genIncomeId() {
+  const key = 'income_id_counter';
   const next = parseInt(localStorage.getItem(key) || '0') + 1;
   localStorage.setItem(key, next);
   return next;
