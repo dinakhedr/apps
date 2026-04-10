@@ -224,6 +224,18 @@ function getUserEmailFromToken(token) {
   } catch { return null; }
 }
 
+function getUserNameFromToken(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(atob(base64).split('').map(c =>
+      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    ).join(''));
+    const payload = JSON.parse(json);
+    return payload.name || payload.given_name || (payload.email ? payload.email.split('@')[0] : null);
+  } catch { return null; }
+}
+
 // ── ID generator ──────────────────────────────────────────
 function genId() {
   const key = 'expense_id_counter';
@@ -255,17 +267,38 @@ async function initGapiClient() {
 }
 
 // ── Toast ─────────────────────────────────────────────────
-// Requires <div id="toast" class="toast"></div> in the page HTML
-let _toastTimer;
+let _toastTimer = null;
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
-  if (!t) return;
-  clearTimeout(_toastTimer);
-  t.className = 'toast'; // reset first to restart animation
-  void t.offsetWidth;    // force reflow so reset takes effect
+  if (!t) {
+    console.warn('Toast element not found');
+    return;
+  }
+  
+  // Clear any existing timer
+  if (_toastTimer) {
+    clearTimeout(_toastTimer);
+    _toastTimer = null;
+  }
+  
+  // Remove any existing show class
+  t.classList.remove('show');
+  
+  // Set the message and type
   t.textContent = msg;
-  t.className = `toast show ${type}`;
-  _toastTimer = setTimeout(() => t.classList.remove('show'), 1000);
+  t.className = `toast ${type}`;
+  
+  // Force reflow to ensure animation restarts
+  void t.offsetHeight;
+  
+  // Add show class to animate in
+  t.classList.add('show');
+  
+  // Set timer to remove show class after 1 second
+  _toastTimer = setTimeout(() => {
+    t.classList.remove('show');
+    _toastTimer = null;
+  }, 1000);
 }
 
 // ── Format money ──────────────────────────────────────────
