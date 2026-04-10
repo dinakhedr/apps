@@ -982,13 +982,29 @@ async function payInstallment(id) {
   let amountToPay = Math.min(inst.monthlyAmount, remaining);
   if(amountToPay <= 0) return;
   const today = new Date().toISOString().slice(0,10);
+  // Get bank name
+  const bank = BANK_PROVIDERS.find(b => b.key === inst.bankKey) || BANK_PROVIDERS[0];
+  const bankName = bank.name;
+  
+  // Get the installment month (the month this payment is for)
+  // Find which payment number this is (based on paid months count + 1)
+  const paidCount = getPaidMonthsCount(inst.id);
+  const paymentNumber = paidCount + 1;
+  
+  // Calculate the date of this installment payment
+  let paymentDate = new Date(inst.startYear, inst.startMonth - 1, 1);
+  paymentDate.setMonth(paymentDate.getMonth() + (paymentNumber - 1));
+  const installmentMonth = paymentDate.toLocaleString('default', { month: 'long' });
+  const installmentYear = paymentDate.getFullYear();
+  
   const newLog = {
     timestamp: new Date().toISOString(),
     installmentId: inst.id,
     datePaid: today,
     amountPaid: amountToPay,
-    notes: `Installment payment for ${inst.itemName}`
+    notes: `Installment payment for ${inst.itemName} - ${installmentMonth} ${installmentYear} - ${bankName}`
   };
+  
   try {
     await addLogToSheet(newLog);
     paymentLogs.push(newLog);
