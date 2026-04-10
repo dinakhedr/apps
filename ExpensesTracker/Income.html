@@ -19,7 +19,6 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <style>
-    /* Income page specific styles */
     .header {
       display: flex;
       align-items: center;
@@ -63,6 +62,28 @@
       margin-top: 4px;
     }
 
+    /* Filter row with 2 dropdowns */
+    .filter-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .filter-row select {
+      flex: 1;
+      padding: 12px 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface-2);
+      color: var(--text);
+    }
+    .filter-row select:focus {
+      outline: none;
+      border-color: var(--brand);
+      background: #fff;
+    }
+
     /* Income item row */
     .income-item {
       display: flex;
@@ -78,7 +99,6 @@
       width: 44px;
       height: 44px;
       border-radius: 13px;
-      background: #d1fae5;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -122,50 +142,241 @@
       flex-shrink: 0;
     }
 
-    /* Search */
-    .search-wrap {
-      position: relative;
-      margin-bottom: 14px;
-    }
-    .search-wrap input {
-      padding-left: 36px;
-    }
-    .search-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 14px;
-      pointer-events: none;
-    }
-
-    /* Month selector inline */
-    .month-selector {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    /* Year Summary styles */
+    .summary-card {
       background: var(--surface);
-      border-radius: var(--radius-md);
-      padding: 8px 12px;
-      margin-bottom: 16px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
     }
-    .month-nav-btn {
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 8px 12px;
-      color: var(--brand);
+    .summary-header {
+      background: var(--brand-grad);
+      color: #fff;
+      padding: 16px 20px;
+      font-family: 'Sora', sans-serif;
       font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .month-display {
+    .summary-header h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
+    }
+    .summary-year-header {
+      background: linear-gradient(135deg, #f5f5fa 0%, #ffffff 100%);
+      color: var(--text);
+      padding: 14px 20px;
       font-family: 'Sora', sans-serif;
       font-weight: 700;
       font-size: 15px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .summary-year-total {
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--brand-grad);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .summary-month-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .summary-month-row:hover {
+      background: var(--surface-2);
+    }
+    .summary-month-row:active {
+      background: #ededff;
+    }
+    .summary-month-left {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .summary-month-name {
+      font-weight: 600;
+      font-size: 15px;
       color: var(--text);
     }
+    .summary-month-count {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .summary-month-amount {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--brand);
+    }
+    .summary-empty {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-3);
+    }
+    .summary-empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
 
-    /* Modal form grid - same as Home.html form-grid */
+    /* Year dropdown */
+    .year-dropdown {
+      position: relative;
+      margin: 0 20px 20px 20px;
+    }
+    .year-dropdown-btn {
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .year-dropdown-btn:hover {
+      border-color: var(--brand);
+      background: #fff;
+    }
+    .year-dropdown-arrow {
+      font-size: 12px;
+      color: var(--text-2);
+      transition: transform 0.2s;
+    }
+    .year-dropdown.open .year-dropdown-arrow {
+      transform: rotate(180deg);
+    }
+    .year-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      z-index: 100;
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+    }
+    .year-dropdown.open .year-dropdown-menu {
+      display: block;
+    }
+    .year-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border-bottom: 1px solid var(--border);
+    }
+    .year-dropdown-item.selected {
+      background: #e8f5e9;
+    }
+    .year-dropdown-item:hover {
+      background: var(--surface-2);
+    }
+    .year-dropdown-item input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--brand);
+    }
+    .year-dropdown-item label {
+      flex: 1;
+      cursor: pointer;
+      margin: 0;
+      text-transform: none;
+      letter-spacing: normal;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .year-dropdown-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      background: #fff;
+      position: sticky;
+      bottom: 0;
+    }
+    .year-done-btn {
+      background: var(--brand);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Month detail modal */
+    .detail-income-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .detail-income-item:last-child {
+      border-bottom: none;
+    }
+    .detail-income-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .detail-income-info {
+      flex: 1;
+    }
+    .detail-income-category {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .detail-income-date {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .detail-income-amount {
+      font-weight: 700;
+      font-size: 15px;
+      color: #10b981;
+    }
+
+    /* Modal form grid */
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -184,9 +395,6 @@
       display: block;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-    }
-    .form-group.full-width {
-      grid-column: 1 / -1;
     }
     .amount-wrap {
       position: relative;
@@ -215,7 +423,6 @@
 
 <div class="container" id="mainApp" style="display:none">
 
-  <!-- Header -->
   <div class="header">
     <h1>💰 Income</h1>
     <div class="header-actions">
@@ -224,36 +431,66 @@
     </div>
   </div>
 
-  <!-- Stats Card -->
   <div class="stats-card-income" id="statsCard" style="display:none">
     <div class="stats-label-income">Total Income</div>
     <div class="stats-total-income" id="totalIncome">EGP 0</div>
     <div class="stats-period" id="periodDisplay"></div>
   </div>
 
-  <!-- Add Income Button -->
   <button class="add-btn" onclick="openAddIncomeModal()">➕ Add Income</button>
 
-  <!-- Month Selector -->
-  <div class="month-selector">
-    <button class="month-nav-btn" onclick="changeMonth(-1)">◀</button>
-    <span class="month-display" id="monthDisplay"></span>
-    <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
-  </div>
-
-  <!-- Search -->
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input type="text" id="incomeSearch" placeholder="Search by category or notes...">
-  </div>
-
-  <!-- Income List Card -->
-  <div class="card">
-    <div class="card-title">
-      <span class="card-title-icon">📋</span>
-      Income Entries
+  <!-- Tabs -->
+  <div class="card" style="padding-bottom: 8px;">
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="monthly">📅 Monthly Details</button>
+      <button class="tab-btn" data-tab="summary">📊 Year Summary</button>
     </div>
-    <div id="incomeList"></div>
+  </div>
+
+  <!-- Monthly Details Tab -->
+  <div id="monthlyTab" class="tab-content active">
+    <div class="card">
+      <div class="card-title">
+        <span class="card-title-icon">📅</span>
+        Filter by Month
+      </div>
+      <div class="filter-row">
+        <select id="monthSelect">
+          <option value="0">January</option><option value="1">February</option>
+          <option value="2">March</option><option value="3">April</option>
+          <option value="4">May</option><option value="5">June</option>
+          <option value="6">July</option><option value="7">August</option>
+          <option value="8">September</option><option value="9">October</option>
+          <option value="10">November</option><option value="11">December</option>
+        </select>
+        <select id="yearSelect"></select>
+      </div>
+      <div id="incomeList"></div>
+    </div>
+  </div>
+
+  <!-- Year Summary Tab -->
+  <div id="summaryTab" class="tab-content">
+    <div class="summary-card">
+      <div class="summary-header">
+        <h3>📊 Income Summary</h3>
+      </div>
+      
+      <div class="year-dropdown" id="yearDropdown">
+        <div class="year-dropdown-btn" onclick="toggleYearDropdown()">
+          <span id="selectedYearsText">Select year</span>
+          <span class="year-dropdown-arrow">▼</span>
+        </div>
+        <div class="year-dropdown-menu" id="yearDropdownMenu">
+          <div id="yearCheckboxList"></div>
+          <div class="year-dropdown-footer">
+            <button class="year-done-btn" onclick="closeYearDropdown()">Done</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="summaryContainer"></div>
+    </div>
   </div>
 
 </div>
@@ -261,7 +498,7 @@
 <div id="bottomNavMount"></div>
 <div class="toast" id="toast"></div>
 
-<!-- Add/Edit Income Modal - Using same form-grid structure as Home.html -->
+<!-- Add/Edit Income Modal -->
 <div class="modal-backdrop" id="incomeModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -286,14 +523,26 @@
         </div>
       </div>
       <div class="form-group">
-        <label>Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-        <input type="text" id="incomeNotes" placeholder="e.g., monthly salary, freelance payment">
+        <label>Notes <span style="font-weight:400;text-transform:none">(optional)</span></label>
+        <input type="text" id="incomeNotes" placeholder="e.g., monthly salary">
       </div>
     </div>
     
     <div class="modal-footer" id="modalFooter">
       <button class="btn-cancel" onclick="closeIncomeModal()">Cancel</button>
       <button class="btn-save" onclick="saveIncome()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Month Detail Modal (for summary tab) -->
+<div class="modal-backdrop" id="monthDetailModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="monthDetailTitle">Income Entries</div>
+    <div id="monthDetailList"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeMonthDetailModal()">Close</button>
     </div>
   </div>
 </div>
@@ -319,17 +568,19 @@ let spreadsheetId = null;
 let currentUserEmail = null;
 let currentAccessToken = null;
 let editingIncomeId = null;
-let currentMonth = new Date().getMonth();
-let currentYear = new Date().getFullYear();
 let selectedIncomeId = null;
+let selectedYear = new Date().getFullYear();
 
 const INCOME_SHEET = 'Income Log';
+const AVAILABLE_YEARS = [];
 
 // ======================== HELPERS ========================
 function getFilteredIncomes() {
+  const month = parseInt(document.getElementById('monthSelect').value);
+  const year = parseInt(document.getElementById('yearSelect').value);
   return incomes.filter(inc => {
     const d = parseLocalDate(inc.date);
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    return d.getMonth() === month && d.getFullYear() === year;
   });
 }
 
@@ -337,6 +588,8 @@ function updateStats() {
   const filtered = getFilteredIncomes();
   const total = filtered.reduce((sum, inc) => sum + inc.amount, 0);
   const statsCard = document.getElementById('statsCard');
+  const monthName = MONTHS_FULL[parseInt(document.getElementById('monthSelect').value)];
+  const year = parseInt(document.getElementById('yearSelect').value);
   
   if (filtered.length === 0) {
     statsCard.style.display = 'none';
@@ -345,26 +598,16 @@ function updateStats() {
   
   statsCard.style.display = 'block';
   document.getElementById('totalIncome').textContent = formatMoney(total);
-  document.getElementById('periodDisplay').textContent = `${MONTHS_FULL[currentMonth]} ${currentYear}`;
+  document.getElementById('periodDisplay').textContent = `${monthName} ${year}`;
 }
 
 function renderIncomeList() {
   const container = document.getElementById('incomeList');
   const filtered = getFilteredIncomes();
-  const searchTerm = document.getElementById('incomeSearch').value.toLowerCase().trim();
-  
-  let displayed = filtered;
-  if (searchTerm) {
-    displayed = filtered.filter(inc => 
-      inc.category.toLowerCase().includes(searchTerm) || 
-      (inc.notes || '').toLowerCase().includes(searchTerm)
-    );
-  }
-  
-  const sorted = [...displayed].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
   
   if (sorted.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><p>No income entries for this month</p></div>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><p>No income entries for this period</p></div>';
     return;
   }
   
@@ -387,27 +630,171 @@ function renderIncomeList() {
   }).join('');
 }
 
-function updateMonthDisplay() {
-  document.getElementById('monthDisplay').textContent = `${MONTHS_FULL[currentMonth]} ${currentYear}`;
-  updateStats();
-  renderIncomeList();
-}
-
-function changeMonth(delta) {
-  let newMonth = currentMonth + delta;
-  let newYear = currentYear;
+// ======================== YEAR SUMMARY ========================
+function getYearSummary(year) {
+  const monthlyTotals = {};
+  const monthlyCounts = {};
+  const monthlyEntries = {};
   
-  if (newMonth < 0) {
-    newMonth = 11;
-    newYear--;
-  } else if (newMonth > 11) {
-    newMonth = 0;
-    newYear++;
+  for (let i = 0; i < 12; i++) {
+    monthlyTotals[i] = 0;
+    monthlyCounts[i] = 0;
+    monthlyEntries[i] = [];
   }
   
-  currentMonth = newMonth;
-  currentYear = newYear;
-  updateMonthDisplay();
+  incomes.forEach(inc => {
+    const d = parseLocalDate(inc.date);
+    if (d.getFullYear() === year) {
+      const month = d.getMonth();
+      monthlyTotals[month] += inc.amount;
+      monthlyCounts[month]++;
+      monthlyEntries[month].push(inc);
+    }
+  });
+  
+  return { monthlyTotals, monthlyCounts, monthlyEntries };
+}
+
+function getYearTotal(year) {
+  const summary = getYearSummary(year);
+  return Object.values(summary.monthlyTotals).reduce((sum, val) => sum + val, 0);
+}
+
+function renderSummary() {
+  const container = document.getElementById('summaryContainer');
+  
+  if (!selectedYear) {
+    container.innerHTML = `
+      <div class="summary-empty">
+        <div class="summary-empty-icon">📭</div>
+        <p>No year selected</p>
+      </div>
+    `;
+    return;
+  }
+  
+  const summary = getYearSummary(selectedYear);
+  const monthlyTotals = summary.monthlyTotals;
+  const monthlyCounts = summary.monthlyCounts;
+  const yearTotal = getYearTotal(selectedYear);
+  
+  const hasData = Object.values(monthlyTotals).some(v => v > 0);
+  
+  let html = `<div class="summary-year-header">
+      <span>📅 ${selectedYear}</span>
+      <span class="summary-year-total">Total: ${formatMoney(yearTotal)}</span>
+    </div>`;
+  
+  for (let i = 0; i < 12; i++) {
+    const amount = monthlyTotals[i];
+    const count = monthlyCounts[i];
+    const monthName = MONTHS_FULL[i];
+    
+    html += `
+      <div class="summary-month-row" onclick="openMonthDetail(${selectedYear}, ${i})">
+        <div class="summary-month-left">
+          <span class="summary-month-name">${monthName}</span>
+          ${count > 0 ? `<span class="summary-month-count">${count} ${count === 1 ? 'entry' : 'entries'}</span>` : ''}
+        </div>
+        <div class="summary-month-amount">${amount > 0 ? formatMoney(amount) : '—'}</div>
+      </div>`;
+  }
+  
+  if (!hasData) {
+    container.innerHTML = `
+      <div class="summary-empty">
+        <div class="summary-empty-icon">📭</div>
+        <p>No income entries for ${selectedYear}</p>
+      </div>
+    `;
+  } else {
+    container.innerHTML = html;
+  }
+}
+
+function openMonthDetail(year, month) {
+  const entries = incomes.filter(inc => {
+    const d = parseLocalDate(inc.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  const monthName = MONTHS_FULL[month];
+  document.getElementById('monthDetailTitle').innerHTML = `📅 ${monthName} ${year}`;
+  
+  const container = document.getElementById('monthDetailList');
+  
+  if (entries.length === 0) {
+    container.innerHTML = '<div class="empty-state">No income entries for this month</div>';
+  } else {
+    container.innerHTML = entries.map(inc => {
+      const icon = getCategoryIcon(inc.category);
+      const bgColor = getCategoryColor(inc.category);
+      return `
+        <div class="detail-income-item">
+          <div class="detail-income-icon" style="background:${bgColor}">${icon}</div>
+          <div class="detail-income-info">
+            <div class="detail-income-category">${escapeHtml(inc.category)}</div>
+            <div class="detail-income-date">${formatDate(inc.date)}</div>
+            ${inc.notes ? `<div style="font-size:11px;color:var(--text-3);margin-top:2px">📝 ${escapeHtml(inc.notes)}</div>` : ''}
+          </div>
+          <div class="detail-income-amount">${formatMoney(inc.amount)}</div>
+        </div>`;
+    }).join('');
+  }
+  
+  document.getElementById('monthDetailModal').classList.add('open');
+}
+
+function closeMonthDetailModal() {
+  document.getElementById('monthDetailModal').classList.remove('open');
+}
+
+// ======================== YEAR DROPDOWN ========================
+function toggleYearDropdown() {
+  const dropdown = document.getElementById('yearDropdown');
+  dropdown.classList.toggle('open');
+}
+
+function closeYearDropdown() {
+  document.getElementById('yearDropdown').classList.remove('open');
+}
+
+function updateSelectedYearsText() {
+  const textSpan = document.getElementById('selectedYearsText');
+  textSpan.textContent = selectedYear || 'Select year';
+}
+
+function buildYearCheckboxList() {
+  // Get all years from incomes
+  const yearsSet = new Set();
+  incomes.forEach(inc => {
+    const d = parseLocalDate(inc.date);
+    yearsSet.add(d.getFullYear());
+  });
+  
+  // Add current year if no data
+  if (yearsSet.size === 0) yearsSet.add(new Date().getFullYear());
+  
+  const years = Array.from(yearsSet).sort((a, b) => b - a);
+  
+  const container = document.getElementById('yearCheckboxList');
+  container.innerHTML = years.map(year => {
+    const isSelected = selectedYear === year;
+    return `
+      <div class="year-dropdown-item ${isSelected ? 'selected' : ''}" onclick="selectYear(${year})">
+        <input type="radio" name="selectedYear" value="${year}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); selectYear(${year})">
+        <label onclick="event.stopPropagation(); selectYear(${year})">${year}</label>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectYear(year) {
+  selectedYear = year;
+  buildYearCheckboxList();
+  updateSelectedYearsText();
+  renderSummary();
+  closeYearDropdown();
 }
 
 // ======================== CRUD OPERATIONS ========================
@@ -422,7 +809,6 @@ async function saveIncome() {
   if (!amount || amount <= 0) { showToast('❌ Enter valid amount', 'error'); return; }
   
   if (editingIncomeId !== null) {
-    // Edit existing
     const index = incomes.findIndex(i => i.id === editingIncomeId);
     if (index !== -1) {
       incomes[index] = { ...incomes[index], date, category, amount, notes };
@@ -430,7 +816,6 @@ async function saveIncome() {
       showToast('✅ Income updated');
     }
   } else {
-    // Add new
     const newIncome = {
       id: genId(),
       date,
@@ -447,6 +832,8 @@ async function saveIncome() {
   closeIncomeModal();
   updateStats();
   renderIncomeList();
+  buildYearCheckboxList();
+  renderSummary();
 }
 
 async function deleteIncome(id) {
@@ -457,10 +844,11 @@ async function deleteIncome(id) {
   showToast('🗑️ Income deleted');
   updateStats();
   renderIncomeList();
+  buildYearCheckboxList();
+  renderSummary();
 }
 
 // ======================== SHEET OPERATIONS ========================
-// Column structure: Timestamp | Date | Category | Amount | Notes | ID (same as Daily Log)
 function incomeToRow(inc) {
   return [inc.timestamp || new Date().toISOString(), inc.date, inc.category, inc.amount, inc.notes || '', inc.id];
 }
@@ -491,21 +879,6 @@ async function ensureIncomeTab() {
         valueInputOption: 'RAW',
         resource: { values: [['Timestamp', 'Date', 'Category', 'Amount', 'Notes', 'ID']] }
       });
-    } else {
-      // Verify headers match Daily Log structure
-      const headerCheck = await gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range: `${INCOME_SHEET}!A1:F1`
-      });
-      const headers = headerCheck.result.values?.[0] || [];
-      if (headers.length !== 6 || headers[0] !== 'Timestamp') {
-        await gapi.client.sheets.spreadsheets.values.update({
-          spreadsheetId,
-          range: `${INCOME_SHEET}!A1:F1`,
-          valueInputOption: 'RAW',
-          resource: { values: [['Timestamp', 'Date', 'Category', 'Amount', 'Notes', 'ID']] }
-        });
-      }
     }
   } catch (e) {
     console.warn(e);
@@ -522,12 +895,10 @@ async function loadIncomesFromSheet() {
     const rows = res.result.values || [];
     incomes = rows.map((row, idx) => parseIncomeRow(row, idx));
     
-    // Update ID counter
     const maxId = incomes.reduce((m, i) => Math.max(m, Number(i.id) || 0), 0);
     const stored = parseInt(localStorage.getItem('expense_id_counter') || '0');
     if (maxId > stored) localStorage.setItem('expense_id_counter', maxId);
     
-    // Save to localStorage as backup
     if (currentUserEmail) {
       localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
     }
@@ -551,7 +922,6 @@ async function persistIncomesToSheet() {
       resource: { values: incomes.map(incomeToRow) }
     });
   }
-  // Update localStorage backup
   if (currentUserEmail) {
     localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
   }
@@ -567,10 +937,6 @@ async function addIncomeToSheet(inc) {
       valueInputOption: 'RAW',
       resource: { values: [[inc.timestamp, inc.date, inc.category, inc.amount, inc.notes || '', inc.id]] }
     });
-    // Update localStorage backup
-    if (currentUserEmail) {
-      localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
-    }
     return true;
   } catch (err) {
     console.error(err);
@@ -600,10 +966,6 @@ async function deleteIncomeFromSheet(incId) {
         requests: [{ deleteDimension: { range: { sheetId: 0, dimension: 'ROWS', startIndex: rowIndex - 1, endIndex: rowIndex } } }]
       }
     });
-    // Update localStorage backup
-    if (currentUserEmail) {
-      localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
-    }
     return true;
   } catch (err) {
     console.error(err);
@@ -612,12 +974,24 @@ async function deleteIncomeFromSheet(incId) {
 }
 
 // ======================== CATEGORY SELECT ========================
-// Get only income categories (catKind === 'income')
 function buildIncomeCategorySelect() {
   const select = document.getElementById('incomeCategory');
   const incomeCats = getIncomeCategories();
   select.innerHTML = '<option value="" disabled selected>Select…</option>' + 
     incomeCats.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
+}
+
+function populateYearSelect() {
+  const yearSelect = document.getElementById('yearSelect');
+  const currentYear = new Date().getFullYear();
+  yearSelect.innerHTML = '';
+  for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+    const option = document.createElement('option');
+    option.value = y;
+    option.textContent = y;
+    if (y === currentYear) option.selected = true;
+    yearSelect.appendChild(option);
+  }
 }
 
 // ======================== MODAL FUNCTIONS ========================
@@ -657,7 +1031,6 @@ function closeIncomeModal() {
   editingIncomeId = null;
 }
 
-// ======================== SHEET MENU ========================
 function openIncomeMenu(id) {
   selectedIncomeId = id;
   document.getElementById('incomeSheet').classList.add('open');
@@ -666,6 +1039,24 @@ function openIncomeMenu(id) {
 function closeIncomeSheet() {
   document.getElementById('incomeSheet').classList.remove('open');
   selectedIncomeId = null;
+}
+
+// ======================== TAB HANDLERS ========================
+function setupTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('monthlyTab').classList.toggle('active', tab === 'monthly');
+      document.getElementById('summaryTab').classList.toggle('active', tab === 'summary');
+      
+      if (tab === 'summary') {
+        buildYearCheckboxList();
+        renderSummary();
+      }
+    });
+  });
 }
 
 // ======================== SYNC ========================
@@ -678,6 +1069,8 @@ async function manualSync() {
   await loadIncomesFromSheet();
   updateStats();
   renderIncomeList();
+  buildYearCheckboxList();
+  renderSummary();
   showToast(`✅ Synced ${incomes.length} income entries`);
 }
 
@@ -687,11 +1080,11 @@ async function initPage() {
     onLoadLocal: (email, sheetId) => {
       currentUserEmail = email;
       spreadsheetId = sheetId;
-      // Try to load from localStorage as temporary cache while sheet loads
       const localData = localStorage.getItem(`incomes_${currentUserEmail}`);
       if (localData) {
         incomes = JSON.parse(localData);
-        updateMonthDisplay();
+        updateStats();
+        renderIncomeList();
       }
       document.getElementById('loadingOverlay').style.display = 'flex';
       document.getElementById('mainApp').style.display = 'none';
@@ -701,8 +1094,20 @@ async function initPage() {
       spreadsheetId = sheetId;
       currentAccessToken = token;
       await ensureIncomeTab();
-      await loadIncomesFromSheet();  // Load from Google Sheet (source of truth)
-      updateMonthDisplay();
+      await loadIncomesFromSheet();
+      
+      // Set default month to current month
+      const now = new Date();
+      document.getElementById('monthSelect').value = now.getMonth();
+      document.getElementById('yearSelect').value = now.getFullYear();
+      selectedYear = now.getFullYear();
+      
+      updateStats();
+      renderIncomeList();
+      buildYearCheckboxList();
+      updateSelectedYearsText();
+      renderSummary();
+      
       document.getElementById('loadingOverlay').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
     }
@@ -710,7 +1115,14 @@ async function initPage() {
 }
 
 // ======================== EVENT LISTENERS ========================
-document.getElementById('incomeSearch').addEventListener('input', () => renderIncomeList());
+document.getElementById('monthSelect').addEventListener('change', () => {
+  updateStats();
+  renderIncomeList();
+});
+document.getElementById('yearSelect').addEventListener('change', () => {
+  updateStats();
+  renderIncomeList();
+});
 document.getElementById('syncBtn').addEventListener('click', manualSync);
 document.getElementById('incomeSheet').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeIncomeSheet();
@@ -731,9 +1143,19 @@ document.getElementById('sheetDeleteBtn').addEventListener('click', async () => 
 document.getElementById('incomeModal').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeIncomeModal();
 });
+document.getElementById('monthDetailModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeMonthDetailModal();
+});
+
+// Close year dropdown when clicking outside
+document.addEventListener('click', function(event) {
+  const dropdown = document.getElementById('yearDropdown');
+  if (dropdown && !dropdown.contains(event.target)) {
+    dropdown.classList.remove('open');
+  }
+});
 
 // ======================== START ========================
-// Build category select with only income categories
 setTimeout(() => {
   if (typeof getIncomeCategories !== 'undefined') {
     buildIncomeCategorySelect();
@@ -747,6 +1169,8 @@ setTimeout(() => {
   }
 }, 100);
 
+populateYearSelect();
+setupTabs();
 renderBottomNav('income');
 initPage();
 </script>
