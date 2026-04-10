@@ -68,53 +68,107 @@
     .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--brand); background: #fff; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
 
-    /* ── Year selector ── */
-    .year-selector {
-      background: rgba(255,255,255,0.15);
+    /* ── Multi-select dropdown for years ── */
+    .year-dropdown {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .year-dropdown-btn {
+      background: rgba(255,255,255,0.18);
       border: 1px solid rgba(255,255,255,0.25);
       border-radius: var(--radius-lg);
       padding: 12px 16px;
-      margin-bottom: 16px;
+      width: 100%;
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
       align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s;
     }
-    .year-selector label {
-      color: rgba(255,255,255,0.9);
-      font-size: 13px;
+    .year-dropdown-btn:hover {
+      background: rgba(255,255,255,0.28);
+    }
+    .year-dropdown-arrow {
+      font-size: 12px;
+      transition: transform 0.2s;
+    }
+    .year-dropdown.open .year-dropdown-arrow {
+      transform: rotate(180deg);
+    }
+    .year-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      z-index: 100;
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .year-dropdown.open .year-dropdown-menu {
+      display: block;
+    }
+    .year-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border-bottom: 1px solid var(--border);
+    }
+    .year-dropdown-item:last-child {
+      border-bottom: none;
+    }
+    .year-dropdown-item:hover {
+      background: var(--surface-2);
+    }
+    .year-dropdown-item input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      cursor: pointer;
+    }
+    .year-dropdown-item label {
+      flex: 1;
+      cursor: pointer;
       margin: 0;
       text-transform: none;
       letter-spacing: normal;
-    }
-    .year-checkbox {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: rgba(255,255,255,0.2);
-      padding: 6px 12px;
-      border-radius: 30px;
-      cursor: pointer;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 500;
-      color: #fff;
-      transition: all 0.15s;
+      color: var(--text);
     }
-    .year-checkbox input {
-      width: 16px;
-      height: 16px;
-      margin: 0;
-      cursor: pointer;
-    }
-    .year-checkbox.selected {
+    .year-dropdown-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
       background: #fff;
+    }
+    .year-dropdown-footer button {
+      background: none;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .year-select-all {
       color: var(--brand);
     }
-    .year-checkbox:hover {
-      background: rgba(255,255,255,0.35);
-    }
-    .year-checkbox.selected:hover {
-      background: #fff;
+    .year-clear-all {
+      color: var(--danger);
     }
 
     /* ── Summary card ── */
@@ -128,16 +182,26 @@
     .summary-year-header {
       background: var(--brand-grad);
       color: #fff;
-      padding: 12px 20px;
+      padding: 14px 20px;
       font-family: 'Sora', sans-serif;
       font-weight: 700;
-      font-size: 18px;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .summary-year-total {
+      font-size: 14px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
     }
     .summary-month-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 20px;
+      padding: 14px 20px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
       transition: background 0.12s;
@@ -148,10 +212,20 @@
     .summary-month-row:active {
       background: #ededff;
     }
+    .summary-month-left {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
     .summary-month-name {
       font-weight: 600;
       font-size: 15px;
       color: var(--text);
+    }
+    .summary-month-count {
+      font-size: 11px;
+      color: var(--text-3);
     }
     .summary-month-amount {
       font-family: 'Sora', sans-serif;
@@ -159,14 +233,9 @@
       font-size: 16px;
       color: var(--brand);
     }
-    .summary-month-count {
-      font-size: 11px;
-      color: var(--text-3);
-      margin-left: 8px;
-    }
     .summary-empty {
       text-align: center;
-      padding: 40px 20px;
+      padding: 48px 20px;
       color: var(--text-3);
     }
     .summary-empty-icon {
@@ -186,8 +255,8 @@
       border-bottom: none;
     }
     .detail-installment-icon {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 12px;
       background: var(--surface-2);
       display: flex;
@@ -195,6 +264,12 @@
       justify-content: center;
       font-size: 20px;
       flex-shrink: 0;
+      overflow: hidden;
+    }
+    .detail-installment-icon img {
+      width: 70%;
+      height: auto;
+      object-fit: contain;
     }
     .detail-installment-info {
       flex: 1;
@@ -205,11 +280,6 @@
       font-size: 14px;
       color: var(--text);
     }
-    .detail-installment-bank {
-      font-size: 11px;
-      color: var(--text-3);
-      margin-top: 2px;
-    }
     .detail-installment-amount {
       font-family: 'Sora', sans-serif;
       font-weight: 700;
@@ -219,11 +289,12 @@
       text-align: right;
     }
     .detail-installment-status {
+      display: inline-block;
       font-size: 10px;
       font-weight: 600;
-      padding: 2px 8px;
+      padding: 3px 10px;
       border-radius: 20px;
-      margin-top: 2px;
+      margin-top: 4px;
     }
     .detail-status-paid {
       background: #d1fae5;
@@ -232,6 +303,12 @@
     .detail-status-pending {
       background: #fef3c7;
       color: #d97706;
+    }
+    .detail-right-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
     }
   </style>
 </head>
@@ -257,13 +334,19 @@
 
   <button class="add-btn" onclick="openAddModal()">➕ New Installment Plan</button>
 
-  <!-- Year Selector -->
-  <div class="year-selector" id="yearSelector"></div>
-
-  <!-- Summary Section -->
-  <div class="summary-card">
-    <div class="summary-year-header">📊 Installments Summary</div>
-    <div id="summaryContainer"></div>
+  <!-- Year Multi-Select Dropdown -->
+  <div class="year-dropdown" id="yearDropdown">
+    <div class="year-dropdown-btn" onclick="toggleYearDropdown()">
+      <span id="selectedYearsText">Select years</span>
+      <span class="year-dropdown-arrow">▼</span>
+    </div>
+    <div class="year-dropdown-menu" id="yearDropdownMenu">
+      <div id="yearCheckboxList"></div>
+      <div class="year-dropdown-footer">
+        <button class="year-select-all" onclick="selectAllYears(); event.stopPropagation();">Select All</button>
+        <button class="year-clear-all" onclick="clearAllYears(); event.stopPropagation();">Clear All</button>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -275,6 +358,14 @@
     <div class="tab-content active" id="tabCurrent"><div id="currentList"></div></div>
     <div class="tab-content" id="tabUpcoming"><div id="upcomingList"></div></div>
     <div class="tab-content" id="tabAll"><div id="allList"></div></div>
+  </div>
+
+  <!-- Installments Summary Section (after tabs) -->
+  <div class="summary-card">
+    <div class="summary-year-header">
+      <span>📊 Installments Summary</span>
+    </div>
+    <div id="summaryContainer"></div>
   </div>
 </div>
 
@@ -340,8 +431,9 @@ let installments = [];
 let paymentLogs = [];
 let sheetTargetId = null; // for the menu
 
-// Selected years for summary (initially current year only)
-let selectedYears = new Set();
+// Selected years for summary (from 2026 to 2030)
+const AVAILABLE_YEARS = [2026, 2027, 2028, 2029, 2030];
+let selectedYears = new Set([2026]); // Default to 2026 only
 
 // ======================== HELPERS =========================
 
@@ -411,18 +503,6 @@ function getPaymentMonths(inst) {
   return months;
 }
 
-// Get all unique years that have any payment months
-function getAllYearsWithPayments() {
-  const years = new Set();
-  installments.forEach(inst => {
-    const paymentMonths = getPaymentMonths(inst);
-    paymentMonths.forEach(pm => {
-      years.add(pm.year);
-    });
-  });
-  return Array.from(years).sort((a, b) => a - b);
-}
-
 // Get summary data for a specific year
 function getYearSummary(year) {
   const monthlyTotals = {};
@@ -456,28 +536,96 @@ function getYearSummary(year) {
   return { monthlyTotals, monthlyInstallments };
 }
 
+// Calculate total for a year
+function getYearTotal(year) {
+  const summary = getYearSummary(year);
+  return Object.values(summary.monthlyTotals).reduce((sum, val) => sum + val, 0);
+}
+
 // Check if a month has any installments due
 function hasInstallmentsInMonth(year, month) {
   const summary = getYearSummary(year);
   return summary.monthlyTotals[month] > 0;
 }
 
+// ======================== YEAR DROPDOWN ==========================
+function toggleYearDropdown() {
+  const dropdown = document.getElementById('yearDropdown');
+  dropdown.classList.toggle('open');
+}
+
+function closeYearDropdown() {
+  document.getElementById('yearDropdown').classList.remove('open');
+}
+
+function updateSelectedYearsText() {
+  const textSpan = document.getElementById('selectedYearsText');
+  const selected = Array.from(selectedYears).sort((a, b) => a - b);
+  if (selected.length === 0) {
+    textSpan.textContent = 'No years selected';
+  } else if (selected.length === AVAILABLE_YEARS.length) {
+    textSpan.textContent = 'All years (2026-2030)';
+  } else {
+    textSpan.textContent = selected.join(', ');
+  }
+}
+
+function buildYearCheckboxList() {
+  const container = document.getElementById('yearCheckboxList');
+  container.innerHTML = AVAILABLE_YEARS.map(year => `
+    <div class="year-dropdown-item" onclick="toggleYearCheckbox(${year})">
+      <input type="checkbox" id="year_${year}" ${selectedYears.has(year) ? 'checked' : ''} onclick="event.stopPropagation(); toggleYearCheckbox(${year})">
+      <label for="year_${year}" onclick="event.stopPropagation(); toggleYearCheckbox(${year})">${year}</label>
+    </div>
+  `).join('');
+}
+
+function toggleYearCheckbox(year) {
+  if (selectedYears.has(year)) {
+    selectedYears.delete(year);
+  } else {
+    selectedYears.add(year);
+  }
+  buildYearCheckboxList();
+  updateSelectedYearsText();
+  renderSummary();
+}
+
+function selectAllYears() {
+  AVAILABLE_YEARS.forEach(year => selectedYears.add(year));
+  buildYearCheckboxList();
+  updateSelectedYearsText();
+  renderSummary();
+}
+
+function clearAllYears() {
+  selectedYears.clear();
+  buildYearCheckboxList();
+  updateSelectedYearsText();
+  renderSummary();
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+  const dropdown = document.getElementById('yearDropdown');
+  if (!dropdown.contains(event.target)) {
+    dropdown.classList.remove('open');
+  }
+});
+
 // ======================== RENDER SUMMARY ==========================
 function renderSummary() {
   const container = document.getElementById('summaryContainer');
-  const allYears = getAllYearsWithPayments();
   
-  // Filter years based on selection
-  let yearsToShow = allYears.filter(y => selectedYears.has(y));
-  // Sort years descending (most recent first)
-  yearsToShow.sort((a, b) => b - a);
+  // Filter years based on selection and sort from 2026 to 2030
+  let yearsToShow = AVAILABLE_YEARS.filter(y => selectedYears.has(y));
   
   if (yearsToShow.length === 0) {
     container.innerHTML = `
       <div class="summary-empty">
         <div class="summary-empty-icon">📭</div>
-        <p>No installments found for selected years</p>
-        <p style="font-size: 12px; margin-top: 8px;">Select a year above to view summary</p>
+        <p>No years selected</p>
+        <p style="font-size: 12px; margin-top: 8px;">Select years from the dropdown above to view summary</p>
       </div>
     `;
     return;
@@ -489,13 +637,17 @@ function renderSummary() {
     const summary = getYearSummary(year);
     const monthlyTotals = summary.monthlyTotals;
     const monthlyInstallments = summary.monthlyInstallments;
+    const yearTotal = getYearTotal(year);
     
     // Check if year has any data
     const hasData = Object.values(monthlyTotals).some(v => v > 0);
     if (!hasData) return;
     
     html += `<div class="summary-card" style="margin-bottom: 16px;">
-      <div class="summary-year-header">📅 ${year}</div>`;
+      <div class="summary-year-header">
+        <span>📅 ${year}</span>
+        <span class="summary-year-total">Total: ${formatMoney(yearTotal)}</span>
+      </div>`;
     
     // Months from Jan (0) to Dec (11)
     for (let i = 0; i < 12; i++) {
@@ -505,7 +657,7 @@ function renderSummary() {
         const count = monthlyInstallments[i].length;
         html += `
           <div class="summary-month-row" onclick="openMonthDetail(${year}, ${i})">
-            <div>
+            <div class="summary-month-left">
               <span class="summary-month-name">${monthName}</span>
               <span class="summary-month-count">${count} ${count === 1 ? 'installment' : 'installments'}</span>
             </div>
@@ -521,7 +673,7 @@ function renderSummary() {
     container.innerHTML = `
       <div class="summary-empty">
         <div class="summary-empty-icon">📭</div>
-        <p>No installments scheduled</p>
+        <p>No installments scheduled for selected years</p>
       </div>
     `;
   } else {
@@ -556,15 +708,14 @@ function openMonthDetail(year, month) {
       return `
         <div class="detail-installment-item">
           <div class="detail-installment-icon">
-            <img src="${bank.logo}" alt="${bank.name}" style="width: 70%; height: auto; object-fit: contain;" onerror="this.style.display='none';this.parentElement.innerText='🏦'">
+            <img src="${bank.logo}" alt="${bank.name}" onerror="this.style.display='none';this.parentElement.innerText='🏦'">
           </div>
           <div class="detail-installment-info">
             <div class="detail-installment-name">${escapeHtml(inst.name)}</div>
-            <div class="detail-installment-bank">${bank.name}</div>
             <div class="detail-installment-status ${statusClass}">${statusText}</div>
           </div>
-          <div class="detail-installment-amount">
-            ${formatMoney(inst.amount)}
+          <div class="detail-right-col">
+            <div class="detail-installment-amount">${formatMoney(inst.amount)}</div>
           </div>
         </div>`;
     }).join('');
@@ -575,69 +726,6 @@ function openMonthDetail(year, month) {
 
 function closeMonthDetailModal() {
   document.getElementById('monthDetailModal').classList.remove('open');
-}
-
-// Build year selector
-function buildYearSelector() {
-  const allYears = getAllYearsWithPayments();
-  const currentYear = new Date().getFullYear();
-  
-  // Also include years from installments that haven't started yet
-  installments.forEach(inst => {
-    const endYear = inst.startYear + Math.ceil(inst.monthsCount / 12);
-    for (let y = inst.startYear; y <= endYear + 1; y++) {
-      if (!allYears.includes(y)) allYears.push(y);
-    }
-  });
-  
-  const uniqueYears = [...new Set(allYears)].sort((a, b) => a - b);
-  
-  // If no years, at least show current year
-  if (uniqueYears.length === 0) {
-    uniqueYears.push(currentYear);
-  }
-  
-  // Initialize selectedYears: only current year by default
-  if (selectedYears.size === 0) {
-    selectedYears.add(currentYear);
-  }
-  
-  const container = document.getElementById('yearSelector');
-  container.innerHTML = `
-    <label>📅 Show years:</label>
-    ${uniqueYears.map(year => `
-      <label class="year-checkbox ${selectedYears.has(year) ? 'selected' : ''}" onclick="toggleYear(${year})">
-        <input type="checkbox" ${selectedYears.has(year) ? 'checked' : ''} onchange="event.stopPropagation(); toggleYear(${year})">
-        ${year}
-      </label>
-    `).join('')}
-    <button class="hdr-btn" onclick="selectAllYears()" style="margin-left: auto; padding: 4px 12px;">All</button>
-  `;
-}
-
-function toggleYear(year) {
-  if (selectedYears.has(year)) {
-    selectedYears.delete(year);
-  } else {
-    selectedYears.add(year);
-  }
-  buildYearSelector();
-  renderSummary();
-}
-
-function selectAllYears() {
-  const allYears = getAllYearsWithPayments();
-  installments.forEach(inst => {
-    const endYear = inst.startYear + Math.ceil(inst.monthsCount / 12);
-    for (let y = inst.startYear; y <= endYear + 1; y++) {
-      if (!allYears.includes(y)) allYears.push(y);
-    }
-  });
-  const uniqueYears = [...new Set(allYears)];
-  uniqueYears.forEach(y => selectedYears.add(y));
-  if (uniqueYears.length === 0) selectedYears.add(new Date().getFullYear());
-  buildYearSelector();
-  renderSummary();
 }
 
 // ======================== RENDER ==========================
@@ -813,7 +901,7 @@ function renderAll() {
   }
   
   // Update summary after render
-  buildYearSelector();
+  buildYearCheckboxList();
   renderSummary();
 }
 
