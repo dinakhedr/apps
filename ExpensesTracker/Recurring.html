@@ -79,11 +79,11 @@
     .pay-btn.paid     { border-color: var(--success); background: #d1fae5; color: var(--success); cursor: default; font-size: 16px; }
     .pay-btn.future   { border-color: #fde68a; background: #fffdf0; color: #d97706; cursor: not-allowed; opacity: 0.45; font-size: 15px; }
 
-    /* More (···) button */
+    /* More (⋮) button */
     .more-btn {
       width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
       border: none; background: none; color: var(--text-3);
-      font-size: 16px; cursor: pointer; letter-spacing: 1px;
+      font-size: 18px; cursor: pointer; line-height: 1;
       display: flex; align-items: center; justify-content: center; transition: background 0.12s;
     }
     .more-btn:active { background: var(--surface-2); }
@@ -391,7 +391,7 @@ function render() {
           <div class="sub-right">
             <div class="sub-amount">${formatMoney(sub.amount)}</div>
             <button class="${payClass}" onclick="${payClick}" title="${payTitle}">${payIcon}</button>
-            <button class="more-btn" onclick="openMoreSheet(${globalIdx})">···</button>
+            <button class="more-btn" onclick="openMoreSheet(${globalIdx})">⋮</button>
           </div>
         </div>`;
     }).join('');
@@ -413,7 +413,7 @@ function render() {
             <div class="sub-meta"><span class="sub-freq ${sub.frequency.toLowerCase()}">${sub.frequency}</span><span class="sub-dot">·</span><span class="sub-status upcoming">${formatMoney(sub.amount)}</span></div>
           </div>
           <div class="sub-right">
-            <button class="more-btn" onclick="openMoreSheet(${globalIdx})">···</button>
+            <button class="more-btn" onclick="openMoreSheet(${globalIdx})">⋮</button>
           </div>
         </div>`;
     }).join('');
@@ -446,7 +446,7 @@ function render() {
           </div>
           <div class="sub-right">
             <div class="sub-amount">${formatMoney(sub.amount)}</div>
-            <button class="more-btn" onclick="openMoreSheet(${globalIdx})">···</button>
+            <button class="more-btn" onclick="openMoreSheet(${globalIdx})">⋮</button>
           </div>
         </div>`;
     }).join('');
