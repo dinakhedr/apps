@@ -20,7 +20,7 @@
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .header h1 { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
 
-    /* ── Installment row — 3-column layout ── */
+    /* ── Installment row ── */
     .inst-row {
       display: flex; align-items: center; gap: 12px;
       padding: 14px 0; border-bottom: 1px solid var(--border);
@@ -50,7 +50,8 @@
     .inst-progress { margin-top: 8px; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
     .inst-progress-bar { height: 100%; background: var(--brand); border-radius: 4px; width: 0%; }
     .inst-amounts { text-align: right; flex-shrink: 0; min-width: 110px; }
-    .inst-amount    { font-weight: 700; font-size: 13px; color: var(--brand); }
+    .inst-amount { font-weight: 700; font-size: 13px; color: var(--brand); }
+    .inst-total-amount { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 4px; }
     .inst-remaining { font-size: 11px; color: var(--danger); margin-top: 2px; font-weight: 600; }
     .inst-action { flex-shrink: 0; }
     .pay-btn {
@@ -59,13 +60,21 @@
       color: #d97706; cursor: pointer; transition: 0.1s; white-space: nowrap;
     }
     .pay-btn:active { transform: scale(0.95); }
-    .pay-btn.paid { background: transparent; color: var(--success); cursor: default; border: 1px solid var(--success); }
+    .pay-btn.paid { background: transparent; color: var(--success); cursor: default; border: none; }
 
     .action-icon {
       background: none; border: none; font-size: 18px; cursor: pointer;
       padding: 6px; border-radius: 8px; transition: background 0.1s; color: var(--text-3);
     }
     .action-icon:hover { background: var(--surface-2); }
+
+    /* Vertical dots menu (3 vertical dots) */
+    .menu-icon-vertical {
+      font-size: 18px;
+      letter-spacing: -2px;
+      transform: scaleY(1.2);
+      display: inline-block;
+    }
 
     .badge-completed { background: #d1fae5; color: #065f46; font-size: 10px; padding: 2px 8px; border-radius: 20px; }
     .badge-active    { background: #ede9fe; color: #6d28d9; font-size: 10px; padding: 2px 8px; border-radius: 20px; }
@@ -140,7 +149,7 @@
       border-bottom: 1px solid var(--border);
     }
     .year-dropdown-item.selected {
-      background: #e8e8ff;
+      background: #e8f5e9;
     }
     .year-dropdown-item:hover {
       background: var(--surface-2);
@@ -150,6 +159,7 @@
       height: 18px;
       margin: 0;
       cursor: pointer;
+      accent-color: var(--brand);
     }
     .year-dropdown-item label {
       flex: 1;
@@ -364,7 +374,7 @@
       gap: 4px;
     }
 
-    /* Hero section - increase this month due font size */
+    /* Hero section */
     .stats-total {
       font-size: 28px;
     }
@@ -406,13 +416,12 @@
     <div class="tab-content" id="tabAll"><div id="allList"></div></div>
   </div>
 
-  <!-- Installments Summary Section (after tabs) -->
+  <!-- Installments Summary Section -->
   <div class="summary-card">
     <div class="summary-header">
       <h3>📊 Installments Summary</h3>
     </div>
     
-    <!-- Year Multi-Select Dropdown (inside summary card, under header) -->
     <div class="year-dropdown" id="yearDropdown">
       <div class="year-dropdown-btn" onclick="toggleYearDropdown()">
         <span id="selectedYearsText">Select years</span>
@@ -430,7 +439,6 @@
       </div>
     </div>
 
-    <!-- Summary content -->
     <div id="summaryContainer"></div>
   </div>
 </div>
@@ -490,16 +498,13 @@
 
 <script>
 // ======================== CONFIG ==========================
-// BANK_PROVIDERS is defined in utils.js
-
 let spreadsheetId = null, currentUserEmail = null, currentAccessToken = null;
 let installments = [];
 let paymentLogs = [];
-let sheetTargetId = null; // for the menu
+let sheetTargetId = null;
 
-// Selected years for summary (from 2026 to 2030)
 const AVAILABLE_YEARS = [2026, 2027, 2028, 2029, 2030];
-let selectedYears = new Set([2026]); // Default to 2026 only
+let selectedYears = new Set([2026]);
 
 // ======================== HELPERS =========================
 
@@ -536,12 +541,10 @@ function getStatus(inst) { return getRemaining(inst) <= 0 ? 'completed' : 'activ
 function getStartDate(inst) { return new Date(inst.startYear, inst.startMonth-1, 1); }
 function getEndDate(inst) { let d = new Date(inst.startYear, inst.startMonth-1, 1); d.setMonth(d.getMonth() + inst.monthsCount); return d; }
 
-// Get all payment months for an installment (returns array of { year, month, amount })
 function getPaymentMonths(inst) {
   const months = [];
   const paidMonths = new Set();
   
-  // Mark paid months
   paymentLogs.forEach(log => {
     if (log.installmentId === inst.id) {
       const d = new Date(log.datePaid);
@@ -555,8 +558,7 @@ function getPaymentMonths(inst) {
     const month = currentDate.getMonth();
     const isPaid = paidMonths.has(`${year}-${month}`);
     months.push({
-      year,
-      month,
+      year, month,
       amount: inst.monthlyAmount,
       isPaid,
       paidDate: paymentLogs.find(log => {
@@ -569,12 +571,10 @@ function getPaymentMonths(inst) {
   return months;
 }
 
-// Get summary data for a specific year
 function getYearSummary(year) {
   const monthlyTotals = {};
-  const monthlyInstallments = {}; // Store installments per month for details
+  const monthlyInstallments = {};
   
-  // Initialize months 0-11
   for (let i = 0; i < 12; i++) {
     monthlyTotals[i] = 0;
     monthlyInstallments[i] = [];
@@ -602,7 +602,6 @@ function getYearSummary(year) {
   return { monthlyTotals, monthlyInstallments };
 }
 
-// Calculate total for a year
 function getYearTotal(year) {
   const summary = getYearSummary(year);
   return Object.values(summary.monthlyTotals).reduce((sum, val) => sum + val, 0);
@@ -668,7 +667,6 @@ function clearAllYears() {
   renderSummary();
 }
 
-// Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
   const dropdown = document.getElementById('yearDropdown');
   if (dropdown && !dropdown.contains(event.target)) {
@@ -681,9 +679,8 @@ function renderSummary() {
   const container = document.getElementById('summaryContainer');
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth(); // 0-11
+  const currentMonth = currentDate.getMonth();
   
-  // Filter years based on selection and sort from 2026 to 2030
   let yearsToShow = AVAILABLE_YEARS.filter(y => selectedYears.has(y));
   
   if (yearsToShow.length === 0) {
@@ -705,7 +702,6 @@ function renderSummary() {
     const monthlyInstallments = summary.monthlyInstallments;
     const yearTotal = getYearTotal(year);
     
-    // Check if year has any data
     const hasData = Object.values(monthlyTotals).some(v => v > 0);
     if (!hasData) return;
     
@@ -714,13 +710,11 @@ function renderSummary() {
         <span class="summary-year-total">Total: ${formatMoney(yearTotal)}</span>
       </div>`;
     
-    // Months from Jan (0) to Dec (11)
     for (let i = 0; i < 12; i++) {
       const amount = monthlyTotals[i];
       if (amount > 0) {
         const monthName = MONTHS_FULL[i];
         const count = monthlyInstallments[i].length;
-        // Add past-month class if this month is before current month AND year is current year
         const isPastMonth = (year === currentYear && i < currentMonth);
         const pastClass = isPastMonth ? 'past-month' : '';
         html += `
@@ -747,7 +741,6 @@ function renderSummary() {
   }
 }
 
-// Open month detail modal
 function openMonthDetail(year, month) {
   const summary = getYearSummary(year);
   const installmentsList = summary.monthlyInstallments[month] || [];
@@ -760,7 +753,6 @@ function openMonthDetail(year, month) {
   if (installmentsList.length === 0) {
     container.innerHTML = '<div class="empty-state">No installments for this month</div>';
   } else {
-    // Sort by paid status (pending first) then by name
     const sorted = [...installmentsList].sort((a, b) => {
       if (a.isPaid !== b.isPaid) return a.isPaid ? 1 : -1;
       return a.name.localeCompare(b.name);
@@ -801,10 +793,11 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
   const progress = Math.min(100, ((inst.totalAmount - remaining) / inst.totalAmount) * 100);
   const remainingMonths = getRemainingMonths(inst);
   const status = getStatus(inst);
+  const totalAmountFormatted = formatMoney(inst.totalAmount);
 
   let actionColInner = '';
   if (showMenu) {
-    actionColInner = `<button class="action-icon" onclick="openActionSheet('${inst.id}')">⋯</button>`;
+    actionColInner = `<button class="action-icon" onclick="openActionSheet('${inst.id}')"><span class="menu-icon-vertical">⋮</span></button>`;
   } else if (showPayButton && status !== 'completed') {
     actionColInner = isPaidThisMonth
       ? `<button class="pay-btn paid" disabled>✅ Paid</button>`
@@ -817,15 +810,21 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
     ? `${escapeHtml(inst.itemName)}`
     : `${escapeHtml(inst.itemName)}`;
 
-  // For current month tab, remove the "Left X of Y months" line
+  // For current month tab: "Left X out of Y" (without "months" word)
   const metaHtml = isCurrentMonthTab ? `
     <div class="inst-meta" style="flex-direction:column;align-items:flex-start;gap:2px">
-      <span></span>
+      <span>Left ${remainingMonths} out of ${inst.monthsCount}</span>
     </div>` : `
     <div class="inst-meta" style="flex-direction:column;align-items:flex-start;gap:2px">
       <span></span>
-      <span>Left ${remainingMonths} of ${inst.monthsCount} months</span>
+      <span>Left ${remainingMonths} out of ${inst.monthsCount} months</span>
     </div>`;
+
+  // For All Plans tab: show total amount above monthly amount
+  const amountsHtml = showMenu ? `
+    <div class="inst-total-amount">${totalAmountFormatted}</div>
+    <div class="inst-amount">${formatMoney(inst.monthlyAmount)}/mo</div>` : `
+    <div class="inst-amount">${formatMoney(inst.monthlyAmount)}/mo</div>`;
 
   return `
     <div class="inst-row">
@@ -836,7 +835,7 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
         <div class="inst-progress"><div class="inst-progress-bar" style="width:${progress}%"></div></div>
       </div>
       <div class="inst-amounts">
-        <div class="inst-amount">${formatMoney(inst.monthlyAmount)}/mo</div>
+        ${amountsHtml}
         <div class="inst-remaining">left: ${formatMoney(remaining)}</div>
       </div>
       <div class="inst-action">${actionColInner}</div>
@@ -916,18 +915,14 @@ function renderAll() {
         continue;
       }
       if (isDueInMonth(inst, checkYear, checkMonth)) {
-        const label = new Date(checkYear, checkMonth, 1)
-          .toLocaleString('default', { month: 'long', year: 'numeric' });
-        upcomingEntries.push({ inst, label });
+        upcomingEntries.push({ inst });
         found = true;
         break;
       }
       checkMonth++; if (checkMonth > 11) { checkMonth = 0; checkYear++; }
     }
     if (!found && getStartDate(inst) > now && getStatus(inst) === 'active') {
-      const label = new Date(inst.startYear, inst.startMonth - 1, 1)
-        .toLocaleString('default', { month: 'long', year: 'numeric' });
-      upcomingEntries.push({ inst, label });
+      upcomingEntries.push({ inst });
     }
   });
 
@@ -954,7 +949,7 @@ function renderAll() {
   if (!upcomingEntries.length) {
     upcomingContainer.innerHTML = '<div class="empty-state">No upcoming installments</div>';
   } else {
-    upcomingContainer.innerHTML = upcomingEntries.map(({ inst, label }) => {
+    upcomingContainer.innerHTML = upcomingEntries.map(({ inst }) => {
       return renderInstRow(inst, false, false, false, false);
     }).join('');
   }
@@ -964,16 +959,10 @@ function renderAll() {
     allContainer.innerHTML = '<div class="empty-state">No installment plans added</div>';
   } else {
     allContainer.innerHTML = allItems.map(inst => {
-      const row      = renderInstRow(inst, false, false, true, false);
-      const dueLabel = getDueLabel(inst);
-      return row.replace(
-        `<span></span>`,
-        `<span style="color:var(--brand);font-weight:700">${dueLabel}</span>`
-      );
+      return renderInstRow(inst, false, false, true, false);
     }).join('');
   }
   
-  // Update summary after render
   buildYearCheckboxList();
   renderSummary();
 }
