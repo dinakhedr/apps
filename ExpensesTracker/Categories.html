@@ -860,8 +860,6 @@ async function syncCategories() {
   }
 }
 
-// Add event listener for sync button
-document.getElementById('syncBtn')?.addEventListener('click', syncCategories);
 // Load page
 async function loadPage() {
   await initPageAuth({
@@ -878,6 +876,9 @@ async function loadPage() {
   initTabs();
   document.querySelectorAll('input[name="catType"]').forEach(r => r.addEventListener('change', handleTypeChange));
   initRadioCards();
+  
+  // Add sync button listener HERE (moved from outside)
+  document.getElementById('syncBtn')?.addEventListener('click', syncCategories);
 }
 
 renderBottomNav('categories');
