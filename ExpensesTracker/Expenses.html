@@ -498,7 +498,7 @@ function openCatDetail(category) {
           </div>
          <div class="detail-right" style="display:flex;flex-direction:row;align-items:center;gap:10px">
   <div class="detail-amt">EGP ${e.amount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
-  <button class="action-icon" onclick="catDetailOpenMenu('${e.id}')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3)">⋯</button>
+  <button class="action-icon" onclick="catDetailOpenMenu('${e.id}')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3)">⋮</button>
 </div>
         </div>`).join('')
     : '<div class="empty-state"><div class="empty-icon">📭</div><p>No expenses</p></div>';
@@ -599,7 +599,7 @@ function renderByDay(list) {
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
   <div class="exp-amt">EGP ${e.amount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
-  <button class="action-icon" onclick="openDailyExpenseMenu('${e.id}')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3)">⋯</button>
+  <button class="action-icon" onclick="openDailyExpenseMenu('${e.id}')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3)">⋮</button>
 </div>
           </div>`).join('')}
       </div>`;
