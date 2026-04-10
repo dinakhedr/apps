@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Income Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
+  <link rel="shortcut icon" href="icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="utils.js"></script>
+  <script src="auth.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    /* Income page specific styles */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .header h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    /* Stats banner */
+    .stats-card-income {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(16,185,129,0.25);
+    }
+    .stats-label-income {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .stats-total-income {
+      font-family: 'Sora', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+      margin-top: 6px;
+    }
+    .stats-period {
+      font-size: 12px;
+      color: rgba(255,255,255,0.75);
+      margin-top: 4px;
+    }
+
+    /* Filter row */
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    /* Income item row */
+    .income-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .income-item:last-child {
+      border-bottom: none;
+    }
+    .income-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: #d1fae5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .income-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .income-category {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .income-meta {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .income-notes {
+      font-size: 11px;
+      color: var(--text-2);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .income-amount {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #10b981;
+      flex-shrink: 0;
+      text-align: right;
+    }
+    .income-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Search */
+    .search-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .search-wrap input {
+      padding-left: 36px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    /* Month selector inline */
+    .month-selector {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      margin-bottom: 16px;
+    }
+    .month-nav-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 8px 12px;
+      color: var(--brand);
+      font-weight: 700;
+    }
+    .month-display {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p>Loading income data...</p>
+  </div>
+</div>
+
+<div class="container" id="mainApp" style="display:none">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>💰 Income</h1>
+    <div class="header-actions">
+      <button class="hdr-icon-btn" id="syncBtn" title="Sync">↻</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+
+  <!-- Stats Card -->
+  <div class="stats-card-income" id="statsCard" style="display:none">
+    <div class="stats-label-income">Total Income</div>
+    <div class="stats-total-income" id="totalIncome">EGP 0</div>
+    <div class="stats-period" id="periodDisplay"></div>
+  </div>
+
+  <!-- Add Income Button -->
+  <button class="add-btn" onclick="openAddIncomeModal()">➕ Add Income</button>
+
+  <!-- Month Selector -->
+  <div class="month-selector">
+    <button class="month-nav-btn" onclick="changeMonth(-1)">◀</button>
+    <span class="month-display" id="monthDisplay"></span>
+    <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="incomeSearch" placeholder="Search by category or notes...">
+  </div>
+
+  <!-- Income List Card -->
+  <div class="card">
+    <div class="card-title">
+      <span class="card-title-icon">📋</span>
+      Income Entries
+    </div>
+    <div id="incomeList"></div>
+  </div>
+
+</div>
+
+<div id="bottomNavMount"></div>
+<div class="toast" id="toast"></div>
+
+<!-- Add/Edit Income Modal -->
+<div class="modal-backdrop" id="incomeModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">➕ Add Income</div>
+    
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="incomeDate" required>
+    </div>
+    
+    <div class="form-group">
+      <label>Category</label>
+      <select id="incomeCategory" required></select>
+    </div>
+    
+    <div class="form-group">
+      <label>Amount (EGP)</label>
+      <div class="amount-wrap">
+        <span class="currency-flag">🇪🇬</span>
+        <input type="number" id="incomeAmount" placeholder="0.00" step="0.01" min="0.01" inputmode="decimal" required>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label>Notes <span style="font-weight:400;text-transform:none">(optional)</span></label>
+      <input type="text" id="incomeNotes" placeholder="e.g., monthly salary, freelance payment">
+    </div>
+    
+    <div class="modal-footer" id="modalFooter">
+      <button class="btn-cancel" onclick="closeIncomeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveIncome()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit/Delete Sheet Menu -->
+<div class="sheet-backdrop" id="incomeSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Options</div>
+    <button class="sheet-action" id="sheetEditBtn">
+      <span class="sheet-action-icon">✏️</span> Edit
+    </button>
+    <button class="sheet-action danger" id="sheetDeleteBtn">
+      <span class="sheet-action-icon">🗑️</span> Delete
+    </button>
+  </div>
+</div>
+
+<script>
+// ======================== STATE ==========================
+let incomes = [];
+let spreadsheetId = null;
+let currentUserEmail = null;
+let currentAccessToken = null;
+let editingIncomeId = null;
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let selectedIncomeId = null;
+
+const INCOME_SHEET = 'Income Log';
+
+// ======================== HELPERS ========================
+function getFilteredIncomes() {
+  return incomes.filter(inc => {
+    const d = parseLocalDate(inc.date);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+}
+
+function updateStats() {
+  const filtered = getFilteredIncomes();
+  const total = filtered.reduce((sum, inc) => sum + inc.amount, 0);
+  const statsCard = document.getElementById('statsCard');
+  
+  if (filtered.length === 0) {
+    statsCard.style.display = 'none';
+    return;
+  }
+  
+  statsCard.style.display = 'block';
+  document.getElementById('totalIncome').textContent = formatMoney(total);
+  document.getElementById('periodDisplay').textContent = `${MONTHS_FULL[currentMonth]} ${currentYear}`;
+}
+
+function renderIncomeList() {
+  const container = document.getElementById('incomeList');
+  const filtered = getFilteredIncomes();
+  const searchTerm = document.getElementById('incomeSearch').value.toLowerCase().trim();
+  
+  let displayed = filtered;
+  if (searchTerm) {
+    displayed = filtered.filter(inc => 
+      inc.category.toLowerCase().includes(searchTerm) || 
+      (inc.notes || '').toLowerCase().includes(searchTerm)
+    );
+  }
+  
+  const sorted = [...displayed].sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  if (sorted.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><p>No income entries for this month</p></div>';
+    return;
+  }
+  
+  container.innerHTML = sorted.map(inc => {
+    const icon = getCategoryIcon(inc.category);
+    const bgColor = getCategoryColor(inc.category);
+    return `
+      <div class="income-item">
+        <div class="income-icon" style="background:${bgColor}">${icon}</div>
+        <div class="income-details">
+          <div class="income-category">${escapeHtml(inc.category)}</div>
+          <div class="income-meta">${formatDate(inc.date)}</div>
+          ${inc.notes ? `<div class="income-notes">📝 ${escapeHtml(inc.notes)}</div>` : ''}
+        </div>
+        <div class="income-right">
+          <div class="income-amount">${formatMoney(inc.amount)}</div>
+          <button class="action-icon" onclick="openIncomeMenu(${inc.id})">⋮</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function updateMonthDisplay() {
+  document.getElementById('monthDisplay').textContent = `${MONTHS_FULL[currentMonth]} ${currentYear}`;
+  updateStats();
+  renderIncomeList();
+}
+
+function changeMonth(delta) {
+  let newMonth = currentMonth + delta;
+  let newYear = currentYear;
+  
+  if (newMonth < 0) {
+    newMonth = 11;
+    newYear--;
+  } else if (newMonth > 11) {
+    newMonth = 0;
+    newYear++;
+  }
+  
+  currentMonth = newMonth;
+  currentYear = newYear;
+  updateMonthDisplay();
+}
+
+// ======================== CRUD OPERATIONS ========================
+async function saveIncome() {
+  const date = document.getElementById('incomeDate').value;
+  const category = document.getElementById('incomeCategory').value;
+  const amount = parseFloat(document.getElementById('incomeAmount').value);
+  const notes = document.getElementById('incomeNotes').value.trim();
+  
+  if (!date) { showToast('❌ Select date', 'error'); return; }
+  if (!category) { showToast('❌ Select category', 'error'); return; }
+  if (!amount || amount <= 0) { showToast('❌ Enter valid amount', 'error'); return; }
+  
+  if (editingIncomeId !== null) {
+    // Edit existing
+    const index = incomes.findIndex(i => i.id === editingIncomeId);
+    if (index !== -1) {
+      incomes[index] = { ...incomes[index], date, category, amount, notes };
+      await persistIncomesToSheet();
+      showToast('✅ Income updated');
+    }
+  } else {
+    // Add new
+    const newIncome = {
+      id: genId(),
+      date,
+      category,
+      amount,
+      notes: notes || '',
+      timestamp: new Date().toISOString()
+    };
+    incomes.unshift(newIncome);
+    await addIncomeToSheet(newIncome);
+    showToast('✅ Income added');
+  }
+  
+  closeIncomeModal();
+  updateStats();
+  renderIncomeList();
+}
+
+async function deleteIncome(id) {
+  if (!confirm('Delete this income entry?')) return;
+  
+  incomes = incomes.filter(i => i.id !== id);
+  await deleteIncomeFromSheet(id);
+  showToast('🗑️ Income deleted');
+  updateStats();
+  renderIncomeList();
+}
+
+// ======================== SHEET OPERATIONS ========================
+// Column structure: Timestamp | Date | Category | Amount | Notes | ID (same as Daily Log)
+function incomeToRow(inc) {
+  return [inc.timestamp || new Date().toISOString(), inc.date, inc.category, inc.amount, inc.notes || '', inc.id];
+}
+
+function parseIncomeRow(row, idx) {
+  return {
+    timestamp: row[0] || '',
+    date: row[1] || '',
+    category: row[2] || '',
+    amount: parseFloat(row[3]) || 0,
+    notes: row[4] || '',
+    id: (row[5] && !isNaN(parseInt(row[5]))) ? parseInt(row[5]) : -(idx + 1)
+  };
+}
+
+async function ensureIncomeTab() {
+  try {
+    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
+    const exists = meta.result.sheets.some(s => s.properties.title === INCOME_SHEET);
+    if (!exists) {
+      await gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        resource: { requests: [{ addSheet: { properties: { title: INCOME_SHEET } } }] }
+      });
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${INCOME_SHEET}!A1:F1`,
+        valueInputOption: 'RAW',
+        resource: { values: [['Timestamp', 'Date', 'Category', 'Amount', 'Notes', 'ID']] }
+      });
+    } else {
+      // Verify headers match Daily Log structure
+      const headerCheck = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${INCOME_SHEET}!A1:F1`
+      });
+      const headers = headerCheck.result.values?.[0] || [];
+      if (headers.length !== 6 || headers[0] !== 'Timestamp') {
+        await gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `${INCOME_SHEET}!A1:F1`,
+          valueInputOption: 'RAW',
+          resource: { values: [['Timestamp', 'Date', 'Category', 'Amount', 'Notes', 'ID']] }
+        });
+      }
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+async function loadIncomesFromSheet() {
+  if (!spreadsheetId) return;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${INCOME_SHEET}!A2:F`
+    });
+    const rows = res.result.values || [];
+    incomes = rows.map((row, idx) => parseIncomeRow(row, idx));
+    
+    // Update ID counter
+    const maxId = incomes.reduce((m, i) => Math.max(m, Number(i.id) || 0), 0);
+    const stored = parseInt(localStorage.getItem('expense_id_counter') || '0');
+    if (maxId > stored) localStorage.setItem('expense_id_counter', maxId);
+    
+    // Save to localStorage as backup
+    if (currentUserEmail) {
+      localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
+    }
+  } catch (e) {
+    console.error(e);
+    incomes = [];
+  }
+}
+
+async function persistIncomesToSheet() {
+  if (!spreadsheetId) return false;
+  await gapi.client.sheets.spreadsheets.values.clear({
+    spreadsheetId,
+    range: `${INCOME_SHEET}!A2:F`
+  });
+  if (incomes.length) {
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${INCOME_SHEET}!A2:F`,
+      valueInputOption: 'RAW',
+      resource: { values: incomes.map(incomeToRow) }
+    });
+  }
+  // Update localStorage backup
+  if (currentUserEmail) {
+    localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
+  }
+  return true;
+}
+
+async function addIncomeToSheet(inc) {
+  if (!spreadsheetId) return false;
+  try {
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: `${INCOME_SHEET}!A2:F`,
+      valueInputOption: 'RAW',
+      resource: { values: [[inc.timestamp, inc.date, inc.category, inc.amount, inc.notes || '', inc.id]] }
+    });
+    // Update localStorage backup
+    if (currentUserEmail) {
+      localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
+    }
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
+async function deleteIncomeFromSheet(incId) {
+  if (!spreadsheetId) return false;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${INCOME_SHEET}!A2:F`
+    });
+    const rows = res.result.values || [];
+    let rowIndex = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][5] && parseInt(rows[i][5]) === incId) {
+        rowIndex = i + 2;
+        break;
+      }
+    }
+    if (rowIndex < 2) return false;
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      resource: {
+        requests: [{ deleteDimension: { range: { sheetId: 0, dimension: 'ROWS', startIndex: rowIndex - 1, endIndex: rowIndex } } }]
+      }
+    });
+    // Update localStorage backup
+    if (currentUserEmail) {
+      localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
+    }
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
+// ======================== CATEGORY SELECT ========================
+// Get only income categories (catKind === 'income')
+function buildIncomeCategorySelect() {
+  const select = document.getElementById('incomeCategory');
+  // Use getIncomeCategories() from utils.js which filters catKind === 'income'
+  const incomeCats = getIncomeCategories();
+  select.innerHTML = incomeCats.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
+}
+
+// ======================== MODAL FUNCTIONS ========================
+function openAddIncomeModal() {
+  editingIncomeId = null;
+  document.getElementById('modalTitle').textContent = '➕ Add Income';
+  document.getElementById('incomeDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('incomeCategory').value = '';
+  document.getElementById('incomeAmount').value = '';
+  document.getElementById('incomeNotes').value = '';
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn-cancel" onclick="closeIncomeModal()">Cancel</button>
+    <button class="btn-save" onclick="saveIncome()">Save</button>
+  `;
+  document.getElementById('incomeModal').classList.add('open');
+}
+
+function openEditIncomeModal(id) {
+  editingIncomeId = id;
+  const inc = incomes.find(i => i.id === id);
+  if (!inc) return;
+  
+  document.getElementById('modalTitle').textContent = '✏️ Edit Income';
+  document.getElementById('incomeDate').value = inc.date;
+  document.getElementById('incomeCategory').value = inc.category;
+  document.getElementById('incomeAmount').value = inc.amount;
+  document.getElementById('incomeNotes').value = inc.notes || '';
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn-cancel" onclick="closeIncomeModal()">Cancel</button>
+    <button class="btn-save" onclick="saveIncome()">Update</button>
+  `;
+  document.getElementById('incomeModal').classList.add('open');
+}
+
+function closeIncomeModal() {
+  document.getElementById('incomeModal').classList.remove('open');
+  editingIncomeId = null;
+}
+
+// ======================== SHEET MENU ========================
+function openIncomeMenu(id) {
+  selectedIncomeId = id;
+  const inc = incomes.find(i => i.id === id);
+  if (!inc) return;
+  document.getElementById('incomeSheet').classList.add('open');
+}
+
+function closeIncomeSheet() {
+  document.getElementById('incomeSheet').classList.remove('open');
+  selectedIncomeId = null;
+}
+
+// ======================== SYNC ========================
+async function manualSync() {
+  if (!spreadsheetId) {
+    showToast('⚠️ No spreadsheet connected', 'error');
+    return;
+  }
+  showToast('🔄 Syncing...', 'info');
+  await loadIncomesFromSheet();
+  updateStats();
+  renderIncomeList();
+  showToast(`✅ Synced ${incomes.length} income entries`);
+}
+
+// ======================== AUTH & INIT ========================
+async function initPage() {
+  await initPageAuth({
+    onLoadLocal: (email, sheetId) => {
+      currentUserEmail = email;
+      spreadsheetId = sheetId;
+      // Try to load from localStorage as temporary cache while sheet loads
+      const localData = localStorage.getItem(`incomes_${currentUserEmail}`);
+      if (localData) {
+        incomes = JSON.parse(localData);
+        updateMonthDisplay();
+      }
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      document.getElementById('mainApp').style.display = 'none';
+    },
+    onReady: async (sheetId, email, token) => {
+      currentUserEmail = email;
+      spreadsheetId = sheetId;
+      currentAccessToken = token;
+      await ensureIncomeTab();
+      await loadIncomesFromSheet();  // Load from Google Sheet (source of truth)
+      updateMonthDisplay();
+      document.getElementById('loadingOverlay').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+    }
+  });
+}
+
+// ======================== EVENT LISTENERS ========================
+document.getElementById('incomeSearch').addEventListener('input', () => renderIncomeList());
+document.getElementById('syncBtn').addEventListener('click', manualSync);
+document.getElementById('incomeSheet').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeIncomeSheet();
+});
+document.getElementById('sheetEditBtn').addEventListener('click', () => {
+  if (selectedIncomeId) {
+    closeIncomeSheet();
+    setTimeout(() => openEditIncomeModal(selectedIncomeId), 100);
+  }
+});
+document.getElementById('sheetDeleteBtn').addEventListener('click', async () => {
+  if (selectedIncomeId) {
+    const id = selectedIncomeId;
+    closeIncomeSheet();
+    await deleteIncome(id);
+  }
+});
+document.getElementById('incomeModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeIncomeModal();
+});
+
+// ======================== START ========================
+// Build category select with only income categories
+setTimeout(() => {
+  if (typeof getIncomeCategories !== 'undefined') {
+    buildIncomeCategorySelect();
+  } else {
+    // Fallback: wait for utils to load
+    const checkInterval = setInterval(() => {
+      if (typeof getIncomeCategories !== 'undefined') {
+        buildIncomeCategorySelect();
+        clearInterval(checkInterval);
+      }
+    }, 100);
+  }
+}, 100);
+
+renderBottomNav('income');
+initPage();
+</script>
+</body>
+</html>
