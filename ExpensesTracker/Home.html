@@ -466,11 +466,9 @@ function renderExpensesList() {
         <div class="exp-meta">📅 ${formatDate(e.date)}</div>
         ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
       </div>
-      <div class="exp-right">
+      <div class="exp-right" style="flex-direction:row;align-items:center;gap:8px">
         <div class="exp-amount">EGP ${e.amount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
-        <div class="exp-actions">
-          <button class="action-icon" onclick="openExpenseMenu(${e.id})" style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3)">⋯</button>
-        </div>
+        <button class="action-icon" onclick="openExpenseMenu(${e.id})" style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3)">⋯</button>
       </div>
     </div>`).join('');
 }
