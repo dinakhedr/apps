@@ -71,29 +71,31 @@
     /* ── Multi-select dropdown for years ── */
     .year-dropdown {
       position: relative;
-      margin-bottom: 16px;
+      margin: 16px 20px 20px 20px;
     }
     .year-dropdown-btn {
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: var(--radius-lg);
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
       padding: 12px 16px;
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      color: #fff;
+      color: var(--text);
       font-size: 14px;
       font-weight: 500;
       font-family: 'DM Sans', sans-serif;
-      transition: background 0.15s;
+      transition: all 0.15s;
     }
     .year-dropdown-btn:hover {
-      background: rgba(255,255,255,0.28);
+      border-color: var(--brand);
+      background: #fff;
     }
     .year-dropdown-arrow {
       font-size: 12px;
+      color: var(--text-2);
       transition: transform 0.2s;
     }
     .year-dropdown.open .year-dropdown-arrow {
@@ -111,6 +113,7 @@
       display: none;
       max-height: 300px;
       overflow-y: auto;
+      border: 1px solid var(--border);
     }
     .year-dropdown.open .year-dropdown-menu {
       display: block;
@@ -153,6 +156,8 @@
       gap: 12px;
       justify-content: flex-end;
       background: #fff;
+      position: sticky;
+      bottom: 0;
     }
     .year-dropdown-footer button {
       background: none;
@@ -179,10 +184,10 @@
       box-shadow: var(--shadow);
       overflow: hidden;
     }
-    .summary-year-header {
+    .summary-header {
       background: var(--brand-grad);
       color: #fff;
-      padding: 14px 20px;
+      padding: 16px 20px;
       font-family: 'Sora', sans-serif;
       font-weight: 700;
       font-size: 16px;
@@ -190,10 +195,30 @@
       justify-content: space-between;
       align-items: center;
     }
+    .summary-header h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
+    }
+    .summary-year-header {
+      background: linear-gradient(135deg, #f5f5fa 0%, #ffffff 100%);
+      color: var(--text);
+      padding: 14px 20px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
     .summary-year-total {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      background: rgba(255,255,255,0.2);
+      background: var(--brand-grad);
+      color: #fff;
       padding: 4px 12px;
       border-radius: 20px;
     }
@@ -334,21 +359,6 @@
 
   <button class="add-btn" onclick="openAddModal()">➕ New Installment Plan</button>
 
-  <!-- Year Multi-Select Dropdown -->
-  <div class="year-dropdown" id="yearDropdown">
-    <div class="year-dropdown-btn" onclick="toggleYearDropdown()">
-      <span id="selectedYearsText">Select years</span>
-      <span class="year-dropdown-arrow">▼</span>
-    </div>
-    <div class="year-dropdown-menu" id="yearDropdownMenu">
-      <div id="yearCheckboxList"></div>
-      <div class="year-dropdown-footer">
-        <button class="year-select-all" onclick="selectAllYears(); event.stopPropagation();">Select All</button>
-        <button class="year-clear-all" onclick="clearAllYears(); event.stopPropagation();">Clear All</button>
-      </div>
-    </div>
-  </div>
-
   <div class="card">
     <div class="tab-bar">
       <button class="tab-btn active" data-tab="current">📅 Current Month</button>
@@ -362,9 +372,26 @@
 
   <!-- Installments Summary Section (after tabs) -->
   <div class="summary-card">
-    <div class="summary-year-header">
-      <span>📊 Installments Summary</span>
+    <div class="summary-header">
+      <h3>📊 Installments Summary</h3>
     </div>
+    
+    <!-- Year Multi-Select Dropdown (inside summary card, under header) -->
+    <div class="year-dropdown" id="yearDropdown">
+      <div class="year-dropdown-btn" onclick="toggleYearDropdown()">
+        <span id="selectedYearsText">Select years</span>
+        <span class="year-dropdown-arrow">▼</span>
+      </div>
+      <div class="year-dropdown-menu" id="yearDropdownMenu">
+        <div id="yearCheckboxList"></div>
+        <div class="year-dropdown-footer">
+          <button class="year-select-all" onclick="selectAllYears(); event.stopPropagation();">Select All</button>
+          <button class="year-clear-all" onclick="clearAllYears(); event.stopPropagation();">Clear All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary content -->
     <div id="summaryContainer"></div>
   </div>
 </div>
@@ -542,12 +569,6 @@ function getYearTotal(year) {
   return Object.values(summary.monthlyTotals).reduce((sum, val) => sum + val, 0);
 }
 
-// Check if a month has any installments due
-function hasInstallmentsInMonth(year, month) {
-  const summary = getYearSummary(year);
-  return summary.monthlyTotals[month] > 0;
-}
-
 // ======================== YEAR DROPDOWN ==========================
 function toggleYearDropdown() {
   const dropdown = document.getElementById('yearDropdown');
@@ -608,7 +629,7 @@ function clearAllYears() {
 // Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
   const dropdown = document.getElementById('yearDropdown');
-  if (!dropdown.contains(event.target)) {
+  if (dropdown && !dropdown.contains(event.target)) {
     dropdown.classList.remove('open');
   }
 });
@@ -643,8 +664,7 @@ function renderSummary() {
     const hasData = Object.values(monthlyTotals).some(v => v > 0);
     if (!hasData) return;
     
-    html += `<div class="summary-card" style="margin-bottom: 16px;">
-      <div class="summary-year-header">
+    html += `<div class="summary-year-header">
         <span>📅 ${year}</span>
         <span class="summary-year-total">Total: ${formatMoney(yearTotal)}</span>
       </div>`;
@@ -665,8 +685,6 @@ function renderSummary() {
           </div>`;
       }
     }
-    
-    html += `</div>`;
   });
   
   if (html === '') {
