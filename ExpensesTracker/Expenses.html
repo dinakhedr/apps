@@ -871,7 +871,7 @@ function setupTabs() {
 // ── Google Drive helpers ──────────────────────────────────
 async function findExistingSpreadsheet() {
   const res = await gapi.client.drive.files.list({
-    q: `name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
+    q: `name='${EXPENSES_SHEET}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
     spaces: 'drive', fields: 'files(id)'
   });
   return res.result.files?.[0]?.id || null;
