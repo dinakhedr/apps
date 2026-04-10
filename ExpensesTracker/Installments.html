@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="utils.js"></script>
   <script src="auth.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <style>
     /* ── Header ── */
@@ -32,17 +32,14 @@
       justify-content: center; flex-shrink: 0; overflow: hidden;
     }
     .bank-logo img { width: 70%; height: auto; object-fit: contain; }
-    /* Col 1: info + progress bar */
     .inst-info { flex: 1; min-width: 0; }
     .inst-name { font-weight: 700; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .inst-meta { font-size: 11px; color: var(--text-2); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 6px; }
     .inst-progress { margin-top: 8px; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
     .inst-progress-bar { height: 100%; background: var(--brand); border-radius: 4px; width: 0%; }
-    /* Col 2: amounts */
     .inst-amounts { text-align: right; flex-shrink: 0; min-width: 110px; }
     .inst-amount    { font-weight: 700; font-size: 13px; color: var(--brand); }
     .inst-remaining { font-size: 11px; color: var(--danger); margin-top: 2px; font-weight: 600; }
-    /* Col 3: action button */
     .inst-action { flex-shrink: 0; }
     .pay-btn {
       background: #fef3c7; border: none; border-radius: 24px;
@@ -52,14 +49,12 @@
     .pay-btn:active { transform: scale(0.95); }
     .pay-btn.paid { background: #d1fae5; color: #065f46; cursor: default; }
 
-    /* Action icon (⋯ menu button) */
     .action-icon {
       background: none; border: none; font-size: 18px; cursor: pointer;
       padding: 6px; border-radius: 8px; transition: background 0.1s; color: var(--text-3);
     }
     .action-icon:hover { background: var(--surface-2); }
 
-    /* Status badges */
     .badge-completed { background: #d1fae5; color: #065f46; font-size: 10px; padding: 2px 8px; border-radius: 20px; }
     .badge-active    { background: #ede9fe; color: #6d28d9; font-size: 10px; padding: 2px 8px; border-radius: 20px; }
 
@@ -72,6 +67,172 @@
     }
     .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--brand); background: #fff; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+
+    /* ── Year selector ── */
+    .year-selector {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: var(--radius-lg);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .year-selector label {
+      color: rgba(255,255,255,0.9);
+      font-size: 13px;
+      margin: 0;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .year-checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.2);
+      padding: 6px 12px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      transition: all 0.15s;
+    }
+    .year-checkbox input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      cursor: pointer;
+    }
+    .year-checkbox.selected {
+      background: #fff;
+      color: var(--brand);
+    }
+    .year-checkbox:hover {
+      background: rgba(255,255,255,0.35);
+    }
+    .year-checkbox.selected:hover {
+      background: #fff;
+    }
+
+    /* ── Summary card ── */
+    .summary-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .summary-year-header {
+      background: var(--brand-grad);
+      color: #fff;
+      padding: 12px 20px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    .summary-month-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .summary-month-row:hover {
+      background: var(--surface-2);
+    }
+    .summary-month-row:active {
+      background: #ededff;
+    }
+    .summary-month-name {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .summary-month-amount {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--brand);
+    }
+    .summary-month-count {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-left: 8px;
+    }
+    .summary-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-3);
+    }
+    .summary-empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    /* ── Month detail modal ── */
+    .detail-installment-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .detail-installment-item:last-child {
+      border-bottom: none;
+    }
+    .detail-installment-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .detail-installment-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .detail-installment-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .detail-installment-bank {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .detail-installment-amount {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--brand);
+      flex-shrink: 0;
+      text-align: right;
+    }
+    .detail-installment-status {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 2px;
+    }
+    .detail-status-paid {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .detail-status-pending {
+      background: #fef3c7;
+      color: #d97706;
+    }
   </style>
 </head>
 <body>
@@ -95,6 +256,15 @@
   </div>
 
   <button class="add-btn" onclick="openAddModal()">➕ New Installment Plan</button>
+
+  <!-- Year Selector -->
+  <div class="year-selector" id="yearSelector"></div>
+
+  <!-- Summary Section -->
+  <div class="summary-card">
+    <div class="summary-year-header">📊 Installments Summary</div>
+    <div id="summaryContainer"></div>
+  </div>
 
   <div class="card">
     <div class="tab-bar">
@@ -135,6 +305,18 @@
   </div>
 </div>
 
+<!-- Month Detail Modal -->
+<div class="modal-backdrop" id="monthDetailModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="monthDetailTitle">Installments</div>
+    <div id="monthDetailList"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeMonthDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Sheet menu for All tab -->
 <div class="sheet-backdrop" id="actionSheet">
   <div class="sheet">
@@ -158,9 +340,19 @@ let installments = [];
 let paymentLogs = [];
 let sheetTargetId = null; // for the menu
 
+// Selected years for summary (initially current year only)
+let selectedYears = new Set();
+
 // ======================== HELPERS =========================
 
-// generateShortId() is provided by utils.js
+function generateShortId(existingIds = []) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+  let id;
+  do {
+    id = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  } while (existingIds.includes(id));
+  return id;
+}
 
 function computeMonthlyAmount(total, months) { return months > 0 ? total / months : 0; }
 
@@ -186,43 +378,266 @@ function getStatus(inst) { return getRemaining(inst) <= 0 ? 'completed' : 'activ
 function getStartDate(inst) { return new Date(inst.startYear, inst.startMonth-1, 1); }
 function getEndDate(inst) { let d = new Date(inst.startYear, inst.startMonth-1, 1); d.setMonth(d.getMonth() + inst.monthsCount); return d; }
 
-function isDueThisMonth(inst) {
-  if (getStatus(inst) === 'completed') return false;
-  const now = new Date();
-  const start = getStartDate(inst);
-  const end = getEndDate(inst);
-  if (now < start || now >= end) return false;
-  return true;
-}
-
-function isDueInMonth(inst, year, month) {
-  if (getStatus(inst) === 'completed') return false;
-  const start = getStartDate(inst);
-  const end = getEndDate(inst);
-  const checkDate = new Date(year, month, 1);
-  if (checkDate < start || checkDate >= end) return false;
-  // Also check if already paid for that specific month
-  const alreadyPaid = paymentLogs.some(log => {
-    if (log.installmentId !== inst.id) return false;
-    const d = new Date(log.datePaid);
-    return d.getFullYear() === year && d.getMonth() === month;
+// Get all payment months for an installment (returns array of { year, month, amount })
+function getPaymentMonths(inst) {
+  const months = [];
+  const paidMonths = new Set();
+  
+  // Mark paid months
+  paymentLogs.forEach(log => {
+    if (log.installmentId === inst.id) {
+      const d = new Date(log.datePaid);
+      paidMonths.add(`${d.getFullYear()}-${d.getMonth()}`);
+    }
   });
-  return !alreadyPaid;
+  
+  let currentDate = new Date(inst.startYear, inst.startMonth - 1, 1);
+  for (let i = 0; i < inst.monthsCount; i++) {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const isPaid = paidMonths.has(`${year}-${month}`);
+    months.push({
+      year,
+      month,
+      amount: inst.monthlyAmount,
+      isPaid,
+      paidDate: paymentLogs.find(log => {
+        const d = new Date(log.datePaid);
+        return log.installmentId === inst.id && d.getFullYear() === year && d.getMonth() === month;
+      })?.datePaid || null
+    });
+    currentDate.setMonth(currentDate.getMonth() + 1);
+  }
+  return months;
 }
 
-function hasPaidThisMonth(instId) {
-  const now = new Date();
-  const year = now.getFullYear(), month = now.getMonth();
-  return paymentLogs.some(log => {
-    if (log.installmentId !== instId) return false;
-    const d = new Date(log.datePaid);
-    return d.getFullYear() === year && d.getMonth() === month;
+// Get all unique years that have any payment months
+function getAllYearsWithPayments() {
+  const years = new Set();
+  installments.forEach(inst => {
+    const paymentMonths = getPaymentMonths(inst);
+    paymentMonths.forEach(pm => {
+      years.add(pm.year);
+    });
   });
+  return Array.from(years).sort((a, b) => a - b);
 }
 
-function calculateDueCount() {
-  const now = new Date();
-  return installments.filter(i => isDueThisMonth(i) && getStatus(i)==='active' && !hasPaidThisMonth(i.id)).length;
+// Get summary data for a specific year
+function getYearSummary(year) {
+  const monthlyTotals = {};
+  const monthlyInstallments = {}; // Store installments per month for details
+  
+  // Initialize months 0-11
+  for (let i = 0; i < 12; i++) {
+    monthlyTotals[i] = 0;
+    monthlyInstallments[i] = [];
+  }
+  
+  installments.forEach(inst => {
+    const paymentMonths = getPaymentMonths(inst);
+    paymentMonths.forEach(pm => {
+      if (pm.year === year) {
+        monthlyTotals[pm.month] = (monthlyTotals[pm.month] || 0) + pm.amount;
+        monthlyInstallments[pm.month].push({
+          id: inst.id,
+          name: inst.itemName,
+          bankKey: inst.bankKey,
+          amount: pm.amount,
+          isPaid: pm.isPaid,
+          paidDate: pm.paidDate,
+          totalAmount: inst.totalAmount,
+          monthsCount: inst.monthsCount
+        });
+      }
+    });
+  });
+  
+  return { monthlyTotals, monthlyInstallments };
+}
+
+// Check if a month has any installments due
+function hasInstallmentsInMonth(year, month) {
+  const summary = getYearSummary(year);
+  return summary.monthlyTotals[month] > 0;
+}
+
+// ======================== RENDER SUMMARY ==========================
+function renderSummary() {
+  const container = document.getElementById('summaryContainer');
+  const allYears = getAllYearsWithPayments();
+  
+  // Filter years based on selection
+  let yearsToShow = allYears.filter(y => selectedYears.has(y));
+  // Sort years descending (most recent first)
+  yearsToShow.sort((a, b) => b - a);
+  
+  if (yearsToShow.length === 0) {
+    container.innerHTML = `
+      <div class="summary-empty">
+        <div class="summary-empty-icon">📭</div>
+        <p>No installments found for selected years</p>
+        <p style="font-size: 12px; margin-top: 8px;">Select a year above to view summary</p>
+      </div>
+    `;
+    return;
+  }
+  
+  let html = '';
+  
+  yearsToShow.forEach(year => {
+    const summary = getYearSummary(year);
+    const monthlyTotals = summary.monthlyTotals;
+    const monthlyInstallments = summary.monthlyInstallments;
+    
+    // Check if year has any data
+    const hasData = Object.values(monthlyTotals).some(v => v > 0);
+    if (!hasData) return;
+    
+    html += `<div class="summary-card" style="margin-bottom: 16px;">
+      <div class="summary-year-header">📅 ${year}</div>`;
+    
+    // Months from Jan (0) to Dec (11)
+    for (let i = 0; i < 12; i++) {
+      const amount = monthlyTotals[i];
+      if (amount > 0) {
+        const monthName = MONTHS_FULL[i];
+        const count = monthlyInstallments[i].length;
+        html += `
+          <div class="summary-month-row" onclick="openMonthDetail(${year}, ${i})">
+            <div>
+              <span class="summary-month-name">${monthName}</span>
+              <span class="summary-month-count">${count} ${count === 1 ? 'installment' : 'installments'}</span>
+            </div>
+            <div class="summary-month-amount">${formatMoney(amount)}</div>
+          </div>`;
+      }
+    }
+    
+    html += `</div>`;
+  });
+  
+  if (html === '') {
+    container.innerHTML = `
+      <div class="summary-empty">
+        <div class="summary-empty-icon">📭</div>
+        <p>No installments scheduled</p>
+      </div>
+    `;
+  } else {
+    container.innerHTML = html;
+  }
+}
+
+// Open month detail modal
+function openMonthDetail(year, month) {
+  const summary = getYearSummary(year);
+  const installmentsList = summary.monthlyInstallments[month] || [];
+  const monthName = MONTHS_FULL[month];
+  
+  document.getElementById('monthDetailTitle').innerHTML = `📅 ${monthName} ${year}`;
+  
+  const container = document.getElementById('monthDetailList');
+  
+  if (installmentsList.length === 0) {
+    container.innerHTML = '<div class="empty-state">No installments for this month</div>';
+  } else {
+    // Sort by paid status (pending first) then by name
+    const sorted = [...installmentsList].sort((a, b) => {
+      if (a.isPaid !== b.isPaid) return a.isPaid ? 1 : -1;
+      return a.name.localeCompare(b.name);
+    });
+    
+    container.innerHTML = sorted.map(inst => {
+      const bank = BANK_PROVIDERS.find(b => b.key === inst.bankKey) || BANK_PROVIDERS[0];
+      const statusClass = inst.isPaid ? 'detail-status-paid' : 'detail-status-pending';
+      const statusText = inst.isPaid ? '✅ Paid' : '⏳ Pending';
+      
+      return `
+        <div class="detail-installment-item">
+          <div class="detail-installment-icon">
+            <img src="${bank.logo}" alt="${bank.name}" style="width: 70%; height: auto; object-fit: contain;" onerror="this.style.display='none';this.parentElement.innerText='🏦'">
+          </div>
+          <div class="detail-installment-info">
+            <div class="detail-installment-name">${escapeHtml(inst.name)}</div>
+            <div class="detail-installment-bank">${bank.name}</div>
+            <div class="detail-installment-status ${statusClass}">${statusText}</div>
+          </div>
+          <div class="detail-installment-amount">
+            ${formatMoney(inst.amount)}
+          </div>
+        </div>`;
+    }).join('');
+  }
+  
+  document.getElementById('monthDetailModal').classList.add('open');
+}
+
+function closeMonthDetailModal() {
+  document.getElementById('monthDetailModal').classList.remove('open');
+}
+
+// Build year selector
+function buildYearSelector() {
+  const allYears = getAllYearsWithPayments();
+  const currentYear = new Date().getFullYear();
+  
+  // Also include years from installments that haven't started yet
+  installments.forEach(inst => {
+    const endYear = inst.startYear + Math.ceil(inst.monthsCount / 12);
+    for (let y = inst.startYear; y <= endYear + 1; y++) {
+      if (!allYears.includes(y)) allYears.push(y);
+    }
+  });
+  
+  const uniqueYears = [...new Set(allYears)].sort((a, b) => a - b);
+  
+  // If no years, at least show current year
+  if (uniqueYears.length === 0) {
+    uniqueYears.push(currentYear);
+  }
+  
+  // Initialize selectedYears: only current year by default
+  if (selectedYears.size === 0) {
+    selectedYears.add(currentYear);
+  }
+  
+  const container = document.getElementById('yearSelector');
+  container.innerHTML = `
+    <label>📅 Show years:</label>
+    ${uniqueYears.map(year => `
+      <label class="year-checkbox ${selectedYears.has(year) ? 'selected' : ''}" onclick="toggleYear(${year})">
+        <input type="checkbox" ${selectedYears.has(year) ? 'checked' : ''} onchange="event.stopPropagation(); toggleYear(${year})">
+        ${year}
+      </label>
+    `).join('')}
+    <button class="hdr-btn" onclick="selectAllYears()" style="margin-left: auto; padding: 4px 12px;">All</button>
+  `;
+}
+
+function toggleYear(year) {
+  if (selectedYears.has(year)) {
+    selectedYears.delete(year);
+  } else {
+    selectedYears.add(year);
+  }
+  buildYearSelector();
+  renderSummary();
+}
+
+function selectAllYears() {
+  const allYears = getAllYearsWithPayments();
+  installments.forEach(inst => {
+    const endYear = inst.startYear + Math.ceil(inst.monthsCount / 12);
+    for (let y = inst.startYear; y <= endYear + 1; y++) {
+      if (!allYears.includes(y)) allYears.push(y);
+    }
+  });
+  const uniqueYears = [...new Set(allYears)];
+  uniqueYears.forEach(y => selectedYears.add(y));
+  if (uniqueYears.length === 0) selectedYears.add(new Date().getFullYear());
+  buildYearSelector();
+  renderSummary();
 }
 
 // ======================== RENDER ==========================
@@ -233,7 +648,6 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
   const remainingMonths = getRemainingMonths(inst);
   const status = getStatus(inst);
 
-  // Action column: pay button (current tab) OR menu (all tab) OR nothing (upcoming)
   let actionColInner = '';
   if (showMenu) {
     actionColInner = `<button class="action-icon" onclick="openActionSheet('${inst.id}')">⋯</button>`;
@@ -245,7 +659,6 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
     actionColInner = `<span class="badge-completed">✅ Done</span>`;
   }
 
-  // Name line: completed badge instead of active badge (no active badge — redundant)
   const nameLine = status === 'completed'
     ? `${escapeHtml(inst.itemName)}`
     : `${escapeHtml(inst.itemName)}`;
@@ -268,6 +681,7 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
       <div class="inst-action">${actionColInner}</div>
     </div>`;
 }
+
 function getLastPaymentDate(inst) {
   const lastMonthIndex = (inst.startMonth - 1) + (inst.monthsCount - 1);
   const lastYear  = inst.startYear + Math.floor(lastMonthIndex / 12);
@@ -281,37 +695,62 @@ function getDueLabel(inst) {
   const prefix   = status === 'completed' ? 'Last: ' : 'Due: ';
   return prefix + lastDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 }
+
+function isDueThisMonth(inst) {
+  if (getStatus(inst) === 'completed') return false;
+  const now = new Date();
+  const start = getStartDate(inst);
+  const end = getEndDate(inst);
+  if (now < start || now >= end) return false;
+  return true;
+}
+
+function isDueInMonth(inst, year, month) {
+  if (getStatus(inst) === 'completed') return false;
+  const start = getStartDate(inst);
+  const end = getEndDate(inst);
+  const checkDate = new Date(year, month, 1);
+  if (checkDate < start || checkDate >= end) return false;
+  const alreadyPaid = paymentLogs.some(log => {
+    if (log.installmentId !== inst.id) return false;
+    const d = new Date(log.datePaid);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+  return !alreadyPaid;
+}
+
+function hasPaidThisMonth(instId) {
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  return paymentLogs.some(log => {
+    if (log.installmentId !== instId) return false;
+    const d = new Date(log.datePaid);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+}
+
 function renderAll() {
   const now = new Date();
   const currentYear  = now.getFullYear();
-  const currentMonth = now.getMonth(); // 0-based
+  const currentMonth = now.getMonth();
 
-  // ── Current Month ─────────────────────────────────────────
-  // All active installments that fall in this calendar month
   const currentItems = installments.filter(i =>
     isDueThisMonth(i) && getStatus(i) === 'active'
   );
 
-  // ── Upcoming Tab ─────────────────────────────────────────
-  // For EVERY active installment, find its NEXT due month after the current one.
-  // An installment "appears" in upcoming when it has a payment due NEXT month
-  // (month+1) regardless of whether it also appeared in current month.
-  // Each entry carries the next-due month label so we can show "Due in May 2026".
   const nextMonth     = currentMonth === 11 ? 0 : currentMonth + 1;
   const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
 
-  // Build list: { inst, nextDueLabel }
   const upcomingEntries = [];
   installments.forEach(inst => {
     if (getStatus(inst) !== 'active') return;
-    // Walk forward from next month until we find a month where it's due
     let checkMonth = nextMonth;
     let checkYear  = nextMonthYear;
     let found = false;
     for (let steps = 0; steps < inst.monthsCount + 2; steps++) {
       const checkDate = new Date(checkYear, checkMonth, 1);
-      if (checkDate >= getEndDate(inst)) break; // past end of plan
-      if (checkDate < getStartDate(inst)) { // not started yet — advance
+      if (checkDate >= getEndDate(inst)) break;
+      if (checkDate < getStartDate(inst)) {
         checkMonth++; if (checkMonth > 11) { checkMonth = 0; checkYear++; }
         continue;
       }
@@ -324,7 +763,6 @@ function renderAll() {
       }
       checkMonth++; if (checkMonth > 11) { checkMonth = 0; checkYear++; }
     }
-    // If not already due this month and plan is starting in the future
     if (!found && getStartDate(inst) > now && getStatus(inst) === 'active') {
       const label = new Date(inst.startYear, inst.startMonth - 1, 1)
         .toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -332,10 +770,8 @@ function renderAll() {
     }
   });
 
-  // ── All Installments ────────────────────────────────────
   const allItems = [...installments];
 
-  // ── Stats ────────────────────────────────────────────────
   const totalRemaining = installments.reduce((sum,i) => sum + getRemaining(i), 0);
   document.getElementById('totalRemaining').textContent  = formatMoney(totalRemaining);
   const monthDueTotal = currentItems
@@ -344,7 +780,6 @@ function renderAll() {
   document.getElementById('monthDueAmount').textContent = formatMoney(monthDueTotal);
   document.getElementById('statsRow').style.display      = installments.length ? 'flex' : 'none';
 
-  // ── Render current month ──────────────────────────────────
   const currentContainer = document.getElementById('currentList');
   if (!currentItems.length) {
     currentContainer.innerHTML = '<div class="empty-state">No installments due this month</div>';
@@ -354,17 +789,15 @@ function renderAll() {
       .join('');
   }
 
-  // ── Render upcoming ───────────────────────────────────────
   const upcomingContainer = document.getElementById('upcomingList');
   if (!upcomingEntries.length) {
     upcomingContainer.innerHTML = '<div class="empty-state">No upcoming installments</div>';
   } else {
     upcomingContainer.innerHTML = upcomingEntries.map(({ inst, label }) => {
-    return renderInstRow(inst, false, false, false);
-  }).join('');
+      return renderInstRow(inst, false, false, false);
+    }).join('');
   }
 
-// ── Render all ────────────────────────────────────────────
   const allContainer = document.getElementById('allList');
   if (!allItems.length) {
     allContainer.innerHTML = '<div class="empty-state">No installment plans added</div>';
@@ -372,12 +805,16 @@ function renderAll() {
     allContainer.innerHTML = allItems.map(inst => {
       const row      = renderInstRow(inst, false, false, true);
       const dueLabel = getDueLabel(inst);
-return row.replace(
+      return row.replace(
         `<span></span>`,
         `<span style="color:var(--brand);font-weight:700">${dueLabel}</span>`
       );
     }).join('');
   }
+  
+  // Update summary after render
+  buildYearSelector();
+  renderSummary();
 }
 
 function monthName(m) { return new Date(0, m-1).toLocaleString('default',{month:'long'}); }
@@ -418,14 +855,12 @@ function openActionSheet(id) {
 }
 function closeActionSheet() {
   document.getElementById('actionSheet').classList.remove('open');
-  // NOTE: do NOT null sheetTargetId here — sheetEdit/sheetDelete read it after close
 }
 function sheetEdit() {
   const id = sheetTargetId;
   if (!id) return;
   sheetTargetId = null;
   document.getElementById('actionSheet').classList.remove('open');
-  // Small delay so sheet animation finishes before modal opens
   setTimeout(() => openEditModal(id), 80);
 }
 async function sheetDelete() {
@@ -561,7 +996,6 @@ function openEditModal(id) {
 }
 async function deleteInstallment(id) {
   if (!confirm('Delete this installment and all payment logs?')) return;
-  // Close any open modal immediately so UI isn't stuck
   document.getElementById('instModal').classList.remove('open');
   editingId = null;
   showToast('Deleting…');
@@ -642,6 +1076,10 @@ document.getElementById('actionSheet').addEventListener('click', e => {
     document.getElementById('actionSheet').classList.remove('open');
   }
 });
+document.getElementById('monthDetailModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeMonthDetailModal();
+});
+
 populateSelects();
 renderBottomNav('installments');
 initPage();
