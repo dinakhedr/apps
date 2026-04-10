@@ -463,7 +463,7 @@ function renderExpensesList() {
       <div class="cat-icon" style="background:${getCategoryColor(e.category)}">${getCategoryIcon(e.category)}</div>
       <div class="exp-details">
         <div class="exp-cat">${getCategoryMeta(e.category).value || e.category}</div>
-        <div class="exp-meta">📅 ${formatDate(e.date)}</div>
+        <div class="exp-meta">${formatDate(e.date)}</div>
         ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
       </div>
       <div class="exp-right" style="flex-direction:row;align-items:center;gap:8px">
