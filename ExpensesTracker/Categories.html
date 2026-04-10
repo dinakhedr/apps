@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Manage Categories</title>
   <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
   <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
   <link rel="shortcut icon" href="icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="utils.js"></script>
   <script src="auth.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <style>
     /* ── Page layout ── */
@@ -99,6 +99,24 @@
       outline: none; border-color: var(--brand); background: #fff;
     }
 
+    /* ── Type radio group (Income/Expense) ── */
+    .type-radio-group {
+      display: flex; gap: 24px; margin-bottom: 14px;
+      background: var(--surface-2); border-radius: var(--radius-sm);
+      padding: 12px 14px; border: 2px solid var(--border);
+    }
+    .type-radio {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text);
+    }
+    .type-radio input { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--brand); }
+    .type-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 20px; margin-left: 6px;
+    }
+    .type-badge.expense { background: #fee2e2; color: #b91c1c; }
+    .type-badge.income  { background: #dcfce7; color: #166534; }
+
     /* ── Icon picker ── */
     .icon-picker-label {
       font-size: 11px; font-weight: 700; color: var(--text-2);
@@ -134,13 +152,14 @@
     }
     .color-option.selected { border-color: var(--text); }
 
-    /* ── Budget input (with EGP prefix) ── */
+    /* ── Budget input (only for expenses) ── */
     .budget-input-wrap { position: relative; }
     .budget-input-wrap input { padding-left: 44px; }
     .budget-curr-label {
       position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
       font-size: 12px; color: var(--text-3); pointer-events: none; font-weight: 600;
     }
+    .budget-field-hidden { display: none; }
 
     /* ── Category preview ── */
     .cat-preview {
@@ -155,15 +174,27 @@
     .cat-preview-name { font-weight: 700; font-size: 15px; color: var(--text); }
     .cat-preview-sub  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 
-    /* ── Section divider ── */
+    /* ── Section divider & tabs ── */
     .section-divider {
       font-size: 11px; font-weight: 700; color: var(--text-3);
       text-transform: uppercase; letter-spacing: 0.06em;
       padding: 10px 0 6px; border-bottom: 1px solid var(--border);
       margin-bottom: 4px;
     }
+    .cat-tabs {
+      display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border);
+    }
+    .cat-tab-btn {
+      flex: 1; background: none; border: none; padding: 10px 0;
+      font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px;
+      color: var(--text-3); cursor: pointer; transition: all 0.15s;
+      border-bottom: 2px solid transparent;
+    }
+    .cat-tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
+    .cat-panel { display: none; }
+    .cat-panel.active { display: block; }
 
-    /* ── Spinner (brand colour, used inside loading-box) ── */
+    /* ── Spinner ── */
     .spinner-brand {
       display: inline-block; width: 28px; height: 28px;
       border: 3px solid #ededff; border-top-color: var(--brand);
@@ -194,28 +225,42 @@
   <!-- Add custom category -->
   <button class="add-cat-btn" onclick="openAddModal()">＋ Add Custom Category</button>
 
-  <!-- Built-in categories -->
-  <div class="card">
-    <div class="card-title"><span class="card-title-icon">📋</span> Default Categories</div>
-    <div class="section-divider">Toggle visibility · Set budget · Rename</div>
-    <div id="defaultCatList"></div>
+  <!-- Tabs for Expense / Income -->
+  <div class="card" style="padding-bottom: 8px;">
+    <div class="cat-tabs">
+      <button class="cat-tab-btn active" data-tab="expense">💸 Expenses</button>
+      <button class="cat-tab-btn" data-tab="income">💰 Income</button>
+    </div>
   </div>
 
-  <!-- Custom categories -->
-  <div class="card" id="customCatCard" style="display:none">
-    <div class="card-title"><span class="card-title-icon">✨</span> Custom Categories</div>
-    <div id="customCatList"></div>
+  <!-- Expense Panel (Default categories + Expense custom) -->
+  <div id="expensePanel" class="cat-panel active">
+    <div class="card">
+      <div class="card-title"><span class="card-title-icon">📋</span> Default Expense Categories</div>
+      <div class="section-divider">Toggle visibility · Set budget · Rename</div>
+      <div id="defaultCatList"></div>
+    </div>
+    <div class="card" id="customExpenseCard" style="display:none">
+      <div class="card-title"><span class="card-title-icon">✨</span> Custom Expense Categories</div>
+      <div id="customExpenseList"></div>
+    </div>
+  </div>
+
+  <!-- Income Panel (Only custom income categories) -->
+  <div id="incomePanel" class="cat-panel">
+    <div class="card">
+      <div class="card-title"><span class="card-title-icon">📈</span> Income Categories</div>
+      <div class="section-divider">Toggle visibility · No budget limits</div>
+      <div id="incomeCatList"></div>
+    </div>
   </div>
 
 </div>
 
-<!-- Toast -->
-
 <div id="bottomNavMount"></div>
-
 <div class="toast" id="toast"></div>
 
-<!-- ── Add / Edit Modal ── -->
+<!-- ── Add / Edit Modal (supports type selection) ── -->
 <div class="modal-backdrop" id="catModalBackdrop">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -230,10 +275,20 @@
       </div>
     </div>
 
+    <!-- Type Radio (Expense / Income) -->
+    <div class="type-radio-group" id="typeRadioGroup">
+      <label class="type-radio">
+        <input type="radio" name="catType" value="expense" checked> 💸 Expense
+      </label>
+      <label class="type-radio">
+        <input type="radio" name="catType" value="income"> 💰 Income
+      </label>
+    </div>
+
     <!-- Name -->
     <div class="form-group">
       <label>Category Name</label>
-      <input type="text" id="catName" placeholder="e.g. Dining Out" maxlength="30" oninput="updatePreview()">
+      <input type="text" id="catName" placeholder="e.g. Freelance, Salary" maxlength="30" oninput="updatePreview()">
     </div>
 
     <!-- Icon picker -->
@@ -244,8 +299,8 @@
     <span class="icon-picker-label">Background Color</span>
     <div class="color-grid" id="colorGrid"></div>
 
-    <!-- Budget limit -->
-    <div class="form-group">
+    <!-- Budget limit (only for expenses, hidden for income) -->
+    <div class="form-group" id="budgetGroup">
       <label>Monthly Budget Limit (optional)</label>
       <div class="budget-input-wrap">
         <span class="budget-curr-label">EGP</span>
@@ -260,7 +315,7 @@
   </div>
 </div>
 
-<!-- ── Edit Built-in Modal (rename + budget only) ── -->
+<!-- ── Edit Built-in Modal (expense only, no type selector) ── -->
 <div class="modal-backdrop" id="editBuiltinBackdrop">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -273,11 +328,10 @@
         <div class="cat-preview-sub" id="builtinPreviewBudget">No budget limit</div>
       </div>
     </div>
-<!-- Icon picker -->
+
     <span class="icon-picker-label">Icon</span>
     <div class="icon-grid" id="builtinIconGrid"></div>
 
-    <!-- Color picker -->
     <span class="icon-picker-label">Background Color</span>
     <div class="color-grid" id="builtinColorGrid"></div>
 
@@ -302,361 +356,298 @@
 </div>
 
 <script>
-// ── Constants ─────────────────────────────────────────────
+// ======================== Constants & State ========================
 const ICON_OPTIONS = [
-  '🍕','🍔','🍣','🥗','🍜','☕','🧃',
-  '🚗','✈️','🚕','⛽','🚂','🛳️','🚲',
-  '👕','👟','👜','💄','💍','🧥','🕶️',
-  '🏋️','⚽','🎮','🎬','🎵','🎨','📚',
-  '💊','🏥','🧴','🧘','🩺','💉','🌿',
-  '🛒','🏠','🛠️','💡','📶','💻','📱',
-  '🐾','🐶','🐱','🌱','🎁','💰','⚡',
-  '📝','🎓','💼','🏦','🔑','📦','🌍',
+  '🍕','🍔','🍣','🥗','🍜','☕','🧃','🚗','✈️','🚕','⛽','🚂','🛳️','🚲',
+  '👕','👟','👜','💄','💍','🧥','🕶️','🏋️','⚽','🎮','🎬','🎵','🎨','📚',
+  '💊','🏥','🧴','🧘','🩺','💉','🌿','🛒','🏠','🛠️','💡','📶','💻','📱',
+  '🐾','🐶','🐱','🌱','🎁','💰','⚡','📝','🎓','💼','🏦','🔑','📦','🌍',
+  '💵','📊','📈','💹','🏧','🧾','💳'
 ];
-
 const COLOR_OPTIONS = [
-  { bg: '#ffd1d1', chart: '#e57373' },
-  { bg: '#ffccd9', chart: '#f48fb1' },
-  { bg: '#ffe5b4', chart: '#f4c542' },
-  { bg: '#ffe0b5', chart: '#ffb74d' },
-  { bg: '#d4e8d4', chart: '#81c784' },
-  { bg: '#d4e8ff', chart: '#4fc3f7' },
-  { bg: '#cce0ff', chart: '#7986cb' },
-  { bg: '#d4b8ff', chart: '#b39ddb' },
-  { bg: '#e8d5b7', chart: '#d4a574' },
-  { bg: '#e0e0e0', chart: '#9e9e9e' },
-  { bg: '#cce7ff', chart: '#64b5f6' },
-  { bg: '#d1fae5', chart: '#34d399' },
-  { bg: '#fce7f3', chart: '#f472b6' },
-  { bg: '#ede9fe', chart: '#a78bfa' },
+  { bg: '#ffd1d1', chart: '#e57373' }, { bg: '#ffccd9', chart: '#f48fb1' },
+  { bg: '#ffe5b4', chart: '#f4c542' }, { bg: '#ffe0b5', chart: '#ffb74d' },
+  { bg: '#d4e8d4', chart: '#81c784' }, { bg: '#d4e8ff', chart: '#4fc3f7' },
+  { bg: '#cce0ff', chart: '#7986cb' }, { bg: '#d4b8ff', chart: '#b39ddb' },
+  { bg: '#e8d5b7', chart: '#d4a574' }, { bg: '#e0e0e0', chart: '#9e9e9e' },
+  { bg: '#cce7ff', chart: '#64b5f6' }, { bg: '#d1fae5', chart: '#34d399' },
+  { bg: '#fce7f3', chart: '#f472b6' }, { bg: '#ede9fe', chart: '#a78bfa' },
 ];
-
-// ── State ─────────────────────────────────────────────────
-let allCats = [];          // full list including hidden (from sheet)
-let spreadsheetId  = null;
+let allCats = [];          // each cat: { type, originalValue, value, icon, bg, chart, budget, hidden, catKind ('expense'|'income') }
+let spreadsheetId = null;
 let currentUserEmail = null;
 let currentAccessToken = null;
-let editingIndex   = null; // index in allCats being edited, null = new
-let editingBuiltinKey  = null;
-let builtinSelectedIcon  = null;
+let editingIndex = null;
+let editingBuiltinKey = null;
+let builtinSelectedIcon = null;
 let builtinSelectedColor = null;
-let selectedIcon   = ICON_OPTIONS[0];
-let selectedColor  = COLOR_OPTIONS[0];
+let selectedIcon = ICON_OPTIONS[0];
+let selectedColor = COLOR_OPTIONS[0];
+let selectedCatType = 'expense';   // default expense
 let isSaving = false;
 
-// ── Toast ─────────────────────────────────────────────────
-let toastTimer;
+// Extend DEFAULT_CATEGORIES with catKind = 'expense'
+const DEFAULT_CATEGORIES_BASE = [
+  { value: 'Car Repairs',   icon: '🚗', bg: '#ffd1d1', chart: '#e57373' },
+  { value: 'Cafe',          icon: '☕', bg: '#d4e8d4', chart: '#81c784' },
+  { value: 'Charity',       icon: '🏥', bg: '#e0f2fe', chart: '#38bdf8' },
+  { value: 'Shopping',      icon: '🛍️', bg: '#e8d5b7', chart: '#d4a574' },
+  { value: 'Entertainment', icon: '🎬', bg: '#d4b8ff', chart: '#b39ddb' },
+  { value: 'Electronics',   icon: '📱', bg: '#d4e8ff', chart: '#7986cb' },
+  { value: 'Games',         icon: '🎮', bg: '#d4b8ff', chart: '#b39ddb' },
+  { value: 'Gym',           icon: '🏋️', bg: '#ffe5b4', chart: '#f4c542' },
+  { value: 'Health',        icon: '💊', bg: '#ffccd9', chart: '#f48fb1' },
+  { value: 'Home Repairs',  icon: '🛠️', bg: '#ffd1d1', chart: '#e57373' },
+  { value: 'Internet',      icon: '📶', bg: '#cce0ff', chart: '#4fc3f7' },
+  { value: 'Personal Care', icon: '🧴', bg: '#ffccd9', chart: '#f48fb1' },
+  { value: 'Pets',          icon: '🐾', bg: '#e8d5b7', chart: '#d4a574' },
+  { value: 'Petrol',        icon: '⛽', bg: '#ffd1d1', chart: '#e57373' },
+  { value: 'Ride Hailing',  icon: '🚕', bg: '#ffe5b4', chart: '#f4c542' },
+  { value: 'Smoking',       icon: '🚬', bg: '#e0e0e0', chart: '#9e9e9e' },
+  { value: 'Subscriptions', icon: '💻', bg: '#cce7ff', chart: '#64b5f6' },
+  { value: 'Supermarket',   icon: '🛒', bg: '#ffe0b5', chart: '#ffb74d' },
+  { value: 'Travel',        icon: '✈️', bg: '#d4e8ff', chart: '#4fc3f7' },
+  { value: 'Utilities',     icon: '⚡', bg: '#ffe5b4', chart: '#f4c542' },
+  { value: 'Rent',          icon: '🏠', bg: '#cce0ff', chart: '#7986cb' },
+  { value: 'Installments',  icon: '🔄', bg: '#d4e8d4', chart: '#81c784' },
+];
 
-// ── Render ────────────────────────────────────────────────
+// Helper to build default categories with catKind = 'expense'
+function getDefaultCategoriesWithKind() {
+  return DEFAULT_CATEGORIES_BASE.map(c => ({
+    ...c, type: 'default', originalValue: c.value, catKind: 'expense', budget: null, hidden: false
+  }));
+}
+
+// Parse row from sheet: new column index 8 = catKind ('expense'|'income')
+function parseCatRowWithKind(r) {
+  return {
+    type:          r[0] || 'default',
+    originalValue: r[1] || '',
+    value:         r[2] || r[1] || '',
+    icon:          r[3] || '💰',
+    bg:            r[4] || '#f0f0f0',
+    chart:         r[5] || '#aaa',
+    budget:        r[6] ? parseFloat(r[6]) : null,
+    hidden:        r[7] === 'true',
+    catKind:       r[8] === 'income' ? 'income' : 'expense',   // default expense
+  };
+}
+
+function catToRowWithKind(cat) {
+  return [
+    cat.type || 'default',
+    cat.originalValue || cat.value,
+    cat.value,
+    cat.icon,
+    cat.bg,
+    cat.chart,
+    cat.budget || '',
+    cat.hidden ? 'true' : 'false',
+    cat.catKind || 'expense',
+  ];
+}
+
+async function saveCategoriesToSheet(spreadsheetId, allCats) {
+  const rows = allCats.map(catToRowWithKind);
+  await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `${CAT_SHEET_NAME}!A2:I` });
+  if (rows.length) {
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId, range: `${CAT_SHEET_NAME}!A2:I`,
+      valueInputOption: 'RAW', resource: { values: rows },
+    });
+  }
+}
+
+async function createCategoriesTabWithKind(spreadsheetId) {
+  await gapi.client.sheets.spreadsheets.batchUpdate({
+    spreadsheetId, resource: { requests: [{ addSheet: { properties: { title: CAT_SHEET_NAME } } }] }
+  });
+  await gapi.client.sheets.spreadsheets.values.update({
+    spreadsheetId, range: `${CAT_SHEET_NAME}!A1:I1`, valueInputOption: 'RAW',
+    resource: { values: [['Type','OriginalValue','Name','Icon','BG','Chart','Budget','Hidden','Kind']] },
+  });
+  const defaultRows = getDefaultCategoriesWithKind();
+  await saveCategoriesToSheet(spreadsheetId, defaultRows);
+  return defaultRows;
+}
+
+async function ensureCategoriesTabWithKind(spreadsheetId) {
+  try {
+    const res = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
+    const sheets = res.result.sheets || [];
+    const exists = sheets.some(s => s.properties.title === CAT_SHEET_NAME);
+    if (!exists) return await createCategoriesTabWithKind(spreadsheetId);
+    const fullRes = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId, range: `${CAT_SHEET_NAME}!A2:I`
+    });
+    let rows = (fullRes.result.values || []).map(parseCatRowWithKind);
+    const existingOriginals = new Set(rows.map(r => r.originalValue));
+    const newDefaults = getDefaultCategoriesWithKind().filter(d => !existingOriginals.has(d.originalValue));
+    if (newDefaults.length) {
+      rows = [...rows, ...newDefaults];
+      await saveCategoriesToSheet(spreadsheetId, rows);
+    }
+    return rows;
+  } catch(e) {
+    console.error('ensureCategoriesTab error', e);
+    return getDefaultCategoriesWithKind();
+  }
+}
+
+// Render function with tabs: Expense panel shows default + expense custom; Income panel shows income custom only
 function render() {
-  const defaults = allCats.filter(c => c.type === 'default').sort((a, b) => a.value.localeCompare(b.value));
-  const customs  = allCats.filter(c => c.type === 'custom').sort((a, b) => a.value.localeCompare(b.value));
+  const expenseCats = allCats.filter(c => c.catKind === 'expense');
+  const incomeCats = allCats.filter(c => c.catKind === 'income');
+  const defaults = expenseCats.filter(c => c.type === 'default').sort((a,b) => a.value.localeCompare(b.value));
+  const expenseCustoms = expenseCats.filter(c => c.type === 'custom').sort((a,b) => a.value.localeCompare(b.value));
   
-  document.getElementById('defaultCatList').innerHTML = defaults.map((cat, _) => {
+  // Render default expenses
+  document.getElementById('defaultCatList').innerHTML = defaults.map((cat, idx) => {
     const i = allCats.indexOf(cat);
-    const budget = cat.budget;
-    const budgetTxt = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
-    const origDef = DEFAULT_CATEGORIES.find(d => d.value === cat.originalValue) || {};
-    
-    const displayName = cat.value;
-    
-    return `
-      <div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
+    const budgetTxt = cat.budget ? `EGP ${Number(cat.budget).toLocaleString('en-US')} / month` : 'No budget limit';
+    return `<div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
         <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
-        <div class="cat-info">
-          <div class="cat-name-text">${displayName}</div>
-          <div class="cat-budget-text">${budgetTxt}</div>
-        </div>
-        <div class="cat-actions">
-          <button class="action-btn" onclick="openEditBuiltin(${i})" title="Edit">✏️</button>
-          <button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button>
-        </div>
+        <div class="cat-info"><div class="cat-name-text">${escapeHtml(cat.value)}</div><div class="cat-budget-text">${budgetTxt}</div></div>
+        <div class="cat-actions"><button class="action-btn" onclick="openEditBuiltin(${i})" title="Edit">✏️</button><button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button></div>
       </div>`;
   }).join('');
 
-  const customCard = document.getElementById('customCatCard');
-  const customList = document.getElementById('customCatList');
-  if (!customs.length) { customCard.style.display = 'none'; }
+  const customExpenseCard = document.getElementById('customExpenseCard');
+  const customExpenseList = document.getElementById('customExpenseList');
+  if (!expenseCustoms.length) customExpenseCard.style.display = 'none';
   else {
-    customCard.style.display = 'block';
-    customList.innerHTML = customs.map((cat, _) => {
+    customExpenseCard.style.display = 'block';
+    customExpenseList.innerHTML = expenseCustoms.map((cat, idx) => {
       const i = allCats.indexOf(cat);
-      const budget = cat.budget;
-      const budgetTxt = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
-      return `
-        <div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
+      const budgetTxt = cat.budget ? `EGP ${Number(cat.budget).toLocaleString('en-US')} / month` : 'No budget limit';
+      return `<div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
           <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
-          <div class="cat-info">
-            <div class="cat-name-text">${cat.value}</div>
-            <div class="cat-budget-text">${budgetTxt}</div>
-          </div>
-          <div class="cat-actions">
-            <button class="action-btn" onclick="openEditCustom(${i})" title="Edit">✏️</button>
-            <button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button>
-            <button class="action-btn" onclick="deleteCustom(${i})" title="Delete" style="color:var(--danger)">🗑️</button>
-          </div>
+          <div class="cat-info"><div class="cat-name-text">${escapeHtml(cat.value)}</div><div class="cat-budget-text">${budgetTxt}</div></div>
+          <div class="cat-actions"><button class="action-btn" onclick="openEditCustom(${i})" title="Edit">✏️</button><button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button><button class="action-btn" onclick="deleteCustom(${i})" style="color:var(--danger)">🗑️</button></div>
+        </div>`;
+    }).join('');
+  }
+
+  // Income panel
+  const incomeListDiv = document.getElementById('incomeCatList');
+  if (!incomeCats.length) incomeListDiv.innerHTML = '<div class="empty-state"><span class="empty-icon">💰</span><p>No income categories yet. Tap + to add.</p></div>';
+  else {
+    incomeListDiv.innerHTML = incomeCats.map((cat, idx) => {
+      const i = allCats.indexOf(cat);
+      return `<div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
+          <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
+          <div class="cat-info"><div class="cat-name-text">${escapeHtml(cat.value)}</div><div class="cat-budget-text">Income (no budget limit)</div></div>
+          <div class="cat-actions"><button class="action-btn" onclick="openEditCustom(${i})" title="Edit">✏️</button><button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button><button class="action-btn" onclick="deleteCustom(${i})" style="color:var(--danger)">🗑️</button></div>
         </div>`;
     }).join('');
   }
 }
 
-// ── Save to sheet ─────────────────────────────────────────
-async function persistToSheet() {
-  if (!spreadsheetId) { showToast('⚠️ Not connected to sheet', 'error'); return false; }
-  if (isSaving) return false;
-  isSaving = true;
-  try {
-    await saveCategoriesToSheet(spreadsheetId, allCats);
-    // Refresh active CATEGORIES for this session
-    CATEGORIES = allCats.filter(c => !c.hidden);
-    isSaving = false;
-    return true;
-  } catch(e) {
-    console.error(e);
-    showToast('❌ Failed to save to sheet', 'error');
-    isSaving = false;
-    return false;
-  }
-}
-
-// ── Toggle hide ───────────────────────────────────────────
+// Toggle hide / persist
 async function toggleHide(i) {
   allCats[i].hidden = !allCats[i].hidden;
   render();
   const ok = await persistToSheet();
-  if (ok) showToast(allCats[i].hidden ? '👁 Category hidden' : '👁 Category visible');
-  else allCats[i].hidden = !allCats[i].hidden; // revert on fail
+  if (!ok) allCats[i].hidden = !allCats[i].hidden;
   render();
 }
 
-// ── Delete custom ─────────────────────────────────────────
 async function deleteCustom(i) {
-  if (!confirm(`Delete "${allCats[i].value}"? This won't affect existing expenses.`)) return;
+  if (!confirm(`Delete "${allCats[i].value}"?`)) return;
   const removed = allCats.splice(i, 1);
   render();
   const ok = await persistToSheet();
-  if (ok) showToast('🗑️ Category deleted');
-  else { allCats.splice(i, 0, removed[0]); render(); } // revert
+  if (!ok) { allCats.splice(i, 0, removed[0]); render(); }
+  else showToast('🗑️ Deleted');
 }
 
-// ── Edit built-in ─────────────────────────────────────────
+async function persistToSheet() {
+  if (!spreadsheetId) { showToast('⚠️ Not connected', 'error'); return false; }
+  if (isSaving) return false;
+  isSaving = true;
+  try {
+    await saveCategoriesToSheet(spreadsheetId, allCats);
+    isSaving = false;
+    return true;
+  } catch(e) { console.error(e); showToast('❌ Save failed', 'error'); isSaving = false; return false; }
+}
+
+// Edit built-in (expense only)
 function openEditBuiltin(i) {
-  editingIndex     = i;
-  editingBuiltinKey = allCats[i].originalValue;
+  editingIndex = i;
   const cat = allCats[i];
-
-  builtinSelectedIcon  = cat.icon;
+  builtinSelectedIcon = cat.icon;
   builtinSelectedColor = COLOR_OPTIONS.find(c => c.bg === cat.bg) || COLOR_OPTIONS[0];
-
-  document.getElementById('editBuiltinTitle').textContent        = `✏️ Edit — ${cat.originalValue}`;
-  document.getElementById('builtinPreviewIcon').textContent      = builtinSelectedIcon;
+  document.getElementById('editBuiltinTitle').textContent = `✏️ Edit — ${cat.originalValue}`;
+  document.getElementById('builtinPreviewIcon').textContent = builtinSelectedIcon;
   document.getElementById('builtinPreviewIcon').style.background = builtinSelectedColor.bg;
-  document.getElementById('builtinPreviewName').textContent      = cat.value;
-  document.getElementById('builtinPreviewBudget').textContent    = cat.budget ? `EGP ${Number(cat.budget).toLocaleString('en-US')} / month` : 'No budget limit';
-  document.getElementById('builtinName').value   = cat.value !== cat.originalValue ? cat.value : '';
+  document.getElementById('builtinPreviewName').textContent = cat.value;
+  document.getElementById('builtinPreviewBudget').textContent = cat.budget ? `EGP ${Number(cat.budget).toLocaleString('en-US')} / month` : 'No budget limit';
+  document.getElementById('builtinName').value = cat.value !== cat.originalValue ? cat.value : '';
   document.getElementById('builtinBudget').value = cat.budget || '';
-
-  buildBuiltinIconGrid();
-  buildBuiltinColorGrid();
+  buildBuiltinIconGrid(); buildBuiltinColorGrid();
   document.getElementById('editBuiltinBackdrop').classList.add('open');
 }
 
-function updateBuiltinPreview() {
-  const name   = document.getElementById('builtinName').value.trim();
-  const budget = document.getElementById('builtinBudget').value;
-  const cat    = allCats[editingIndex];
-  document.getElementById('builtinPreviewIcon').textContent      = builtinSelectedIcon;
-  document.getElementById('builtinPreviewIcon').style.background = builtinSelectedColor ? builtinSelectedColor.bg : cat.bg;
-  document.getElementById('builtinPreviewName').textContent      = name || cat.originalValue;
-  document.getElementById('builtinPreviewBudget').textContent    = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
-}
-
-function buildBuiltinIconGrid() {
-  document.getElementById('builtinIconGrid').innerHTML = ICON_OPTIONS.map(icon => `
-    <button class="icon-option ${icon === builtinSelectedIcon ? 'selected' : ''}"
-      onclick="selectBuiltinIcon('${icon}')">${icon}</button>`).join('');
-}
-function buildBuiltinColorGrid() {
-  document.getElementById('builtinColorGrid').innerHTML = COLOR_OPTIONS.map((c, i) => `
-    <div class="color-option ${c.bg === builtinSelectedColor.bg ? 'selected' : ''}"
-      style="background:${c.bg}" onclick="selectBuiltinColor(${i})"></div>`).join('');
+function saveBuiltin() { /* similar to original but ensure catKind preserved */ saveBuiltinLogic(); }
+async function saveBuiltinLogic() {
+  const name = document.getElementById('builtinName').value.trim();
+  const budget = parseFloat(document.getElementById('builtinBudget').value);
+  const cat = allCats[editingIndex];
+  allCats[editingIndex] = { ...cat, value: name || cat.originalValue, icon: builtinSelectedIcon, bg: builtinSelectedColor.bg, chart: builtinSelectedColor.chart, budget: budget > 0 ? budget : null };
+  closeBuiltinModal(); render();
+  await persistToSheet();
+  showToast('✅ Updated');
 }
 function selectBuiltinIcon(icon) { builtinSelectedIcon = icon; buildBuiltinIconGrid(); updateBuiltinPreview(); }
-function selectBuiltinColor(i)   { builtinSelectedColor = COLOR_OPTIONS[i]; buildBuiltinColorGrid(); updateBuiltinPreview(); }
+function selectBuiltinColor(i) { builtinSelectedColor = COLOR_OPTIONS[i]; buildBuiltinColorGrid(); updateBuiltinPreview(); }
+function updateBuiltinPreview() { /* simplified */ const name = document.getElementById('builtinName').value.trim(); const budget = document.getElementById('builtinBudget').value; document.getElementById('builtinPreviewIcon').textContent = builtinSelectedIcon; document.getElementById('builtinPreviewIcon').style.background = builtinSelectedColor.bg; document.getElementById('builtinPreviewName').textContent = name || allCats[editingIndex]?.originalValue || ''; document.getElementById('builtinPreviewBudget').textContent = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit'; }
+function buildBuiltinIconGrid() { document.getElementById('builtinIconGrid').innerHTML = ICON_OPTIONS.map(icon => `<button class="icon-option ${icon === builtinSelectedIcon ? 'selected' : ''}" onclick="selectBuiltinIcon('${icon}')">${icon}</button>`).join(''); }
+function buildBuiltinColorGrid() { document.getElementById('builtinColorGrid').innerHTML = COLOR_OPTIONS.map((c, i) => `<div class="color-option ${c.bg === builtinSelectedColor.bg ? 'selected' : ''}" style="background:${c.bg}" onclick="selectBuiltinColor(${i})"></div>`).join(''); }
+function closeBuiltinModal() { document.getElementById('editBuiltinBackdrop').classList.remove('open'); editingIndex = null; }
 
-function closeBuiltinModal() {
-  document.getElementById('editBuiltinBackdrop').classList.remove('open');
-  editingIndex = null; editingBuiltinKey = null;
-}
+// Add/Edit modal with type radio
+function openAddModal() { editingIndex = null; selectedCatType = 'expense'; selectedIcon = ICON_OPTIONS[0]; selectedColor = COLOR_OPTIONS[0]; document.getElementById('catModalTitle').textContent = '✨ New Category'; document.getElementById('catName').value = ''; document.getElementById('catBudget').value = ''; document.querySelector('input[name="catType"][value="expense"]').checked = true; document.querySelector('input[name="catType"][value="income"]').checked = false; handleTypeChange(); buildIconGrid(); buildColorGrid(); updatePreview(); document.getElementById('catModalBackdrop').classList.add('open'); }
+function openEditCustom(i) { editingIndex = i; const cat = allCats[i]; selectedIcon = cat.icon; selectedColor = COLOR_OPTIONS.find(c => c.bg === cat.bg) || COLOR_OPTIONS[0]; selectedCatType = cat.catKind || 'expense'; document.getElementById('catModalTitle').textContent = '✏️ Edit Category'; document.getElementById('catName').value = cat.value; document.getElementById('catBudget').value = cat.budget || ''; const radio = document.querySelector(`input[name="catType"][value="${selectedCatType}"]`); if (radio) radio.checked = true; handleTypeChange(); buildIconGrid(); buildColorGrid(); updatePreview(); document.getElementById('catModalFooter').innerHTML = `<button class="btn-danger" onclick="deleteCustom(${i});closeCatModal()">Delete</button><button class="btn-cancel" onclick="closeCatModal()">Cancel</button><button class="btn-save" onclick="saveCategory()">Save</button>`; document.getElementById('catModalBackdrop').classList.add('open'); }
+function handleTypeChange() { const type = document.querySelector('input[name="catType"]:checked').value; selectedCatType = type; const budgetGroup = document.getElementById('budgetGroup'); if (type === 'income') budgetGroup.classList.add('budget-field-hidden'); else budgetGroup.classList.remove('budget-field-hidden'); updatePreview(); }
+function selectIcon(icon) { selectedIcon = icon; buildIconGrid(); updatePreview(); }
+function selectColor(i) { selectedColor = COLOR_OPTIONS[i]; buildColorGrid(); updatePreview(); }
+function buildIconGrid() { document.getElementById('iconGrid').innerHTML = ICON_OPTIONS.map(icon => `<button class="icon-option ${icon === selectedIcon ? 'selected' : ''}" onclick="selectIcon('${icon}')">${icon}</button>`).join(''); }
+function buildColorGrid() { document.getElementById('colorGrid').innerHTML = COLOR_OPTIONS.map((c, i) => `<div class="color-option ${c.bg === selectedColor.bg ? 'selected' : ''}" style="background:${c.bg}" onclick="selectColor(${i})"></div>`).join(''); }
+function updatePreview() { const name = document.getElementById('catName').value.trim(); const budget = document.getElementById('catBudget').value; const type = selectedCatType; document.getElementById('previewIcon').textContent = selectedIcon; document.getElementById('previewIcon').style.background = selectedColor.bg; document.getElementById('previewName').textContent = name || 'Category Name'; if (type === 'income') document.getElementById('previewBudget').textContent = '💰 Income (no budget)'; else document.getElementById('previewBudget').textContent = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit'; }
+function closeCatModal() { document.getElementById('catModalBackdrop').classList.remove('open'); editingIndex = null; }
+async function saveCategory() { const name = document.getElementById('catName').value.trim(); const budget = parseFloat(document.getElementById('catBudget').value); const type = selectedCatType; if (!name) { showToast('❌ Enter name', 'error'); return; } const duplicate = allCats.some((c, i) => i !== editingIndex && c.value.toLowerCase() === name.toLowerCase() && c.catKind === type); if (duplicate) { showToast('❌ Name already exists in this type', 'error'); return; } if (editingIndex !== null) { allCats[editingIndex] = { ...allCats[editingIndex], value: name, icon: selectedIcon, bg: selectedColor.bg, chart: selectedColor.chart, budget: type === 'expense' ? (budget > 0 ? budget : null) : null, catKind: type }; } else { allCats.push({ type: 'custom', originalValue: name, value: name, icon: selectedIcon, bg: selectedColor.bg, chart: selectedColor.chart, budget: type === 'expense' ? (budget > 0 ? budget : null) : null, hidden: false, catKind: type }); } closeCatModal(); render(); await persistToSheet(); showToast(editingIndex !== null ? '✅ Updated' : '✅ Added'); }
 
-async function saveBuiltin() {
-  const name   = document.getElementById('builtinName').value.trim();
-  const budget = parseFloat(document.getElementById('builtinBudget').value);
-  const cat    = allCats[editingIndex];
-  const origDef = DEFAULT_CATEGORIES.find(d => d.value === cat.originalValue);
-
-  allCats[editingIndex] = {
-    ...cat,
-    value:  name || cat.originalValue,
-    icon:   builtinSelectedIcon,
-    bg:     builtinSelectedColor.bg,
-    chart:  builtinSelectedColor.chart,
-    budget: budget > 0 ? budget : null,
-  };
-
-  closeBuiltinModal();
-  render();
-  const ok = await persistToSheet();
-  if (ok) showToast('✅ Category updated');
-}
-
-// ── Add / Edit custom category modal ─────────────────────
-function buildIconGrid() {
-  document.getElementById('iconGrid').innerHTML = ICON_OPTIONS.map(icon => `
-    <button class="icon-option ${icon === selectedIcon ? 'selected' : ''}"
-      onclick="selectIcon('${icon}')">${icon}</button>`).join('');
-}
-function buildColorGrid() {
-  document.getElementById('colorGrid').innerHTML = COLOR_OPTIONS.map((c, i) => `
-    <div class="color-option ${c.bg === selectedColor.bg ? 'selected' : ''}"
-      style="background:${c.bg}" onclick="selectColor(${i})"></div>`).join('');
-}
-function selectIcon(icon)  { selectedIcon = icon; buildIconGrid(); updatePreview(); }
-function selectColor(i)    { selectedColor = COLOR_OPTIONS[i]; buildColorGrid(); updatePreview(); }
-
-function updatePreview() {
-  const name   = document.getElementById('catName').value.trim();
-  const budget = document.getElementById('catBudget').value;
-  document.getElementById('previewIcon').textContent      = selectedIcon;
-  document.getElementById('previewIcon').style.background = selectedColor.bg;
-  document.getElementById('previewName').textContent      = name || 'Category Name';
-  document.getElementById('previewBudget').textContent    = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
-}
-
-function openAddModal() {
-  editingIndex  = null;
-  selectedIcon  = ICON_OPTIONS[0];
-  selectedColor = COLOR_OPTIONS[0];
-  document.getElementById('catModalTitle').textContent = '✨ New Category';
-  document.getElementById('catName').value   = '';
-  document.getElementById('catBudget').value = '';
-  document.getElementById('catModalFooter').innerHTML = `
-    <button class="btn-cancel" onclick="closeCatModal()">Cancel</button>
-    <button class="btn-save" onclick="saveCategory()">Save</button>`;
-  buildIconGrid(); buildColorGrid(); updatePreview();
-  document.getElementById('catModalBackdrop').classList.add('open');
-}
-
-function openEditCustom(i) {
-  editingIndex  = i;
-  const cat     = allCats[i];
-  selectedIcon  = cat.icon;
-  selectedColor = COLOR_OPTIONS.find(c => c.bg === cat.bg) || COLOR_OPTIONS[0];
-  document.getElementById('catModalTitle').textContent = '✏️ Edit Category';
-  document.getElementById('catName').value   = cat.value;
-  document.getElementById('catBudget').value = cat.budget || '';
-  document.getElementById('catModalFooter').innerHTML = `
-    <button class="btn-danger" onclick="deleteCustom(${i});closeCatModal()">Delete</button>
-    <button class="btn-cancel" onclick="closeCatModal()">Cancel</button>
-    <button class="btn-save" onclick="saveCategory()">Save</button>`;
-  buildIconGrid(); buildColorGrid(); updatePreview();
-  document.getElementById('catModalBackdrop').classList.add('open');
-}
-
-function closeCatModal() {
-  document.getElementById('catModalBackdrop').classList.remove('open');
-  editingIndex = null;
-}
-
-async function saveCategory() {
-  const name   = document.getElementById('catName').value.trim();
-  const budget = parseFloat(document.getElementById('catBudget').value);
-  if (!name) { showToast('❌ Please enter a name', 'error'); return; }
-
-  // Check for duplicate names (excluding current editing)
-  const duplicate = allCats.some((c, i) => i !== editingIndex && c.value.toLowerCase() === name.toLowerCase());
-  if (duplicate) { showToast('❌ Name already exists', 'error'); return; }
-
-  if (editingIndex !== null) {
-    // editing existing custom
-    allCats[editingIndex] = {
-      ...allCats[editingIndex],
-      value:  name,
-      icon:   selectedIcon,
-      bg:     selectedColor.bg,
-      chart:  selectedColor.chart,
-      budget: budget > 0 ? budget : null,
-    };
-  } else {
-    allCats.push({
-      type: 'custom', originalValue: name, value: name,
-      icon: selectedIcon, bg: selectedColor.bg, chart: selectedColor.chart,
-      budget: budget > 0 ? budget : null, hidden: false,
+// Tab switching
+function initTabs() {
+  document.querySelectorAll('.cat-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.cat-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('expensePanel').classList.toggle('active', tab === 'expense');
+      document.getElementById('incomePanel').classList.toggle('active', tab === 'income');
     });
-  }
-
-  closeCatModal();
-  render();
-  const ok = await persistToSheet();
-  if (ok) showToast(editingIndex !== null ? '✅ Category updated' : '✅ Category added');
-}
-
-// ── GAPI bootstrap provided by utils.js ───────────────────
-
-
-async function loadPage() {
-  await initPageAuth({
-    onLoadLocal: (email, sheetId) => {
-      currentUserEmail = email;
-      spreadsheetId    = sheetId;
-    },
-    onReady: async (sheetId, email, token) => {
-      currentUserEmail   = email;
-      spreadsheetId      = sheetId;
-      currentAccessToken = token;
-      allCats = await ensureCategoriesTab(spreadsheetId);
-      render();
-      document.getElementById('loadingOverlay').style.display = 'none';
-    }
   });
 }
 
+// Load page
+async function loadPage() {
+  await initPageAuth({
+    onLoadLocal: (email, sheetId) => { currentUserEmail = email; spreadsheetId = sheetId; },
+    onReady: async (sheetId, email, token) => {
+      currentUserEmail = email; spreadsheetId = sheetId; currentAccessToken = token;
+      allCats = await ensureCategoriesTabWithKind(spreadsheetId);
+      render(); document.getElementById('loadingOverlay').style.display = 'none';
+    }
+  });
+  initTabs();
+  document.querySelectorAll('input[name="catType"]').forEach(r => r.addEventListener('change', handleTypeChange));
+}
 renderBottomNav('categories');
 loadPage();
 </script>
-
-<script>
-(function() {
-  try {
-    const c = document.createElement('canvas');
-    c.width = c.height = 180;
-    const ctx = c.getContext('2d');
-    const g = ctx.createLinearGradient(0, 0, 180, 180);
-    g.addColorStop(0, '#5b5ef4');
-    g.addColorStop(1, '#8b5cf6');
-    const r = 36;
-    ctx.beginPath();
-    ctx.moveTo(r, 0); ctx.lineTo(180-r, 0);
-    ctx.quadraticCurveTo(180, 0, 180, r);
-    ctx.lineTo(180, 180-r);
-    ctx.quadraticCurveTo(180, 180, 180-r, 180);
-    ctx.lineTo(r, 180);
-    ctx.quadraticCurveTo(0, 180, 0, 180-r);
-    ctx.lineTo(0, r);
-    ctx.quadraticCurveTo(0, 0, r, 0);
-    ctx.closePath();
-    ctx.fillStyle = g; ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 96px -apple-system, Helvetica, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('$', 90, 96);
-    const link = document.querySelector('link[rel="apple-touch-icon"]') || document.createElement('link');
-    link.rel = 'apple-touch-icon';
-    link.href = c.toDataURL('image/png');
-    document.head.appendChild(link);
-  } catch(e) {}
-})();
-</script>
+<script>(function(){try{const c=document.createElement('canvas');c.width=c.height=180;const ctx=c.getContext('2d');const g=ctx.createLinearGradient(0,0,180,180);g.addColorStop(0,'#5b5ef4');g.addColorStop(1,'#8b5cf6');const r=36;ctx.beginPath();ctx.moveTo(r,0);ctx.lineTo(180-r,0);ctx.quadraticCurveTo(180,0,180,r);ctx.lineTo(180,180-r);ctx.quadraticCurveTo(180,180,180-r,180);ctx.lineTo(r,180);ctx.quadraticCurveTo(0,180,0,180-r);ctx.lineTo(0,r);ctx.quadraticCurveTo(0,0,r,0);ctx.closePath();ctx.fillStyle=g;ctx.fill();ctx.fillStyle='#ffffff';ctx.font='bold 96px -apple-system, Helvetica, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('$',90,96);const link=document.querySelector('link[rel="apple-touch-icon"]')||document.createElement('link');link.rel='apple-touch-icon';link.href=c.toDataURL('image/png');document.head.appendChild(link);}catch(e){}})();</script>
 </body>
 </html>
