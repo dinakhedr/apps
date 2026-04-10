@@ -489,17 +489,22 @@ nav, .bottom-nav, .nav-tabs { list-style: none; }
 /* ── Toast ── */
 .toast {
   position: fixed;
-  bottom: calc(var(--nav-h) + 24px);
-  left: 50%;
-  transform: translateX(-50%) translateY(120px);
+  top: 24px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: 80vw;
+  transform: translateY(-120px);
   background: var(--text); color: #fff;
   padding: 11px 22px; border-radius: 30px;
   font-size: 13px; font-weight: 600;
   z-index: 9999; white-space: nowrap;
-  transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
-  pointer-events: none; max-width: 90vw;
+  opacity: 0;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  pointer-events: none;
 }
-.toast.show    { transform: translateX(-50%) translateY(0); }
+.toast.show    { transform: translateY(0); opacity: 1; }
 .toast.success { background: var(--success); }
 .toast.error   { background: var(--danger); }
 
