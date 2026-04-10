@@ -250,12 +250,19 @@ textarea { resize: vertical; min-height: 72px; }
   background: var(--text); color: #fff;
   padding: 11px 22px; border-radius: 30px;
   font-size: 13px; font-weight: 600;
-  z-index: 9999; white-space: nowrap;
-  width: max-content; max-width: 90vw;
+  z-index: 9999;
+  white-space: nowrap;
+  display: inline-block;
+  width: auto;
+  max-width: min(90vw, 360px);
+  text-align: center;
   opacity: 0;
   transition: transform 0.25s ease, opacity 0.25s ease;
   pointer-events: none;
 }
+.toast.show    { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.success { background: var(--success); }
+.toast.error   { background: var(--danger); }
 .toast.show    { transform: translateX(-50%) translateY(0); opacity: 1; }
 .toast.success { background: var(--success); }
 .toast.error   { background: var(--danger); }
