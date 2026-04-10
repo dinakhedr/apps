@@ -27,6 +27,7 @@ const BANK_PROVIDERS = [
   { key: 'CIB',    name: 'CIB',        logo: 'Logos/CIB.png'    },
   { key: 'Halan',     name: 'Halan',         logo: 'Logos/Halan.png'     },
   { key: 'HSBC',     name: 'HSBC',         logo: 'Logos/HSBC.png'     },
+  { key: 'MoneyFellows',     name: 'Money Fellows',         logo: 'Logos/MoneyFellows.png'     },
   { key: 'NBE',    name: 'National Bank of Egypt',        logo: 'Logos/NBE.png'    },
   { key: 'QNB',     name: 'QNB',         logo: 'Logos/QNB.png'     },
   { key: 'Sympl',     name: 'Sympl',         logo: 'Logos/Sympl.png'     },
