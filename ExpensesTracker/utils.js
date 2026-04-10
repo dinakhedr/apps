@@ -18,7 +18,6 @@ const DISCOVERY_DOCS = [
 ];
 
 // ── Bank / BNPL providers (used by Installments page) ────
-// Add new banks here — all pages share this list via utils.js
 const BANK_PROVIDERS = [
   { key: 'AAIB',     name: 'Arab African International Bank',         logo: 'Logos/AAIB.png'     },
   { key: 'AlexBank',     name: 'Bank of Alexandria',         logo: 'Logos/AlexBank.png'     },
@@ -37,8 +36,6 @@ const BANK_PROVIDERS = [
 ];
 
 // ── Recurring expense categories ─────────────────────────
-// Separate from expense categories — these are for subscriptions,
-// bills and recurring payments (Recurring page only).
 const RECURRING_CATEGORIES = [
   { value: 'Entertainment', icon: '🎬' },
   { value: 'Music',         icon: '🎵' },
@@ -67,32 +64,44 @@ function monthName(num) {  // 1-based
   return MONTHS_FULL[(num - 1)] || '';
 }
 
-// ── Default Categories ────────────────────────────────────
-const DEFAULT_CATEGORIES = [
-  { value: 'Car Repairs',   icon: '🚗', bg: '#ffd1d1', chart: '#e57373' },
-  { value: 'Cafe',          icon: '☕', bg: '#d4e8d4', chart: '#81c784' },
-  { value: 'Charity',       icon: '🏥', bg: '#e0f2fe', chart: '#38bdf8' },
-  { value: 'Shopping',      icon: '🛍️', bg: '#e8d5b7', chart: '#d4a574' },
-  { value: 'Entertainment', icon: '🎬', bg: '#d4b8ff', chart: '#b39ddb' },
-  { value: 'Electronics',   icon: '📱', bg: '#d4e8ff', chart: '#7986cb' },
-  { value: 'Games',         icon: '🎮', bg: '#d4b8ff', chart: '#b39ddb' },
-  { value: 'Gym',           icon: '🏋️', bg: '#ffe5b4', chart: '#f4c542' },
-  { value: 'Health',        icon: '💊', bg: '#ffccd9', chart: '#f48fb1' },
-  { value: 'Home Repairs',  icon: '🛠️', bg: '#ffd1d1', chart: '#e57373' },
-  { value: 'Internet',      icon: '📶', bg: '#cce0ff', chart: '#4fc3f7' },
-  { value: 'Personal Care', icon: '🧴', bg: '#ffccd9', chart: '#f48fb1' },
-  { value: 'Pets',          icon: '🐾', bg: '#e8d5b7', chart: '#d4a574' },
-  { value: 'Petrol',        icon: '⛽', bg: '#ffd1d1', chart: '#e57373' },
-  { value: 'Ride Hailing',  icon: '🚕', bg: '#ffe5b4', chart: '#f4c542' },
-  { value: 'Smoking',       icon: '🚬', bg: '#e0e0e0', chart: '#9e9e9e' },
-  { value: 'Subscriptions', icon: '💻', bg: '#cce7ff', chart: '#64b5f6' },
-  { value: 'Supermarket',   icon: '🛒', bg: '#ffe0b5', chart: '#ffb74d' },
-  { value: 'Travel',        icon: '✈️', bg: '#d4e8ff', chart: '#4fc3f7' },
-  { value: 'Utilities',     icon: '⚡', bg: '#ffe5b4', chart: '#f4c542' },
-  { value: 'Rent',          icon: '🏠', bg: '#cce0ff', chart: '#7986cb' },
-  { value: 'Installments',  icon: '🔄', bg: '#d4e8d4', chart: '#81c784' },
+// ── Default EXPENSE Categories (type: 'expense') ──────────
+const DEFAULT_EXPENSE_CATEGORIES = [
+  { value: 'Car Repairs',   icon: '🚗', bg: '#ffd1d1', chart: '#e57373', catKind: 'expense' },
+  { value: 'Cafe',          icon: '☕', bg: '#d4e8d4', chart: '#81c784', catKind: 'expense' },
+  { value: 'Charity',       icon: '🏥', bg: '#e0f2fe', chart: '#38bdf8', catKind: 'expense' },
+  { value: 'Shopping',      icon: '🛍️', bg: '#e8d5b7', chart: '#d4a574', catKind: 'expense' },
+  { value: 'Entertainment', icon: '🎬', bg: '#d4b8ff', chart: '#b39ddb', catKind: 'expense' },
+  { value: 'Electronics',   icon: '📱', bg: '#d4e8ff', chart: '#7986cb', catKind: 'expense' },
+  { value: 'Games',         icon: '🎮', bg: '#d4b8ff', chart: '#b39ddb', catKind: 'expense' },
+  { value: 'Gym',           icon: '🏋️', bg: '#ffe5b4', chart: '#f4c542', catKind: 'expense' },
+  { value: 'Health',        icon: '💊', bg: '#ffccd9', chart: '#f48fb1', catKind: 'expense' },
+  { value: 'Home Repairs',  icon: '🛠️', bg: '#ffd1d1', chart: '#e57373', catKind: 'expense' },
+  { value: 'Internet',      icon: '📶', bg: '#cce0ff', chart: '#4fc3f7', catKind: 'expense' },
+  { value: 'Personal Care', icon: '🧴', bg: '#ffccd9', chart: '#f48fb1', catKind: 'expense' },
+  { value: 'Pets',          icon: '🐾', bg: '#e8d5b7', chart: '#d4a574', catKind: 'expense' },
+  { value: 'Petrol',        icon: '⛽', bg: '#ffd1d1', chart: '#e57373', catKind: 'expense' },
+  { value: 'Ride Hailing',  icon: '🚕', bg: '#ffe5b4', chart: '#f4c542', catKind: 'expense' },
+  { value: 'Smoking',       icon: '🚬', bg: '#e0e0e0', chart: '#9e9e9e', catKind: 'expense' },
+  { value: 'Subscriptions', icon: '💻', bg: '#cce7ff', chart: '#64b5f6', catKind: 'expense' },
+  { value: 'Supermarket',   icon: '🛒', bg: '#ffe0b5', chart: '#ffb74d', catKind: 'expense' },
+  { value: 'Travel',        icon: '✈️', bg: '#d4e8ff', chart: '#4fc3f7', catKind: 'expense' },
+  { value: 'Utilities',     icon: '⚡', bg: '#ffe5b4', chart: '#f4c542', catKind: 'expense' },
 ];
 
+// ── Default INCOME Categories (type: 'income') ────────────
+const DEFAULT_INCOME_CATEGORIES = [
+  { value: 'Salary',        icon: '💵', bg: '#d1fae5', chart: '#34d399', catKind: 'income' },
+  { value: 'Commission',    icon: '📊', bg: '#ede9fe', chart: '#a78bfa', catKind: 'income' },
+  { value: 'Overtime',      icon: '⏰', bg: '#fef3c7', chart: '#fbbf24', catKind: 'income' },
+  { value: 'Freelance',     icon: '💻', bg: '#dbeafe', chart: '#60a5fa', catKind: 'income' },
+  { value: 'Rental Income', icon: '🏠', bg: '#fce7f3', chart: '#f472b6', catKind: 'income' },
+  { value: 'Bank Interest', icon: '🏦', bg: '#e0e7ff', chart: '#818cf8', catKind: 'income' },
+];
+
+// Combine all default categories
+const DEFAULT_CATEGORIES = [...DEFAULT_EXPENSE_CATEGORIES, ...DEFAULT_INCOME_CATEGORIES];
+
+// Global CATEGORIES array (will be populated from sheet)
 let CATEGORIES = [...DEFAULT_CATEGORIES];
 
 // ── Category sheet helpers ────────────────────────────────
@@ -106,6 +115,7 @@ function parseCatRow(r) {
     chart:         r[5] || '#aaa',
     budget:        r[6] ? parseFloat(r[6]) : null,
     hidden:        r[7] === 'true',
+    catKind:       r[8] === 'income' ? 'income' : 'expense',  // NEW: category type
   };
 }
 
@@ -119,13 +129,14 @@ function catToRow(cat) {
     cat.chart,
     cat.budget  || '',
     cat.hidden  ? 'true' : 'false',
+    cat.catKind || 'expense',  // NEW: save category type
   ];
 }
 
 async function loadCategoriesFromSheet(spreadsheetId) {
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId, range: `${CAT_SHEET_NAME}!A2:H`,
+      spreadsheetId, range: `${CATEGORIES_SHEET}!A2:I`,
     });
     const rows = res.result.values || [];
     if (!rows.length) return null;
@@ -137,10 +148,10 @@ async function loadCategoriesFromSheet(spreadsheetId) {
 
 async function saveCategoriesToSheet(spreadsheetId, allCats) {
   const rows = allCats.map(catToRow);
-  await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `${CAT_SHEET_NAME}!A2:H` });
+  await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `${CATEGORIES_SHEET}!A2:I` });
   if (rows.length) {
     await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId, range: `${CAT_SHEET_NAME}!A2:H`,
+      spreadsheetId, range: `${CATEGORIES_SHEET}!A2:I`,
       valueInputOption: 'RAW', resource: { values: rows },
     });
   }
@@ -148,15 +159,22 @@ async function saveCategoriesToSheet(spreadsheetId, allCats) {
 
 async function createCategoriesTab(spreadsheetId) {
   await gapi.client.sheets.spreadsheets.batchUpdate({
-    spreadsheetId, resource: { requests: [{ addSheet: { properties: { title: CAT_SHEET_NAME } } }] }
+    spreadsheetId, resource: { requests: [{ addSheet: { properties: { title: CATEGORIES_SHEET } } }] }
   });
   await gapi.client.sheets.spreadsheets.values.update({
-    spreadsheetId, range: `${CAT_SHEET_NAME}!A1:H1`, valueInputOption: 'RAW',
-    resource: { values: [['Type','OriginalValue','Name','Icon','BG','Chart','Budget','Hidden']] },
+    spreadsheetId, range: `${CATEGORIES_SHEET}!A1:I1`, valueInputOption: 'RAW',
+    resource: { values: [['Type','OriginalValue','Name','Icon','BG','Chart','Budget','Hidden','Kind']] },
   });
   const defaultRows = DEFAULT_CATEGORIES.map(c => ({
-    type: 'default', originalValue: c.value, value: c.value,
-    icon: c.icon, bg: c.bg, chart: c.chart, budget: null, hidden: false,
+    type: 'default', 
+    originalValue: c.value, 
+    value: c.value,
+    icon: c.icon, 
+    bg: c.bg, 
+    chart: c.chart, 
+    budget: null, 
+    hidden: false,
+    catKind: c.catKind,
   }));
   await saveCategoriesToSheet(spreadsheetId, defaultRows);
   CATEGORIES = [...DEFAULT_CATEGORIES];
@@ -167,40 +185,72 @@ async function ensureCategoriesTab(spreadsheetId) {
   try {
     const res = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
     const sheets = res.result.sheets || [];
-    const exists = sheets.some(s => s.properties.title === CAT_SHEET_NAME);
+    const exists = sheets.some(s => s.properties.title === CATEGORIES_SHEET);
     if (!exists) return await createCategoriesTab(spreadsheetId);
+    
     const fullRes = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId, range: `${CAT_SHEET_NAME}!A2:H`
+      spreadsheetId, range: `${CATEGORIES_SHEET}!A2:I`
     });
     let rows = (fullRes.result.values || []).map(parseCatRow);
+    
+    // Check for missing default categories (both expense and income)
     const existingOriginals = new Set(rows.map(r => r.originalValue));
     const newDefaults = DEFAULT_CATEGORIES.filter(d => !existingOriginals.has(d.value));
+    
     if (newDefaults.length) {
       const newRows = newDefaults.map(c => ({
-        type: 'default', originalValue: c.value, value: c.value,
-        icon: c.icon, bg: c.bg, chart: c.chart, budget: null, hidden: false,
+        type: 'default', 
+        originalValue: c.value, 
+        value: c.value,
+        icon: c.icon, 
+        bg: c.bg, 
+        chart: c.chart, 
+        budget: null, 
+        hidden: false,
+        catKind: c.catKind,
       }));
       rows = [...rows, ...newRows];
       await saveCategoriesToSheet(spreadsheetId, rows);
     }
+    
     CATEGORIES = rows.filter(c => !c.hidden);
     return rows;
   } catch(e) {
     console.error('ensureCategoriesTab error', e);
     CATEGORIES = [...DEFAULT_CATEGORIES];
-    return DEFAULT_CATEGORIES.map(c => ({ ...c, type:'default', originalValue:c.value }));
+    return DEFAULT_CATEGORIES.map(c => ({ 
+      ...c, 
+      type: 'default', 
+      originalValue: c.value,
+      catKind: c.catKind 
+    }));
   }
 }
 
+// ── Category lookup helpers (returns full metadata) ──────
 function getCategoryMeta(category) {
-  return CATEGORIES.find(c => c.value === category || c.originalValue === category)
-    || DEFAULT_CATEGORIES.find(c => c.value === category)
-    || { icon: '💰', bg: '#f0f0f0', chart: '#aaa' };
+  const found = CATEGORIES.find(c => c.value === category || c.originalValue === category);
+  if (found) return found;
+  // Fallback to defaults
+  const defaultCat = DEFAULT_CATEGORIES.find(c => c.value === category);
+  if (defaultCat) return defaultCat;
+  return { icon: '💰', bg: '#f0f0f0', chart: '#aaa', catKind: 'expense' };
 }
+
 function getCategoryIcon(category)   { return getCategoryMeta(category).icon; }
 function getCategoryColor(category)  { return getCategoryMeta(category).bg; }
 function getChartColor(category)     { return getCategoryMeta(category).chart; }
 function getCategoryBudget(category) { const m = getCategoryMeta(category); return m ? (m.budget || null) : null; }
+function getCategoryKind(category)   { return getCategoryMeta(category).catKind || 'expense'; }
+
+// ── Filter categories by type ─────────────────────────────
+function getExpenseCategories() {
+  return CATEGORIES.filter(c => c.catKind === 'expense' && !c.hidden);
+}
+
+function getIncomeCategories() {
+  return CATEGORIES.filter(c => c.catKind === 'income' && !c.hidden);
+}
 
 // ── Date helpers ──────────────────────────────────────────
 function parseLocalDate(str) {
@@ -208,9 +258,11 @@ function parseLocalDate(str) {
   const [y, m, d] = str.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
+
 function formatDate(dateString) {
   return parseLocalDate(dateString).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
+
 function formatDayHeader(dateString) {
   return parseLocalDate(dateString).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
 }
@@ -278,26 +330,17 @@ function showToast(msg, type = 'success') {
     return;
   }
   
-  // Clear any existing timer
   if (_toastTimer) {
     clearTimeout(_toastTimer);
     _toastTimer = null;
   }
   
-  // Remove any existing show class
   t.classList.remove('show');
-  
-  // Set the message and type
   t.textContent = msg;
   t.className = `toast ${type}`;
-  
-  // Force reflow to ensure animation restarts
   void t.offsetHeight;
-  
-  // Add show class to animate in
   t.classList.add('show');
   
-  // Set timer to remove show class after 1 second
   _toastTimer = setTimeout(() => {
     t.classList.remove('show');
     _toastTimer = null;
@@ -315,8 +358,6 @@ function escapeHtml(str) {
 }
 
 // ── Short alphanumeric ID (used by Installments) ─────────
-// Different from genId() which is a sequential numeric counter.
-// This generates a 6-char random ID suitable for installment records.
 function generateShortId(existingIds = []) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
   let id;
@@ -330,15 +371,12 @@ function generateShortId(existingIds = []) {
 function todayStr() { return new Date().toISOString().split('T')[0]; }
 
 // ── Bottom navigation renderer ────────────────────────────
-// Injects the shared bottom nav into any element (default: #bottomNavMount).
-// activePage: 'home' | 'expenses' | 'recurring' | 'categories' | 'installments'
 const NAV_TABS = [
   { id: 'home',         label: 'Home',         icon: '🏠', href: 'Home.html'         },
   { id: 'expenses',     label: 'Expenses',     icon: '📋', href: 'Expenses.html'     },
   { id: 'recurring',    label: 'Recurring',    icon: '🔄', href: 'Recurring.html'    },
   { id: 'installments', label: 'Installments', icon: '📆', href: 'Installments.html' },
   { id: 'categories',   label: 'Categories',   icon: '⚙️', href: 'Categories.html'   },
-  
 ];
 
 function renderBottomNav(activePage, mountId = 'bottomNavMount') {
@@ -355,12 +393,9 @@ function renderBottomNav(activePage, mountId = 'bottomNavMount') {
 }
 
 // ── Logout — clears ALL local cache then redirects ────────
-// Call with the page to redirect to after logout (default: Home.html)
 function logout(redirectTo = 'Home.html') {
   if (!confirm('Log out?')) return;
-  // Always clear base keys
   const keys = ['google_token', 'expense_id_counter'];
-  // Clear all user-scoped keys if we know the email
   const email = localStorage.getItem('google_token')
     ? getUserEmailFromToken(localStorage.getItem('google_token'))
     : null;
@@ -372,7 +407,6 @@ function logout(redirectTo = 'Home.html') {
       `budgets_${email}`,
       `recurring_${email}`,
     );
-    // Clear paid tracking keys for all months (scan localStorage)
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i);
       if (k && k.startsWith(`paid_${email}_`)) keys.push(k);
