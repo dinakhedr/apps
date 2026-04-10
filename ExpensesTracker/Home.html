@@ -654,7 +654,7 @@ async function saveBudgets() {
     try {
       // Build full allCats list (including hidden) to write back
       const fullRes = await gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId, range: `${CAT_SHEET_NAME}!A2:H`
+        spreadsheetId, range: `${CATEGORIES_SHEET}!A2:H`
       });
       const rows = (fullRes.result.values || []).map(parseCatRow);
       // Update budget values in the full list
@@ -723,7 +723,7 @@ async function createFolderAndSheet(isRecreate = false) {
     folderId         = folderRes.result.id;
 
     // Create spreadsheet in folder
-    const sheetRes   = await gapi.client.drive.files.create({ resource: { name: SHEET_NAME, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [folderId] }, fields: 'id' });
+    const sheetRes   = await gapi.client.drive.files.create({ resource: { name: EXPENSES_SHEET, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [folderId] }, fields: 'id' });
     spreadsheetId    = sheetRes.result.id;
 
     // Add headers (Timestamp first)
