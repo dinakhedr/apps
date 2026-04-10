@@ -106,71 +106,72 @@
       gap: 12px;
       margin-bottom: 20px;
     }
+
+.type-radio-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
     
-    .type-radio-card {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 12px;
-      background: var(--surface-2);
-      border: 2px solid var(--border);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-    }
+.type-radio-card:hover {
+  border-color: var(--brand);
+  background: #f8f8ff;
+}
+.type-radio-card.selected {
+  border-color: var(--brand);
+  background: linear-gradient(135deg, rgba(91,94,244,0.08) 0%, rgba(139,92,246,0.08) 100%);
+}
     
-    .type-radio-card:hover {
-      border-color: var(--brand);
-      background: #f8f8ff;
-    }
-    
-    .type-radio-card.selected {
-      border-color: var(--brand);
-      background: linear-gradient(135deg, rgba(91,94,244,0.08) 0%, rgba(139,92,246,0.08) 100%);
-      box-shadow: 0 2px 8px rgba(91,94,244,0.15);
-    }
-    
-    .type-radio-card input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-      height: 0;
-      margin: 0;
-    }
-    
+.type-radio-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
     .type-radio-icon {
-      font-size: 28px;
-    }
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 700;
+}
+    .type-radio-card[data-type="expense"] .type-radio-icon {
+  background: #fee2e2;
+  border: 1.5px solid #fca5a5;
+  color: #dc2626;
+}
+
+.type-radio-card[data-type="income"] .type-radio-icon {
+  background: #dcfce7;
+  border: 1.5px solid #86efac;
+  color: #16a34a;
+}
     
-    .type-radio-label {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-    }
+.type-radio-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+  
+
+    .type-radio-card.selected .type-radio-label {
+  color: var(--brand);
+}
     
-    .type-radio-badge {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 12px;
-      background: var(--border);
-      color: var(--text-2);
-    }
-    
-    .type-radio-card.selected .type-radio-badge {
-      background: var(--brand);
-      color: white;
-    }
-    .type-radio input { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--brand); }
-    .type-badge {
-      display: inline-block; font-size: 10px; font-weight: 700;
-      padding: 2px 8px; border-radius: 20px; margin-left: 6px;
-    }
-    .type-badge.expense { background: #fee2e2; color: #b91c1c; }
-    .type-badge.income  { background: #dcfce7; color: #166534; }
 
     /* ── Icon picker ── */
     .icon-picker-label {
@@ -333,48 +334,50 @@
         <div class="cat-preview-sub" id="previewBudget">No budget limit</div>
       </div>
     </div>
-
+    
+    <!-- Name -->
+    <div class="form-group">
+      <label>Category Name</label>
+      <input type="text" id="catName" placeholder="e.g. Freelance, Salary" maxlength="30" oninput="updatePreview()">
+    </div>
+    
     <!-- Type Radio Group - Better styled radio buttons -->
     <div class="form-group">
       <label>Category Type</label>
       <div class="type-radio-group" id="typeRadioGroup">
         <label class="type-radio-card" data-type="expense">
           <input type="radio" name="catType" value="expense" checked>
-          <span class="type-radio-icon">💸</span>
+          <span class="type-radio-icon">➖</span>
           <span class="type-radio-label">Expense</span>
-          <span class="type-radio-badge">has budget</span>
         </label>
         <label class="type-radio-card" data-type="income">
           <input type="radio" name="catType" value="income">
-          <span class="type-radio-icon">💰</span>
+          <span class="type-radio-icon">➕</span>
           <span class="type-radio-label">Income</span>
-          <span class="type-radio-badge">no budget</span>
         </label>
       </div>
     </div>
 
-    <!-- Name -->
-    <div class="form-group">
-      <label>Category Name</label>
-      <input type="text" id="catName" placeholder="e.g. Freelance, Salary" maxlength="30" oninput="updatePreview()">
-    </div>
-
-    <!-- Icon picker -->
-    <span class="icon-picker-label">Icon</span>
-    <div class="icon-grid" id="iconGrid"></div>
-
-    <!-- Color picker -->
-    <span class="icon-picker-label">Background Color</span>
-    <div class="color-grid" id="colorGrid"></div>
-
-    <!-- Budget limit (only for expenses, hidden for income) -->
-    <div class="form-group" id="budgetGroup">
-      <label>Monthly Budget Limit (optional)</label>
+    <!-- Budget limit (hidden by default, appears when Expense is selected) -->
+    <div class="form-group" id="budgetGroup" style="display: none;">
+      <label>Monthly Budget Limit <span style="color: var(--text-3); font-weight: normal;">(optional)</span></label>
       <div class="budget-input-wrap">
         <span class="budget-curr-label">EGP</span>
         <input type="number" id="catBudget" placeholder="No limit" min="0" step="1" inputmode="numeric" oninput="updatePreview()">
       </div>
     </div>
+    
+
+    <!-- Color picker -->
+    <span class="icon-picker-label">Background Color</span>
+    <div class="color-grid" id="colorGrid"></div>
+    
+    <!-- Icon picker -->
+    <span class="icon-picker-label">Icon</span>
+    <div class="icon-grid" id="iconGrid"></div>
+
+    
+
 
     <div class="modal-footer" id="catModalFooter">
       <button class="btn-cancel" onclick="closeCatModal()">Cancel</button>
@@ -496,15 +499,15 @@ function render() {
     }).join('');
   }
 
-  // Render default incomes
-  document.getElementById('defaultIncomeList').innerHTML = defaultIncomes.map((cat, idx) => {
-    const i = allCats.indexOf(cat);
-    return `<div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
-        <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
-        <div class="cat-info"><div class="cat-name-text">${escapeHtml(cat.value)}</div><div class="cat-budget-text">💰 Income (no budget limit)</div></div>
-        <div class="cat-actions"><button class="action-btn" onclick="openEditIncomeDefault(${i})" title="Edit">✏️</button><button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button></div>
-      </div>`;
-  }).join('') || '<div class="empty-state"><span class="empty-icon">💰</span><p>No default income categories</p></div>';
+// Render default incomes
+document.getElementById('defaultIncomeList').innerHTML = defaultIncomes.map((cat, idx) => {
+  const i = allCats.indexOf(cat);
+  return `<div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
+      <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
+      <div class="cat-info"><div class="cat-name-text">${escapeHtml(cat.value)}</div></div>
+      <div class="cat-actions"><button class="action-btn" onclick="openEditIncomeDefault(${i})" title="Edit">✏️</button><button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button></div>
+    </div>`;
+}).join('') || '<div class="empty-state"><span class="empty-icon">💰</span><p>No default income categories</p></div>';
 
   // Render custom incomes
   const customIncomeCard = document.getElementById('customIncomeCard');
@@ -517,7 +520,7 @@ function render() {
       const i = allCats.indexOf(cat);
       return `<div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
           <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
-          <div class="cat-info"><div class="cat-name-text">${escapeHtml(cat.value)}</div><div class="cat-budget-text">💰 Income (no budget limit)</div></div>
+          <div class="cat-info"><div class="cat-name-text">${escapeHtml(cat.value)}</div></div>
           <div class="cat-actions"><button class="action-btn" onclick="openEditCustom(${i})" title="Edit">✏️</button><button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button><button class="action-btn" onclick="deleteCustom(${i})" style="color:var(--danger)">🗑️</button></div>
         </div>`;
     }).join('');
@@ -555,12 +558,27 @@ function toggleHide(i) {
 }
 
 async function deleteCustom(i) {
-  if (!confirm(`Delete "${allCats[i].value}"?`)) return;
+  const categoryToDelete = allCats[i];
+  
+  // Only check for expense categories (income can be deleted freely)
+  if (categoryToDelete.catKind === 'expense') {
+    showToast('Checking if category is used...', 'info');
+    
+    const isUsed = await isCategoryUsedInExpenses(categoryToDelete.value);
+    
+    if (isUsed) {
+      showToast(`❌ Cannot delete "${categoryToDelete.value}" - it has expenses. Hide it instead.`, 'error');
+      return;
+    }
+  }
+  
+  if (!confirm(`Delete "${categoryToDelete.value}"? This action cannot be undone.`)) return;
+  
   const removed = allCats.splice(i, 1);
   render();
   try {
     await persistToSheet();
-    showToast('🗑️ Deleted');
+    showToast('🗑️ Category deleted');
   } catch(e) {
     allCats.splice(i, 0, removed[0]);
     render();
@@ -583,7 +601,100 @@ async function persistToSheet() {
     return false;
   }
 }
+async function persistToSheet() {
+  if (!spreadsheetId) { showToast('⚠️ Not connected', 'error'); return false; }
+  if (isSaving) return false;
+  isSaving = true;
+  try {
+    await saveCategoriesToSheet(spreadsheetId, allCats);
+    isSaving = false;
+    return true;
+  } catch(e) {
+    console.error(e);
+    showToast('❌ Save failed', 'error');
+    isSaving = false;
+    return false;
+  }
+}
 
+// ========== ADD THIS NEW FUNCTION HERE ==========
+async function isCategoryUsedInExpenses(categoryName) {
+  if (!spreadsheetId) return false;
+  
+  try {
+    // Get all expenses from Daily Log sheet (column C contains category)
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${EXPENSES_SHEET}!C:C`
+    });
+    
+    const rows = res.result.values || [];
+    // Check if category exists in any expense row (skip header row)
+    return rows.slice(1).some(row => row[0] === categoryName);
+  } catch (e) {
+    console.error('Error checking category usage:', e);
+    return false;
+  }
+}
+// ========== END OF NEW FUNCTION ==========
+
+async function deleteCustom(i) {
+  const categoryToDelete = allCats[i];
+  
+  // Only check for expense categories (income can be deleted freely)
+  if (categoryToDelete.catKind === 'expense') {
+    showToast('Checking if category is used...', 'info');
+    
+    const isUsed = await isCategoryUsedInExpenses(categoryToDelete.value);
+    
+    if (isUsed) {
+      showToast(`❌ Cannot delete "${categoryToDelete.value}" - it has expenses. Hide it instead.`, 'error');
+      return;
+    }
+  }
+  
+  if (!confirm(`Delete "${categoryToDelete.value}"? This action cannot be undone.`)) return;
+  
+  const removed = allCats.splice(i, 1);
+  render();
+  try {
+    await persistToSheet();
+    showToast('🗑️ Category deleted');
+  } catch(e) {
+    allCats.splice(i, 0, removed[0]);
+    render();
+    showToast('❌ Delete failed', 'error');
+  }
+}
+  // ========== ADD THIS NEW FUNCTION HERE ==========
+async function deleteCustomWithCheck(i) {
+  const categoryToDelete = allCats[i];
+  
+  if (categoryToDelete.catKind === 'expense') {
+    showToast('Checking if category is used...', 'info');
+    const isUsed = await isCategoryUsedInExpenses(categoryToDelete.value);
+    
+    if (isUsed) {
+      showToast(`❌ Cannot delete "${categoryToDelete.value}" - it has expenses. Hide it instead.`, 'error');
+      closeCatModal();
+      return;
+    }
+  }
+  
+  if (!confirm(`Delete "${categoryToDelete.value}"?`)) return;
+  
+  const removed = allCats.splice(i, 1);
+  render();
+  closeCatModal();
+  try {
+    await persistToSheet();
+    showToast('🗑️ Category deleted');
+  } catch(e) {
+    allCats.splice(i, 0, removed[0]);
+    render();
+    showToast('❌ Delete failed', 'error');
+  }
+}
 function openEditBuiltin(i) {
   editingIndex = i;
   const cat = allCats[i];
@@ -681,8 +792,7 @@ function openEditCustom(i) {
   buildIconGrid(); 
   buildColorGrid(); 
   updatePreview(); 
-  document.getElementById('catModalFooter').innerHTML = `<button class="btn-danger" onclick="deleteCustom(${i});closeCatModal()">Delete</button><button class="btn-cancel" onclick="closeCatModal()">Cancel</button><button class="btn-save" onclick="saveCategory()">Save</button>`; 
-  document.getElementById('catModalBackdrop').classList.add('open'); 
+  document.getElementById('catModalFooter').innerHTML = `<button class="btn-danger" onclick="deleteCustomWithCheck(${i})">Delete</button><button class="btn-cancel" onclick="closeCatModal()">Cancel</button><button class="btn-save" onclick="saveCategory()">Save</button>`;  document.getElementById('catModalBackdrop').classList.add('open'); 
   setTimeout(() => initRadioCards(), 10);
 }
 
@@ -692,9 +802,9 @@ function handleTypeChange() {
     selectedCatType = selectedRadio.value;
     const budgetGroup = document.getElementById('budgetGroup');
     if (selectedCatType === 'income') {
-      budgetGroup.classList.add('budget-field-hidden');
+      budgetGroup.style.display = 'none';
     } else {
-      budgetGroup.classList.remove('budget-field-hidden');
+      budgetGroup.style.display = 'block';
     }
     updatePreview();
   }
