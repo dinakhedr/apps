@@ -5,8 +5,8 @@
 const CLIENT_ID = '957735552832-u52fo3efk11sgg4pege9jo1650l1vl0a.apps.googleusercontent.com';
 const FOLDER_NAME  = 'Expense Tracker';
 const FILE_NAME    = 'My Expenses';   // Google Drive file name (never changes)
-const SHEET_NAME   = 'Daily Log';     // Tab name inside the spreadsheet
-const CAT_SHEET_NAME = 'Categories';
+const EXPENSES_SHEET = 'Daily Log';    // Daily Expenses 
+const CATEGORIES_SHEET = 'Categories';
 const RECURRING_SHEET         = 'Recurring';
 const RECURRING_LOG_SHEET     = 'Recurring Log';
 const INSTALLMENTS_SHEET      = 'Installments';
