@@ -100,14 +100,69 @@
     }
 
     /* ── Type radio group (Income/Expense) ── */
+    /* Enhanced Radio Button Cards */
     .type-radio-group {
-      display: flex; gap: 24px; margin-bottom: 14px;
-      background: var(--surface-2); border-radius: var(--radius-sm);
-      padding: 12px 14px; border: 2px solid var(--border);
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
     }
-    .type-radio {
-      display: flex; align-items: center; gap: 8px;
-      cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text);
+    
+    .type-radio-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 12px;
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    
+    .type-radio-card:hover {
+      border-color: var(--brand);
+      background: #f8f8ff;
+    }
+    
+    .type-radio-card.selected {
+      border-color: var(--brand);
+      background: linear-gradient(135deg, rgba(91,94,244,0.08) 0%, rgba(139,92,246,0.08) 100%);
+      box-shadow: 0 2px 8px rgba(91,94,244,0.15);
+    }
+    
+    .type-radio-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+    }
+    
+    .type-radio-icon {
+      font-size: 28px;
+    }
+    
+    .type-radio-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    
+    .type-radio-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: var(--border);
+      color: var(--text-2);
+    }
+    
+    .type-radio-card.selected .type-radio-badge {
+      background: var(--brand);
+      color: white;
     }
     .type-radio input { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--brand); }
     .type-badge {
@@ -279,14 +334,23 @@
       </div>
     </div>
 
-    <!-- Type Radio (Expense / Income) -->
-    <div class="type-radio-group" id="typeRadioGroup">
-      <label class="type-radio">
-        <input type="radio" name="catType" value="expense" checked> 💸 Expense
-      </label>
-      <label class="type-radio">
-        <input type="radio" name="catType" value="income"> 💰 Income
-      </label>
+    <!-- Type Radio Group - Better styled radio buttons -->
+    <div class="form-group">
+      <label>Category Type</label>
+      <div class="type-radio-group" id="typeRadioGroup">
+        <label class="type-radio-card" data-type="expense">
+          <input type="radio" name="catType" value="expense" checked>
+          <span class="type-radio-icon">💸</span>
+          <span class="type-radio-label">Expense</span>
+          <span class="type-radio-badge">has budget</span>
+        </label>
+        <label class="type-radio-card" data-type="income">
+          <input type="radio" name="catType" value="income">
+          <span class="type-radio-icon">💰</span>
+          <span class="type-radio-label">Income</span>
+          <span class="type-radio-badge">no budget</span>
+        </label>
+      </div>
     </div>
 
     <!-- Name -->
@@ -599,6 +663,7 @@ function openAddModal() {
   buildColorGrid(); 
   updatePreview(); 
   document.getElementById('catModalBackdrop').classList.add('open'); 
+  setTimeout(() => initRadioCards(), 10);
 }
 
 function openEditCustom(i) { 
@@ -618,17 +683,51 @@ function openEditCustom(i) {
   updatePreview(); 
   document.getElementById('catModalFooter').innerHTML = `<button class="btn-danger" onclick="deleteCustom(${i});closeCatModal()">Delete</button><button class="btn-cancel" onclick="closeCatModal()">Cancel</button><button class="btn-save" onclick="saveCategory()">Save</button>`; 
   document.getElementById('catModalBackdrop').classList.add('open'); 
+  setTimeout(() => initRadioCards(), 10);
 }
 
-function handleTypeChange() { 
-  const type = document.querySelector('input[name="catType"]:checked').value; 
-  selectedCatType = type; 
-  const budgetGroup = document.getElementById('budgetGroup'); 
-  if (type === 'income') budgetGroup.classList.add('budget-field-hidden'); 
-  else budgetGroup.classList.remove('budget-field-hidden'); 
-  updatePreview(); 
+function handleTypeChange() {
+  const selectedRadio = document.querySelector('input[name="catType"]:checked');
+  if (selectedRadio) {
+    selectedCatType = selectedRadio.value;
+    const budgetGroup = document.getElementById('budgetGroup');
+    if (selectedCatType === 'income') {
+      budgetGroup.classList.add('budget-field-hidden');
+    } else {
+      budgetGroup.classList.remove('budget-field-hidden');
+    }
+    updatePreview();
+  }
 }
-
+// Initialize radio card styling
+function initRadioCards() {
+  const radioCards = document.querySelectorAll('.type-radio-card');
+  radioCards.forEach(card => {
+    const radio = card.querySelector('input[type="radio"]');
+    
+    // Set initial selected state
+    if (radio.checked) {
+      card.classList.add('selected');
+    }
+    
+    // Handle click on card
+    card.addEventListener('click', function(e) {
+      const radioInput = this.querySelector('input[type="radio"]');
+      radioInput.checked = true;
+      
+      // Trigger change event
+      const changeEvent = new Event('change', { bubbles: true });
+      radioInput.dispatchEvent(changeEvent);
+      
+      // Update UI
+      document.querySelectorAll('.type-radio-card').forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+      
+      // Call handleTypeChange
+      handleTypeChange();
+    });
+  });
+}
 function selectIcon(icon) { selectedIcon = icon; buildIconGrid(); updatePreview(); }
 function selectColor(i) { selectedColor = COLOR_OPTIONS[i]; buildColorGrid(); updatePreview(); }
 function buildIconGrid() { 
@@ -699,6 +798,7 @@ async function loadPage() {
   });
   initTabs();
   document.querySelectorAll('input[name="catType"]').forEach(r => r.addEventListener('change', handleTypeChange));
+  initRadioCards();
 }
 
 renderBottomNav('categories');
