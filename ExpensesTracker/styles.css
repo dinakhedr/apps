@@ -251,9 +251,10 @@ textarea { resize: vertical; min-height: 72px; }
   padding: 11px 22px; border-radius: 30px;
   font-size: 13px; font-weight: 600;
   z-index: 9999; white-space: nowrap;
+  width: max-content; max-width: 90vw;
   opacity: 0;
   transition: transform 0.25s ease, opacity 0.25s ease;
-  pointer-events: none; max-width: 90vw;
+  pointer-events: none;
 }
 .toast.show    { transform: translateX(-50%) translateY(0); opacity: 1; }
 .toast.success { background: var(--success); }
