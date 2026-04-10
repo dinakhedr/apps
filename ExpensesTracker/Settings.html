@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Settings</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
+  <link rel="shortcut icon" href="icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Settings specific styles */
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .settings-header h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    
+    /* Grid layout for settings cards */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .setting-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+    
+    .setting-card:active {
+      transform: scale(0.96);
+      background: var(--surface-2);
+    }
+    
+    .setting-icon {
+      font-size: 42px;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+    
+    .setting-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    
+    .setting-desc {
+      font-size: 12px;
+      color: var(--text-3);
+      line-height: 1.4;
+    }
+    
+    /* Divider */
+    .settings-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 16px;
+    }
+    .settings-divider-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.25);
+    }
+    .settings-divider-text {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    
+    /* Danger zone */
+    .danger-zone {
+      background: rgba(239,68,68,0.12);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .danger-zone-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(239,68,68,0.25);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .danger-zone-header span:first-child {
+      font-size: 20px;
+    }
+    .danger-zone-header h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fca5a5;
+      margin: 0;
+    }
+    .danger-item {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(239,68,68,0.15);
+    }
+    .danger-item:last-child {
+      border-bottom: none;
+    }
+    .danger-item-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .danger-item-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .danger-item-desc {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .danger-btn {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.35);
+      color: #fca5a5;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .danger-btn:active {
+      transform: scale(0.95);
+      background: rgba(239,68,68,0.3);
+    }
+    
+    /* Info card */
+    .info-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+    .info-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+    }
+    .info-value {
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      font-family: 'DM Sans', monospace;
+    }
+    
+    /* Version footer */
+    .version-footer {
+      text-align: center;
+      padding: 24px 0 12px;
+    }
+    .version-text {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- Header -->
+  <div class="settings-header">
+    <h1>⚙️ Settings</h1>
+    <div class="header-actions">
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+  
+  <!-- Settings Grid -->
+  <div class="settings-grid">
+    <!-- Categories Card -->
+    <div class="setting-card" onclick="navigateTo('Categories.html')">
+      <div class="setting-icon">📂</div>
+      <div class="setting-title">Categories</div>
+      <div class="setting-desc">Manage expense & income categories</div>
+    </div>
+    
+    <!-- Income Card (placeholder for future page) -->
+    <div class="setting-card" onclick="navigateToIncome()">
+      <div class="setting-icon">💰</div>
+      <div class="setting-title">Income</div>
+      <div class="setting-desc">Track and manage income sources</div>
+    </div>
+  </div>
+  
+  <!-- Info section (user email) -->
+  <div class="info-card" id="userInfoCard">
+    <div class="info-row">
+      <span class="info-label">📧 Connected Account</span>
+      <span class="info-value" id="userEmailDisplay">—</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">📁 Google Drive</span>
+      <span class="info-value" id="driveStatus">Checking...</span>
+    </div>
+  </div>
+  
+  <!-- Divider -->
+  <div class="settings-divider">
+    <div class="settings-divider-line"></div>
+    <div class="settings-divider-text">Data Management</div>
+    <div class="settings-divider-line"></div>
+  </div>
+  
+  <!-- Danger Zone -->
+  <div class="danger-zone">
+    <div class="danger-zone-header">
+      <span>⚠️</span>
+      <h3>Danger Zone</h3>
+    </div>
+    <div class="danger-item">
+      <div class="danger-item-left">
+        <div class="danger-item-title">Clear Local Data</div>
+        <div class="danger-item-desc">Remove all locally stored expenses (keeps Google Drive data)</div>
+      </div>
+      <button class="danger-btn" onclick="clearLocalData()">Clear Cache</button>
+    </div>
+    <div class="danger-item">
+      <div class="danger-item-left">
+        <div class="danger-item-title">Sign Out</div>
+        <div class="danger-item-desc">Disconnect from Google Drive and clear session</div>
+      </div>
+      <button class="danger-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+  
+  <!-- Version -->
+  <div class="version-footer">
+    <div class="version-text">Expense Tracker v2.0 · Securely stored in your Google Drive</div>
+  </div>
+  
+</div>
+
+<!-- Bottom Navigation Mount -->
+<div id="bottomNavMount"></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ======================== STATE ========================
+  let currentUserEmail = null;
+  let spreadsheetId = null;
+  
+  // ======================== HELPERS ========================
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.classList.remove('show');
+    t.textContent = msg;
+    t.className = `toast ${type}`;
+    void t.offsetHeight;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1000);
+  }
+  
+  // Navigate to Categories
+  function navigateTo(page) {
+    window.location.href = page;
+  }
+  
+  // Income page placeholder (to be created later)
+  function navigateToIncome() {
+    // Show a friendly alert since Income.html doesn't exist yet
+    showToast('📊 Income page coming soon!', 'info');
+    // Optional: could also create a temporary alert modal
+    setTimeout(() => {
+      // For now just inform user, but we can also redirect to Categories
+      // as a temporary fallback if desired
+    }, 500);
+  }
+  
+  // Clear local data (keeps Google Drive intact)
+  async function clearLocalData() {
+    if (!confirm('⚠️ Clear all local expense data?\n\nThis will remove expenses saved on this device only. Your Google Drive data will remain safe.\n\nThis action cannot be undone.')) return;
+    
+    try {
+      const email = currentUserEmail || localStorage.getItem('google_token') 
+        ? getUserEmailFromToken(localStorage.getItem('google_token')) 
+        : null;
+      
+      let clearedCount = 0;
+      
+      // Remove all app-specific local storage items
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (
+          key.startsWith('expenses_') ||
+          key.startsWith('budgets_') ||
+          key.startsWith('recurring_') ||
+          key.startsWith('paid_') ||
+          key === 'expense_id_counter'
+        )) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        clearedCount++;
+      });
+      
+      showToast(`🗑️ Cleared ${clearedCount} local items`, 'success');
+      
+      // Reload page to refresh state
+      setTimeout(() => {
+        window.location.reload();
+      }, 800);
+    } catch (e) {
+      console.error('Clear error:', e);
+      showToast('❌ Failed to clear local data', 'error');
+    }
+  }
+  
+  // Get user email from token
+  function getUserEmailFromToken(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const json = decodeURIComponent(atob(base64).split('').map(c =>
+        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join(''));
+      return JSON.parse(json).email;
+    } catch { return null; }
+  }
+  
+  // Get saved access token
+  function getSavedAccessToken() {
+    return sessionStorage.getItem('gapi_access_token');
+  }
+  
+  // Load user info and drive status
+  async function loadUserInfo() {
+    const token = localStorage.getItem('google_token');
+    if (token) {
+      currentUserEmail = getUserEmailFromToken(token);
+      if (currentUserEmail) {
+        document.getElementById('userEmailDisplay').textContent = currentUserEmail;
+        spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
+        
+        if (spreadsheetId) {
+          document.getElementById('driveStatus').innerHTML = '✅ Connected';
+          document.getElementById('driveStatus').style.color = '#6ee7b7';
+        } else {
+          document.getElementById('driveStatus').innerHTML = '⚠️ No sheet found';
+          document.getElementById('driveStatus').style.color = '#fca5a5';
+        }
+        return;
+      }
+    }
+    document.getElementById('userEmailDisplay').textContent = 'Not signed in';
+    document.getElementById('driveStatus').innerHTML = '❌ Disconnected';
+    document.getElementById('driveStatus').style.color = '#fca5a5';
+  }
+  
+  // Simple init without full auth (just read local storage for display)
+  async function initSettings() {
+    await loadUserInfo();
+    renderBottomNav('settings');
+  }
+  
+  // Override logout from utils to ensure it works from Settings page
+  window.logout = function() {
+    if (!confirm('Sign out from Expense Tracker?\n\nYou will need to sign in again.')) return;
+    
+    const keys = ['google_token', 'expense_id_counter'];
+    const email = localStorage.getItem('google_token')
+      ? getUserEmailFromToken(localStorage.getItem('google_token'))
+      : null;
+    if (email) {
+      keys.push(
+        `drive_setup_${email}`,
+        `spreadsheet_id_${email}`,
+        `expenses_${email}`,
+        `budgets_${email}`,
+        `recurring_${email}`
+      );
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(`paid_${email}_`)) keys.push(k);
+      }
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem('gapi_access_token');
+    window.location.href = 'Home.html';
+  };
+  
+  // Override navigateToIncome if needed
+  window.navigateTo = navigateTo;
+  window.navigateToIncome = navigateToIncome;
+  window.clearLocalData = clearLocalData;
+  
+  // Start
+  initSettings();
+</script>
+
+<!-- Include utils.js for bottom nav and shared functions -->
+<script src="utils.js"></script>
+<script>
+  // Ensure bottom nav renders with Settings active
+  // Override renderBottomNav to set 'settings' as active page
+  if (typeof renderBottomNav === 'function') {
+    // Wait a tiny bit for DOM ready
+    setTimeout(() => {
+      renderBottomNav('settings');
+    }, 50);
+  } else {
+    // Fallback nav render
+    setTimeout(() => {
+      const mount = document.getElementById('bottomNavMount');
+      if (mount && !mount.innerHTML.trim()) {
+        const NAV_TABS_FALLBACK = [
+          { id: 'home', label: 'Home', icon: '🏠', href: 'Home.html' },
+          { id: 'expenses', label: 'Expenses', icon: '📋', href: 'Expenses.html' },
+          { id: 'recurring', label: 'Recurring', icon: '🔄', href: 'Recurring.html' },
+          { id: 'installments', label: 'Installments', icon: '📆', href: 'Installments.html' },
+          { id: 'settings', label: 'Settings', icon: '⚙️', href: 'Settings.html' },
+        ];
+        const tabs = NAV_TABS_FALLBACK.map(t => {
+          const isActive = t.id === 'settings';
+          const click = isActive ? '' : `onclick="window.location.href='${t.href}'"`;
+          return `<button class="nav-tab${isActive ? ' active' : ''}" ${click}>
+            <span class="nav-tab-icon">${t.icon}</span>${t.label}
+          </button>`;
+        }).join('');
+        mount.innerHTML = `<nav class="bottom-nav"><div class="nav-tabs">${tabs}</div></nav>`;
+      }
+    }, 50);
+  }
+</script>
+
+<!-- Additional styles for toast type 'info' -->
+<style>
+  .toast.info {
+    background: var(--brand);
+  }
+  .setting-card {
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .setting-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+</style>
+
+</body>
+</html>
