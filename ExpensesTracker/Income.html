@@ -19,7 +19,7 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <style>
-    /* Income page specific styles - matching Categories.html design */
+    /* Income page specific styles */
     .header {
       display: flex;
       align-items: center;
@@ -34,7 +34,7 @@
       letter-spacing: -0.5px;
     }
 
-    /* Stats banner - same as Categories stats style */
+    /* Stats banner */
     .stats-card-income {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       border-radius: var(--radius-lg);
@@ -63,7 +63,7 @@
       margin-top: 4px;
     }
 
-    /* Add button - matching Categories add-cat-btn */
+    /* Add button */
     .add-income-btn {
       width: 100%;
       padding: 13px;
@@ -86,7 +86,35 @@
     .add-income-btn:hover { opacity: 0.92; }
     .add-income-btn:active { transform: scale(0.97); }
 
-    /* Filter row - 2 dropdowns side by side */
+    /* Pill-style tabs - matching Expenses.html */
+    .income-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .income-tab-btn {
+      flex: 1;
+      padding: 11px 6px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.25) !important;
+      border-bottom: 1px solid rgba(255,255,255,0.25) !important;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+      margin-bottom: 0;
+    }
+    .income-tab-btn.active {
+      background: #fff;
+      color: var(--brand);
+      border-color: transparent !important;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.10);
+    }
+
+    /* Filter row */
     .filter-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -109,7 +137,7 @@
       background: #fff;
     }
 
-    /* Income item row - matching Categories cat-row */
+    /* Income item row */
     .income-item {
       display: flex;
       align-items: center;
@@ -166,38 +194,19 @@
       flex-shrink: 0;
     }
 
-    /* Tabs - matching Categories cat-tabs style */
-    .income-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .income-tab-btn {
-      flex: 1;
-      background: none;
-      border: none;
-      padding: 10px 0;
-      font-family: 'Sora', sans-serif;
+    /* Section divider */
+    .section-divider {
+      font-size: 11px;
       font-weight: 700;
-      font-size: 14px;
       color: var(--text-3);
-      cursor: pointer;
-      transition: all 0.15s;
-      border-bottom: 2px solid transparent;
-    }
-    .income-tab-btn.active {
-      color: var(--brand);
-      border-bottom-color: var(--brand);
-    }
-    .income-panel {
-      display: none;
-    }
-    .income-panel.active {
-      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 10px 0 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
     }
 
-    /* Summary card - matching Categories card design */
+    /* Summary card */
     .summary-card {
       background: var(--surface);
       border-radius: var(--radius-lg);
@@ -227,7 +236,7 @@
       font-size: 14px;
     }
 
-    /* Year dropdown inside summary card - matching card content */
+    /* Year selector */
     .year-selector-wrap {
       padding: 0 20px 16px 20px;
     }
@@ -247,7 +256,7 @@
       background: #fff;
     }
 
-    /* Summary month rows - matching Categories structure */
+    /* Summary month rows */
     .summary-month-row {
       display: flex;
       align-items: center;
@@ -313,7 +322,7 @@
       color: var(--brand);
     }
 
-    /* Month detail modal - matching Categories modal */
+    /* Month detail modal */
     .detail-income-item {
       display: flex;
       align-items: center;
@@ -420,12 +429,10 @@
   <!-- Add Income Button -->
   <button class="add-income-btn" onclick="openAddIncomeModal()">➕ Add Income</button>
 
-  <!-- Tabs (matching Categories design) -->
-  <div class="card" style="padding-bottom: 0;">
-    <div class="income-tabs">
-      <button class="income-tab-btn active" data-tab="monthly">📅 Monthly Details</button>
-      <button class="income-tab-btn" data-tab="summary">📊 Year Summary</button>
-    </div>
+  <!-- Pill-style Tabs (matching Expenses.html) -->
+  <div class="income-tabs">
+    <button class="income-tab-btn active" data-tab="monthly">📊 Monthly Details</button>
+    <button class="income-tab-btn" data-tab="summary">📅 Year Summary</button>
   </div>
 
   <!-- Monthly Details Panel -->
@@ -546,6 +553,15 @@ let selectedIncomeId = null;
 
 const INCOME_SHEET = 'Income Log';
 
+// Use genIncomeId from utils.js (separate counter from expenses)
+// If genIncomeId doesn't exist yet, fallback to a simple implementation
+const genIncomeId = (typeof window.genIncomeId === 'function') ? window.genIncomeId : function() {
+  const key = 'income_id_counter';
+  const next = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, next);
+  return next;
+};
+
 // ======================== HELPERS ========================
 function getFilteredIncomes() {
   const month = parseInt(document.getElementById('monthSelect').value);
@@ -606,12 +622,10 @@ function renderIncomeList() {
 function getYearSummary(year) {
   const monthlyTotals = {};
   const monthlyCounts = {};
-  const monthlyEntries = {};
   
   for (let i = 0; i < 12; i++) {
     monthlyTotals[i] = 0;
     monthlyCounts[i] = 0;
-    monthlyEntries[i] = [];
   }
   
   incomes.forEach(inc => {
@@ -620,11 +634,10 @@ function getYearSummary(year) {
       const month = d.getMonth();
       monthlyTotals[month] += inc.amount;
       monthlyCounts[month]++;
-      monthlyEntries[month].push(inc);
     }
   });
   
-  return { monthlyTotals, monthlyCounts, monthlyEntries };
+  return { monthlyTotals, monthlyCounts };
 }
 
 function getYearTotal(year) {
@@ -839,9 +852,10 @@ async function loadIncomesFromSheet() {
     const rows = res.result.values || [];
     incomes = rows.map((row, idx) => parseIncomeRow(row, idx));
     
+    // Update income ID counter to the largest existing ID
     const maxId = incomes.reduce((m, i) => Math.max(m, Number(i.id) || 0), 0);
-    const stored = parseInt(localStorage.getItem('expense_id_counter') || '0');
-    if (maxId > stored) localStorage.setItem('expense_id_counter', maxId);
+    const stored = parseInt(localStorage.getItem('income_id_counter') || '0');
+    if (maxId > stored) localStorage.setItem('income_id_counter', maxId);
     
     if (currentUserEmail) {
       localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
@@ -992,10 +1006,13 @@ function setupTabs() {
       const tab = btn.dataset.tab;
       document.querySelectorAll('.income-tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById('monthlyPanel').classList.toggle('active', tab === 'monthly');
-      document.getElementById('summaryPanel').classList.toggle('active', tab === 'summary');
       
-      if (tab === 'summary') {
+      if (tab === 'monthly') {
+        document.getElementById('monthlyPanel').style.display = 'block';
+        document.getElementById('summaryPanel').style.display = 'none';
+      } else {
+        document.getElementById('monthlyPanel').style.display = 'none';
+        document.getElementById('summaryPanel').style.display = 'block';
         populateSummaryYearSelect();
         renderSummary();
       }
@@ -1100,6 +1117,10 @@ setTimeout(() => {
     }, 100);
   }
 }, 100);
+
+// Initialize panels
+document.getElementById('monthlyPanel').style.display = 'block';
+document.getElementById('summaryPanel').style.display = 'none';
 
 populateYearSelect();
 setupTabs();
