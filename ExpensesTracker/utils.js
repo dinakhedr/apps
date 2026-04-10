@@ -337,8 +337,9 @@ const NAV_TABS = [
   { id: 'home',         label: 'Home',         icon: '🏠', href: 'Home.html'         },
   { id: 'expenses',     label: 'Expenses',     icon: '📋', href: 'Expenses.html'     },
   { id: 'recurring',    label: 'Recurring',    icon: '🔄', href: 'Recurring.html'    },
-  { id: 'categories',   label: 'Categories',   icon: '⚙️', href: 'Categories.html'   },
   { id: 'installments', label: 'Installments', icon: '📆', href: 'Installments.html' },
+  { id: 'categories',   label: 'Categories',   icon: '⚙️', href: 'Categories.html'   },
+  
 ];
 
 function renderBottomNav(activePage, mountId = 'bottomNavMount') {
