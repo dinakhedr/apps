@@ -28,11 +28,17 @@
 
     /* ── Subscription row ── */
     .sub-card {
-      display: flex; align-items: center; gap: 11px;
-      padding: 11px 16px; border-bottom: 1px solid var(--border); position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
     }
-    .sub-card:last-child { border-bottom: none; padding-bottom: 0; }
+    .sub-card:last-child { border-bottom: none; }
     .sub-card:first-child { padding-top: 0; }
+
+    
     /* Left status bar */
     .sub-card::before {
       content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
@@ -64,8 +70,8 @@
     .sub-freq.monthly   { background-color: #c224d4; }
     .sub-freq.quarterly { background-color: #f59e0b; }
     .sub-freq.annual    { background-color: #3b82f6; }
-    .sub-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-    .sub-amount { font-weight: 700; font-size: 13px; color: var(--brand); min-width: 68px; text-align: right; }
+    .sub-right {display: flex;align-items: center;gap: 4px;flex-shrink: 0;}
+    .sub-amount {font-weight: 700;font-size: 13px;color: var(--brand);min-width: 60px;text-align: right;}
     .sub-card.paid-row .sub-amount { color: var(--text-3); }
 
     /* Pay button */
