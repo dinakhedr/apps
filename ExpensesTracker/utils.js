@@ -31,6 +31,8 @@ const BANK_PROVIDERS = [
   { key: 'QNB',     name: 'QNB',         logo: 'Logos/QNB.png'     },
   { key: 'Sympl',     name: 'Sympl',         logo: 'Logos/Sympl.png'     },
   { key: 'Valu',     name: 'Valu',         logo: 'Logos/Valu.png'     },
+  { key: 'Gamaya',     name: 'Gamaya',         logo: 'Logos/Gamaya.png'     },
+  { key: 'Borrow',     name: 'Borrow',         logo: 'Logos/Borrow.png'     },
   // Add more banks here
 ];
 
