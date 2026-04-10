@@ -11,6 +11,7 @@ const RECURRING_SHEET         = 'Recurring';
 const RECURRING_LOG_SHEET     = 'Recurring Log';
 const INSTALLMENTS_SHEET      = 'Installments';
 const INSTALLMENTS_LOG_SHEET  = 'Installments Log';
+const INCOME_LOG_SHEET  = 'Income Log';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets';
 const DISCOVERY_DOCS = [
   'https://sheets.googleapis.com/$discovery/rest?version=v4',
@@ -376,7 +377,7 @@ const NAV_TABS = [
   { id: 'expenses',     label: 'Expenses',     icon: '📋', href: 'Expenses.html'     },
   { id: 'recurring',    label: 'Recurring',    icon: '🔄', href: 'Recurring.html'    },
   { id: 'installments', label: 'Installments', icon: '📆', href: 'Installments.html' },
-  { id: 'categories',   label: 'Categories',   icon: '⚙️', href: 'Categories.html'   },
+  { id: 'settings',   label: 'Settings',   icon: '⚙️', href: 'Settings.html'   },
 ];
 
 function renderBottomNav(activePage, mountId = 'bottomNavMount') {
