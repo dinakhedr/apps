@@ -222,7 +222,7 @@
     </div>
     
     <!-- Income Card (placeholder for future page) -->
-    <div class="setting-card" onclick="navigateToIncome()">
+    <div class="setting-card" onclick="navigateTo('Income.html')">
       <div class="setting-icon">💰</div>
       <div class="setting-title">Income</div>
       <div class="setting-desc">Track and manage income sources</div>
@@ -303,17 +303,6 @@
   // Navigate to Categories
   function navigateTo(page) {
     window.location.href = page;
-  }
-  
-  // Income page placeholder (to be created later)
-  function navigateToIncome() {
-    // Show a friendly alert since Income.html doesn't exist yet
-    showToast('📊 Income page coming soon!', 'info');
-    // Optional: could also create a temporary alert modal
-    setTimeout(() => {
-      // For now just inform user, but we can also redirect to Categories
-      // as a temporary fallback if desired
-    }, 500);
   }
   
   // Clear local data (keeps Google Drive intact)
@@ -434,7 +423,7 @@
   
   // Override navigateToIncome if needed
   window.navigateTo = navigateTo;
-  window.navigateToIncome = navigateToIncome;
+    window.navigateTo = navigateTo;
   window.clearLocalData = clearLocalData;
   
   // Start
