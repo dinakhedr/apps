@@ -889,7 +889,7 @@ async function loadExpensesFromSheet(showMsg = false) {
     expenses   = rows
       .filter(r => r[2] && r[3])  // skip rows missing category or amount
       .map((r, i) => ({
-        // Never call genId()/Date.now() here — that creates a new ID every
+        // Never call genExpenseId()/Date.now() here — that creates a new ID every
         // read and makes rows look like new expenses on next load.
         id:        (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
         date:      r[1] || r[0],
