@@ -244,32 +244,20 @@ textarea { resize: vertical; min-height: 72px; }
 /* ── Toast ── */
 .toast {
   position: fixed;
-  bottom: 90px;
+  top: 24px;
   left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: #333;
-  color: #fff;
-  padding: 12px 24px;
-  border-radius: 40px;
-  font-size: 14px;
-  font-weight: 600;
-  z-index: 10000;
-  white-space: nowrap;
-  transition: transform 0.25s ease-out;
-  pointer-events: none;
-  max-width: 90vw;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  opacity: 0.95;
+  transform: translateX(-50%) translateY(-120px);
+  background: var(--text); color: #fff;
+  padding: 11px 22px; border-radius: 30px;
+  font-size: 13px; font-weight: 600;
+  z-index: 9999; white-space: nowrap;
+  opacity: 0;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  pointer-events: none; max-width: 90vw;
 }
-.toast.show {
-  transform: translateX(-50%) translateY(0);
-}
-.toast.success {
-  background: var(--success);
-}
-.toast.error {
-  background: var(--danger);
-}
+.toast.show    { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.success { background: var(--success); }
+.toast.error   { background: var(--danger); }
 
 /* ── Spinner / animation ── */
 @keyframes spin { to { transform: rotate(360deg); } }
