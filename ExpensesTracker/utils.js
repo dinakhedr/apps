@@ -72,6 +72,7 @@ function monthName(num) {  // 1-based
 const DEFAULT_CATEGORIES = [
   { value: 'Car Repairs',   icon: '🚗', bg: '#ffd1d1', chart: '#e57373' },
   { value: 'Cafe',          icon: '☕', bg: '#d4e8d4', chart: '#81c784' },
+  { value: 'Charity',       icon: '🏥', bg: '#e0f2fe', chart: '#38bdf8' },
   { value: 'Shopping',      icon: '🛍️', bg: '#e8d5b7', chart: '#d4a574' },
   { value: 'Entertainment', icon: '🎬', bg: '#d4b8ff', chart: '#b39ddb' },
   { value: 'Electronics',   icon: '📱', bg: '#d4e8ff', chart: '#7986cb' },
