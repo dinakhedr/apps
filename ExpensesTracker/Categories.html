@@ -585,7 +585,6 @@ async function deleteCustom(i) {
     showToast('❌ Delete failed', 'error');
   }
 }
-
 async function persistToSheet() {
   if (!spreadsheetId) { showToast('⚠️ Not connected', 'error'); return false; }
   if (isSaving) return false;
@@ -601,23 +600,7 @@ async function persistToSheet() {
     return false;
   }
 }
-async function persistToSheet() {
-  if (!spreadsheetId) { showToast('⚠️ Not connected', 'error'); return false; }
-  if (isSaving) return false;
-  isSaving = true;
-  try {
-    await saveCategoriesToSheet(spreadsheetId, allCats);
-    isSaving = false;
-    return true;
-  } catch(e) {
-    console.error(e);
-    showToast('❌ Save failed', 'error');
-    isSaving = false;
-    return false;
-  }
-}
-
-// ========== ADD THIS NEW FUNCTION HERE ==========
+  
 async function isCategoryUsedInExpenses(categoryName) {
   if (!spreadsheetId) return false;
   
@@ -636,37 +619,8 @@ async function isCategoryUsedInExpenses(categoryName) {
     return false;
   }
 }
-// ========== END OF NEW FUNCTION ==========
+function closeCatModal() { document.getElementById('catModalBackdrop').classList.remove('open'); editingIndex = null; }
 
-async function deleteCustom(i) {
-  const categoryToDelete = allCats[i];
-  
-  // Only check for expense categories (income can be deleted freely)
-  if (categoryToDelete.catKind === 'expense') {
-    showToast('Checking if category is used...', 'info');
-    
-    const isUsed = await isCategoryUsedInExpenses(categoryToDelete.value);
-    
-    if (isUsed) {
-      showToast(`❌ Cannot delete "${categoryToDelete.value}" - it has expenses. Hide it instead.`, 'error');
-      return;
-    }
-  }
-  
-  if (!confirm(`Delete "${categoryToDelete.value}"? This action cannot be undone.`)) return;
-  
-  const removed = allCats.splice(i, 1);
-  render();
-  try {
-    await persistToSheet();
-    showToast('🗑️ Category deleted');
-  } catch(e) {
-    allCats.splice(i, 0, removed[0]);
-    render();
-    showToast('❌ Delete failed', 'error');
-  }
-}
-  // ========== ADD THIS NEW FUNCTION HERE ==========
 async function deleteCustomWithCheck(i) {
   const categoryToDelete = allCats[i];
   
@@ -792,7 +746,8 @@ function openEditCustom(i) {
   buildIconGrid(); 
   buildColorGrid(); 
   updatePreview(); 
-  document.getElementById('catModalFooter').innerHTML = `<button class="btn-danger" onclick="deleteCustomWithCheck(${i})">Delete</button><button class="btn-cancel" onclick="closeCatModal()">Cancel</button><button class="btn-save" onclick="saveCategory()">Save</button>`;  document.getElementById('catModalBackdrop').classList.add('open'); 
+document.getElementById('catModalFooter').innerHTML = `<button class="btn-danger" onclick="deleteCustomWithCheck(${i})">Delete</button><button class="btn-cancel" onclick="closeCatModal()">Cancel</button><button class="btn-save" onclick="saveCategory()">Save</button>`;
+document.getElementById('catModalBackdrop').classList.add('open');
   setTimeout(() => initRadioCards(), 10);
 }
 
@@ -860,7 +815,6 @@ function updatePreview() {
   if (type === 'income') document.getElementById('previewBudget').textContent = '💰 Income (no budget)'; 
   else document.getElementById('previewBudget').textContent = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit'; 
 }
-function closeCatModal() { document.getElementById('catModalBackdrop').classList.remove('open'); editingIndex = null; }
 
 async function saveCategory() { 
   const name = document.getElementById('catName').value.trim(); 
