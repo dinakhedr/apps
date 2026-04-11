@@ -91,12 +91,18 @@ const DEFAULT_EXPENSE_CATEGORIES = [
 
 // ── Default INCOME Categories (type: 'income') ────────────
 const DEFAULT_INCOME_CATEGORIES = [
-  { value: 'Salary',        icon: '💵', bg: '#d1fae5', chart: '#34d399', catKind: 'income' },
-  { value: 'Commission',    icon: '📊', bg: '#ede9fe', chart: '#a78bfa', catKind: 'income' },
-  { value: 'Overtime',      icon: '⏰', bg: '#fef3c7', chart: '#fbbf24', catKind: 'income' },
-  { value: 'Freelance',     icon: '💻', bg: '#dbeafe', chart: '#60a5fa', catKind: 'income' },
-  { value: 'Rental Income', icon: '🏠', bg: '#fce7f3', chart: '#f472b6', catKind: 'income' },
-  { value: 'Bank Interest', icon: '🏦', bg: '#e0e7ff', chart: '#818cf8', catKind: 'income' },
+  { value: 'Salary',              icon: '💵', bg: '#d1fae5', chart: '#34d399', catKind: 'income' },
+  { value: 'Commission',          icon: '📊', bg: '#ede9fe', chart: '#a78bfa', catKind: 'income' },
+  { value: 'Overtime',            icon: '⏰', bg: '#fef3c7', chart: '#fbbf24', catKind: 'income' },
+  { value: 'Freelance',           icon: '💻', bg: '#dbeafe', chart: '#60a5fa', catKind: 'income' },
+  { value: 'Rental Income',       icon: '🏠', bg: '#fce7f3', chart: '#f472b6', catKind: 'income' },
+  { value: 'Bank Interest',       icon: '🏦', bg: '#e0e7ff', chart: '#818cf8', catKind: 'income' },
+  { value: 'Certificate Interest', icon: '📋', bg: '#fef9c3', chart: '#facc15', catKind: 'income' },
+  { value: 'Dividends',           icon: '📈', bg: '#d1fae5', chart: '#10b981', catKind: 'income' },
+  { value: 'Gift',                icon: '🎁', bg: '#fce7f3', chart: '#f472b6', catKind: 'income' },
+  { value: 'Refund',              icon: '🔄', bg: '#e0f2fe', chart: '#38bdf8', catKind: 'income' },
+  { value: 'Bonus',               icon: '🎉', bg: '#fef3c7', chart: '#fbbf24', catKind: 'income' },
+  { value: 'Other Income',        icon: '💰', bg: '#e0e0e0', chart: '#9e9e9e', catKind: 'income' },
 ];
 
 // Combine all default categories
