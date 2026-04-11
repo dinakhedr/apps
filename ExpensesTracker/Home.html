@@ -1225,7 +1225,13 @@ async function handleCredentialResponse(response) {
 
   showScreen('loadingScreen');
   await initGapiClient();
-  makeTokenClient(completeLoginAndSetup).requestAccessToken();
+
+  // requestAccessToken() must be called from a direct user gesture (click),
+  // not from an async callback — otherwise browsers block the popup.
+  // showResumeScreen shows a button and calls it only on tap.
+  showResumeScreen(() => {
+    makeTokenClient(completeLoginAndSetup).requestAccessToken();
+  });
 }
 
 // ── Check existing login on load ──────────────────────────
