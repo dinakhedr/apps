@@ -939,7 +939,7 @@ async function saveIncome() {
     }
   } else {
     const newIncome = {
-      id: genIncomeId(),
+      id: await getNextIncomeId(),
       date,
       category,
       amount,
