@@ -292,19 +292,57 @@ function getUserNameFromToken(token) {
   } catch { return null; }
 }
 
-// ── ID generator for expenses and incomes ────
-function genExpenseId() {
-  const key = 'expense_id_counter';
-  const next = parseInt(localStorage.getItem(key) || '0') + 1;
-  localStorage.setItem(key, next);
-  return next;
+// ── Async ID generators (reads from sheet) ────
+async function getNextExpenseId() {
+  if (!spreadsheetId) {
+    const next = parseInt(localStorage.getItem('expense_id_counter') || '0') + 1;
+    localStorage.setItem('expense_id_counter', next);
+    return next;
+  }
+  
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${EXPENSES_SHEET}!F:F`
+    });
+    const rows = res.result.values || [];
+    let maxId = 0;
+    for (let i = 1; i < rows.length; i++) {
+      const id = parseInt(rows[i][0]);
+      if (!isNaN(id) && id > maxId) maxId = id;
+    }
+    return maxId + 1;
+  } catch (e) {
+    const next = parseInt(localStorage.getItem('expense_id_counter') || '0') + 1;
+    localStorage.setItem('expense_id_counter', next);
+    return next;
+  }
 }
 
-function genIncomeId() {
-  const key = 'income_id_counter';
-  const next = parseInt(localStorage.getItem(key) || '0') + 1;
-  localStorage.setItem(key, next);
-  return next;
+async function getNextIncomeId() {
+  if (!spreadsheetId) {
+    const next = parseInt(localStorage.getItem('income_id_counter') || '0') + 1;
+    localStorage.setItem('income_id_counter', next);
+    return next;
+  }
+  
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${INCOME_LOG_SHEET}!F:F`
+    });
+    const rows = res.result.values || [];
+    let maxId = 0;
+    for (let i = 1; i < rows.length; i++) {
+      const id = parseInt(rows[i][0]);
+      if (!isNaN(id) && id > maxId) maxId = id;
+    }
+    return maxId + 1;
+  } catch (e) {
+    const next = parseInt(localStorage.getItem('income_id_counter') || '0') + 1;
+    localStorage.setItem('income_id_counter', next);
+    return next;
+  }
 }
 
 // ── Access token (sessionStorage) ────────────────────────
