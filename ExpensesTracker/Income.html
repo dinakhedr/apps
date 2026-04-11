@@ -551,16 +551,8 @@ let currentAccessToken = null;
 let editingIncomeId = null;
 let selectedIncomeId = null;
 
-const INCOME_SHEET = 'Income Log';
-
-// Use genIncomeId from utils.js (separate counter from expenses)
-// If genIncomeId doesn't exist yet, fallback to a simple implementation
-const genIncomeId = (typeof window.genIncomeId === 'function') ? window.genIncomeId : function() {
-  const key = 'income_id_counter';
-  const next = parseInt(localStorage.getItem(key) || '0') + 1;
-  localStorage.setItem(key, next);
-  return next;
-};
+// Use the constant from utils.js
+const INCOME_SHEET = INCOME_LOG_SHEET;
 
 // ======================== HELPERS ========================
 function getFilteredIncomes() {
