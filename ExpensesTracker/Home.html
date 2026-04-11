@@ -537,10 +537,11 @@ function getRecentActivity(limit = 5) {
     }))
   ];
   
+  // Sort by timestamp instead of date
   allActivities.sort((a, b) => {
-    const dateA = parseLocalDate(a.date);
-    const dateB = parseLocalDate(b.date);
-    return dateB - dateA;
+    const timeA = a.timestamp ? new Date(a.timestamp) : parseLocalDate(a.date);
+    const timeB = b.timestamp ? new Date(b.timestamp) : parseLocalDate(b.date);
+    return timeB - timeA;
   });
   
   return allActivities.slice(0, limit);
