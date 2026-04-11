@@ -428,7 +428,7 @@ const NAV_TABS = [
   { id: 'expenses',     label: 'Expenses',     icon: '📋', href: 'Expenses.html'     },
   { id: 'recurring',    label: 'Recurring',    icon: '🔄', href: 'Recurring.html'    },
   { id: 'installments', label: 'Installments', icon: '📆', href: 'Installments.html' },
-  { id: 'income',   label: 'Incomee',   icon: '💰', href: 'Income.html'   },
+  { id: 'income',   label: 'Income',   icon: '💰', href: 'Income.html'   },
   { id: 'dashboard',   label: 'Dashoard',   icon: '📊', href: 'Dashboard.html'   },
   
 ];
