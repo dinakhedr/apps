@@ -69,13 +69,9 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
-    .kpi-icon {
-      font-size: 22px;
-      line-height: 1;
-    }
     .kpi-value {
       font-family: 'Sora', sans-serif;
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 800;
       color: #fff;
       line-height: 1.2;
@@ -116,9 +112,6 @@
     .kpi-card-secondary .kpi-value {
       font-size: 18px;
       font-weight: 700;
-    }
-    .kpi-card-secondary .kpi-icon {
-      font-size: 18px;
     }
 
     /* Net Cash Card */
@@ -271,13 +264,11 @@
       margin-bottom: 20px;
     }
     .quick-btn {
-      background: #fff;
       border: none;
       border-radius: var(--radius-sm);
       padding: 14px;
       font-size: 14px;
       font-weight: 700;
-      color: var(--brand);
       cursor: pointer;
       font-family: 'DM Sans', sans-serif;
       display: flex;
@@ -295,7 +286,7 @@
       color: #fff;
     }
     .quick-btn.expense {
-      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       color: #fff;
     }
 
@@ -317,6 +308,11 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
+    
+    /* Trend styles */
+    .trend-up { color: #6ee7b7; }
+    .trend-down { color: #fca5a5; }
+    .kpi-trend { font-size: 11px; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -345,7 +341,6 @@
     <div class="kpi-card-primary income-card">
       <div class="kpi-card-top">
         <div class="kpi-label">Total Income</div>
-        <div class="kpi-icon">💰</div>
       </div>
       <div class="kpi-value" id="totalIncome">EGP 0</div>
       <div class="kpi-trend" id="incomeTrend"></div>
@@ -353,7 +348,6 @@
     <div class="kpi-card-primary expense-card">
       <div class="kpi-card-top">
         <div class="kpi-label">Total Expenses</div>
-        <div class="kpi-icon">💸</div>
       </div>
       <div class="kpi-value" id="totalExpenses">EGP 0</div>
       <div class="kpi-trend" id="expensesTrend"></div>
@@ -364,24 +358,21 @@
   <div class="breakdown-section">
     <div class="breakdown-title">Expenses Breakdown</div>
     <div class="kpi-row-3">
-      <div class="kpi-card-secondary">
+      <div class="kpi-card-secondary" style="border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.18);">
         <div class="kpi-card-top">
           <div class="kpi-label">Daily</div>
-          <div class="kpi-icon">📝</div>
         </div>
         <div class="kpi-value" id="dailyExpenses">EGP 0</div>
       </div>
-      <div class="kpi-card-secondary">
+      <div class="kpi-card-secondary" style="border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.18);">
         <div class="kpi-card-top">
           <div class="kpi-label">Recurring</div>
-          <div class="kpi-icon">🔄</div>
         </div>
         <div class="kpi-value" id="recurringExpenses">EGP 0</div>
       </div>
-      <div class="kpi-card-secondary">
+      <div class="kpi-card-secondary" style="border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.18);">
         <div class="kpi-card-top">
           <div class="kpi-label">Installments</div>
-          <div class="kpi-icon">📆</div>
         </div>
         <div class="kpi-value" id="installmentsExpenses">EGP 0</div>
       </div>
@@ -402,7 +393,7 @@
     <div class="card-title" style="justify-content: space-between;">
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="card-title-icon">📈</span>
-        <span>Income vs Total Expenses</span>
+        <span>Monthly Breakdown</span>
       </div>
       <select id="chartYearSelect" style="width: auto; padding: 6px 12px; font-size: 13px; border-radius: 20px;">
         <option value="2026">2026</option>
@@ -427,10 +418,10 @@
     <div id="topCategoriesList"></div>
   </div>
 
-  <!-- Quick Actions at bottom -->
+  <!-- Quick Actions at bottom - Income on left, Expense on right -->
   <div class="quick-actions">
-    <button class="quick-btn expense" id="addExpenseBtn">➕ Add Expense</button>
     <button class="quick-btn income" id="addIncomeBtn">💰 Add Income</button>
+    <button class="quick-btn expense" id="addExpenseBtn">➕ Add Expense</button>
   </div>
 
 </div>
@@ -512,13 +503,18 @@
 // ======================== STATE ==========================
 let expenses = [];
 let incomes = [];
-let recurringList = [];
-let installments = [];
-let paymentLogs = [];
 let spreadsheetId = null;
 let currentUserEmail = null;
 let currentAccessToken = null;
 let trendChart = null;
+
+// Chart colors
+const CHART_COLORS = {
+  income: '#10b981',
+  daily: '#3b82f6',
+  recurring: '#f59e0b',
+  installments: '#8b5cf6'
+};
 
 // ======================== DATA LOADING ===================
 function parseLocalDate(str) {
@@ -695,7 +691,9 @@ async function getMonthlyData(year = null) {
   
   const labels = [];
   const incomeData = [];
-  const totalExpensesData = [];
+  const dailyData = [];
+  const recurringData = [];
+  const installmentsData = [];
   
   // Get all recurring logs and installment logs once
   let recurringLogs = [];
@@ -735,6 +733,7 @@ async function getMonthlyData(year = null) {
         return d.getMonth() === month && d.getFullYear() === year;
       })
       .reduce((sum, exp) => sum + exp.amount, 0);
+    dailyData.push(isFutureMonth ? null : monthDaily);
     
     // Recurring Expenses from logs
     let monthRecurring = 0;
@@ -746,6 +745,7 @@ async function getMonthlyData(year = null) {
         }
       }
     });
+    recurringData.push(isFutureMonth ? null : monthRecurring);
     
     // Installments Expenses from logs
     let monthInstallments = 0;
@@ -757,18 +757,16 @@ async function getMonthlyData(year = null) {
         }
       }
     });
-    
-    const monthTotalExpenses = monthDaily + monthRecurring + monthInstallments;
-    totalExpensesData.push(isFutureMonth ? null : monthTotalExpenses);
+    installmentsData.push(isFutureMonth ? null : monthInstallments);
   }
   
-  return { labels, incomeData, totalExpensesData };
+  return { labels, incomeData, dailyData, recurringData, installmentsData };
 }
 
 async function renderChart() {
   const yearSelect = document.getElementById('chartYearSelect');
   const selectedYear = parseInt(yearSelect.value);
-  const { labels, incomeData, totalExpensesData } = await getMonthlyData(selectedYear);
+  const { labels, incomeData, dailyData, recurringData, installmentsData } = await getMonthlyData(selectedYear);
   
   if (trendChart) trendChart.destroy();
   
@@ -781,25 +779,51 @@ async function renderChart() {
         {
           label: 'Income',
           data: incomeData,
-          borderColor: '#10b981',
+          borderColor: CHART_COLORS.income,
           backgroundColor: 'rgba(16,185,129,0.10)',
           borderWidth: 2.5,
           tension: 0.4,
           fill: true,
-          pointBackgroundColor: '#10b981',
+          pointBackgroundColor: CHART_COLORS.income,
           pointRadius: 3,
           pointHoverRadius: 6,
           spanGaps: false
         },
         {
-          label: 'Total Expenses',
-          data: totalExpensesData,
-          borderColor: '#ef4444',
-          backgroundColor: 'rgba(239,68,68,0.08)',
-          borderWidth: 2.5,
+          label: 'Daily Expenses',
+          data: dailyData,
+          borderColor: CHART_COLORS.daily,
+          backgroundColor: 'rgba(59,130,246,0.08)',
+          borderWidth: 2,
           tension: 0.4,
           fill: true,
-          pointBackgroundColor: '#ef4444',
+          pointBackgroundColor: CHART_COLORS.daily,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          spanGaps: false
+        },
+        {
+          label: 'Recurring Expenses',
+          data: recurringData,
+          borderColor: CHART_COLORS.recurring,
+          backgroundColor: 'rgba(245,158,11,0.08)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: CHART_COLORS.recurring,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          spanGaps: false
+        },
+        {
+          label: 'Installments',
+          data: installmentsData,
+          borderColor: CHART_COLORS.installments,
+          backgroundColor: 'rgba(139,92,246,0.08)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: CHART_COLORS.installments,
           pointRadius: 3,
           pointHoverRadius: 6,
           spanGaps: false
@@ -833,8 +857,10 @@ async function renderChart() {
   
   // Custom legend
   const legendHtml = `
-    <span class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Income</span>
-    <span class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Total Expenses</span>
+    <span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.income}"></div> Income</span>
+    <span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.daily}"></div> Daily Expenses</span>
+    <span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.recurring}"></div> Recurring</span>
+    <span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.installments}"></div> Installments</span>
   `;
   document.getElementById('chartLegend').innerHTML = legendHtml;
 }
