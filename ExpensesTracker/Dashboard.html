@@ -348,9 +348,19 @@
 
   <!-- Chart Card -->
   <div class="card">
-    <div class="card-title">
-      <span class="card-title-icon">📈</span>
-      Spending Breakdown (Last 6 Months)
+    <div class="card-title" style="justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="card-title-icon">📈</span>
+        <span>Income vs Expenses</span>
+      </div>
+      <select id="chartYearSelect" style="width: auto; padding: 6px 12px; font-size: 13px; border-radius: 20px;">
+        <option value="2025">2025</option>
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+        <option value="2028">2028</option>
+        <option value="2029">2029</option>
+        <option value="2030">2030</option>
+      </select>
     </div>
     <div class="chart-container">
       <canvas id="trendChart"></canvas>
@@ -620,8 +630,11 @@ async function renderKPI() {
 }
 
 // ======================== CHART ==========================
-async function getMonthlyData(monthsBack = 6) {
-  const now = new Date();
+async function getMonthlyData(year = null) {
+  if (!year) {
+    year = new Date().getFullYear();
+  }
+  
   const labels = [];
   const incomeData = [];
   const dailyData = [];
@@ -643,11 +656,9 @@ async function getMonthlyData(monthsBack = 6) {
     installmentLogs = installmentRes.result.values || [];
   } catch(e) { console.error(e); }
   
-  for (let i = monthsBack - 1; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    labels.push(MONTHS_SHORT[month] + ' ' + year.toString().slice(-2));
+  // Loop through all 12 months of the selected year
+  for (let month = 0; month < 12; month++) {
+    labels.push(MONTHS_SHORT[month]);
     
     // Income
     const monthIncome = incomes
@@ -696,7 +707,9 @@ async function getMonthlyData(monthsBack = 6) {
 }
 
 async function renderChart() {
-  const { labels, incomeData, dailyData, recurringData, installmentsData } = await getMonthlyData(6);
+  const yearSelect = document.getElementById('chartYearSelect');
+  const selectedYear = parseInt(yearSelect.value);
+  const { labels, incomeData, dailyData, recurringData, installmentsData } = await getMonthlyData(selectedYear);
   
   if (trendChart) trendChart.destroy();
   
@@ -745,9 +758,19 @@ async function renderChart() {
       maintainAspectRatio: true,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatMoney(ctx.raw)}` } }
+        tooltip: { 
+          callbacks: { 
+            label: (ctx) => `${ctx.dataset.label}: ${formatMoney(ctx.raw)}` 
+          } 
+        }
       },
-      scales: { y: { beginAtZero: true, grid: { color: '#e8e8f0' }, ticks: { callback: (v) => 'EGP ' + v.toLocaleString() } } }
+      scales: { 
+        y: { 
+          beginAtZero: true, 
+          grid: { color: '#e8e8f0' }, 
+          ticks: { callback: (v) => 'EGP ' + v.toLocaleString() } 
+        } 
+      }
     }
   });
   
@@ -1038,9 +1061,8 @@ async function initDashboard() {
 document.getElementById('syncBtn').addEventListener('click', syncAll);
 document.getElementById('addExpenseBtn').addEventListener('click', openExpenseModal);
 document.getElementById('addIncomeBtn').addEventListener('click', openIncomeModal);
-document.getElementById('manageCategoriesBtn').addEventListener('click', () => {
-  window.location.href = 'Expenses.html';
-});
+document.getElementById('manageCategoriesBtn').addEventListener('click', () => {window.location.href = 'Expenses.html';});
+document.getElementById('chartYearSelect').addEventListener('change', () => renderChart());
 
 document.getElementById('expenseModal').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeExpenseModal();
