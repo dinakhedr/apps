@@ -341,7 +341,6 @@
       width: 40px;
       height: 40px;
       border-radius: 10px;
-      background: var(--surface-2);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -742,18 +741,38 @@ function getYearSummary(year) {
     monthlyRecurring[i] = [];
   }
   
+  // Get all paid logs
+  const paidLogsMap = new Map(); // key: "subscriptionName_year_month" -> true
+  try {
+    const paidEntries = window._allPaidLogs || [];
+    paidEntries.forEach(log => {
+      if (log.date) {
+        const d = parseLocalDate(log.date);
+        const key = `${log.name}_${d.getFullYear()}_${d.getMonth()}`;
+        paidLogsMap.set(key, true);
+      }
+    });
+  } catch(e) { console.error(e); }
+  
   recurringList.forEach(sub => {
-    if (!sub.active) return;
+    // For each subscription, we need to determine which months it was active
+    // Active means: either it's still active OR we have paid logs for it
     
-    // Get all payment dates for this subscription
     let currentDate = new Date(sub.startYear || new Date().getFullYear(), sub.startMonth - 1, 1);
-    const endYear = currentDate.getFullYear() + 5; // Look ahead 5 years
+    const maxDate = new Date(year + 1, 11, 31);
     
-    while (currentDate.getFullYear() <= endYear) {
+    while (currentDate <= maxDate) {
       const paymentYear = currentDate.getFullYear();
       const paymentMonth = currentDate.getMonth();
       
-      if (paymentYear === year) {
+      // Check if there's a paid log for this month
+      const paidKey = `${sub.name}_${paymentYear}_${paymentMonth}`;
+      const hasPaidLog = paidLogsMap.has(paidKey);
+      
+      // Only include if:
+      // 1. It's the selected year AND
+      // 2. Either (subscription is active OR there's a paid log for this month)
+      if (paymentYear === year && (sub.active || hasPaidLog)) {
         monthlyTotals[paymentMonth] = (monthlyTotals[paymentMonth] || 0) + sub.amount;
         monthlyRecurring[paymentMonth].push({
           id: sub.id,
@@ -761,7 +780,8 @@ function getYearSummary(year) {
           category: sub.category,
           amount: sub.amount,
           frequency: sub.frequency,
-          paymentDay: sub.paymentDay
+          paymentDay: sub.paymentDay,
+          isPaid: hasPaidLog
         });
       }
       
@@ -774,6 +794,7 @@ function getYearSummary(year) {
         currentDate.setFullYear(currentDate.getFullYear() + 1);
       }
       
+      // Stop if we've gone too far
       if (currentDate.getFullYear() > year + 1) break;
     }
   });
@@ -869,12 +890,15 @@ function openMonthDetail(year, month) {
     container.innerHTML = sorted.map(rec => {
       const icon = getRecurringCategoryIcon(rec.category);
       const freqBadge = rec.frequency === 'Monthly' ? 'Monthly' : rec.frequency === 'Quarterly' ? 'Quarterly' : 'Annual';
+      const statusClass = rec.isPaid ? 'detail-status-paid' : 'detail-status-pending';
+      const statusText = rec.isPaid ? '✅ Paid' : '⏳ Pending';
       
       return `
         <div class="detail-recurring-item">
-          <div class="detail-recurring-icon" style="background:#f0fdf4">${icon}</div>
+          <div class="detail-recurring-icon" style="background:${rec.isPaid ? '#d1fae5' : '#fef3c7'}">${icon}</div>
           <div class="detail-recurring-info">
             <div class="detail-recurring-name">${escapeHtml(rec.name)}</div>
+            <div class="detail-recurring-status ${statusClass}" style="display:inline-block; margin-top:4px;">${statusText}</div>
             <div style="font-size:10px;color:var(--text-3);margin-top:2px">${freqBadge} · Day ${rec.paymentDay}</div>
           </div>
           <div class="detail-right-col">
@@ -1039,6 +1063,10 @@ function renderLog(entries) {
     const d = new Date(e.date + 'T00:00:00');
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
+  
+  // Store all paid logs globally for summary reference
+  window._allPaidLogs = entries;
+  
   window._paidDates = {};
   thisMonth.forEach(e => {
     const d = new Date(e.date + 'T00:00:00');
@@ -1167,7 +1195,7 @@ document.getElementById('monthDetailModal').addEventListener('click', e => {
 
 // ── Sheet parsing ──────────────────────────────────────────
 function parseRecurringRow(row) {
-  if(row.length<8) return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:'Other', frequency:row[2]||'Monthly', amount:parseFloat(row[3])||0, startMonth:parseInt(row[4])||1, paymentDay:parseInt(row[5])||1, startYear:parseInt(row[6])||new Date().getFullYear(), active:row[7]==='true' };
+  if(row.length<9) return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:'Other', frequency:row[2]||'Monthly', amount:parseFloat(row[3])||0, startMonth:parseInt(row[4])||1, paymentDay:parseInt(row[5])||1, startYear:parseInt(row[6])||new Date().getFullYear(), active:row[7]==='true' };
   return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:row[2]||'Other', frequency:row[3]||'Monthly', amount:parseFloat(row[4])||0, startMonth:parseInt(row[5])||1, paymentDay:parseInt(row[6])||1, startYear:parseInt(row[7])||new Date().getFullYear(), active:row[8]==='true' };
 }
 function recurringToRow(s) { return [s.id,s.name,s.category,s.frequency,s.amount,s.startMonth,s.paymentDay,s.startYear||new Date().getFullYear(),s.active?'true':'false']; }
