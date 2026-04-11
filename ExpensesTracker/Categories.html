@@ -21,41 +21,89 @@
   <style>
     /* ── Page layout ── */
     .header {
-      display: flex; align-items: center;
+      display: flex;
+      align-items: center;
       justify-content: space-between;
       margin-bottom: 24px;
     }
     .header-left { display: flex; align-items: center; gap: 10px; }
     .header h1 {
-      font-family: 'Sora', sans-serif; font-size: 22px;
-      font-weight: 800; color: #fff; letter-spacing: -0.5px;
+      font-family: 'Sora', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
     }
 
     /* ── Add custom category button ── */
     .add-cat-btn {
-      width: 100%; padding: 13px;
-      background: #fff; color: var(--brand);
-      border: none; border-radius: var(--radius-sm);
-      font-size: 15px; font-weight: 700;
-      font-family: 'Sora', sans-serif; cursor: pointer;
+      width: 100%;
+      padding: 13px;
+      background: #fff;
+      color: var(--brand);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Sora', sans-serif;
+      cursor: pointer;
       box-shadow: 0 4px 16px rgba(0,0,0,0.10);
       transition: opacity 0.15s, transform 0.15s;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       margin-bottom: 18px;
     }
-    .add-cat-btn:hover  { opacity: 0.92; }
+    .add-cat-btn:hover { opacity: 0.92; }
     .add-cat-btn:active { transform: scale(0.97); }
+
+    /* ── Pill-style tabs (matching Expenses.html) ── */
+    .cat-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .cat-tab-btn {
+      flex: 1;
+      padding: 11px 6px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.25) !important;
+      border-bottom: 1px solid rgba(255,255,255,0.25) !important;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+      margin-bottom: 0;
+    }
+    .cat-tab-btn.active {
+      background: #fff;
+      color: var(--brand);
+      border-color: transparent !important;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.10);
+    }
 
     /* ── Category row ── */
     .cat-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 0; border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
     }
     .cat-row:last-child { border-bottom: none; }
     .cat-icon-preview {
-      width: 42px; height: 42px; border-radius: 13px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
     }
     .cat-info { flex: 1; min-width: 0; }
     .cat-name-text { font-weight: 600; font-size: 14px; color: var(--text); }
@@ -66,16 +114,27 @@
     /* ── Toggle switch ── */
     .toggle-wrap { display: flex; align-items: center; }
     .toggle {
-      position: relative; width: 40px; height: 22px;
-      background: var(--border); border-radius: 11px;
-      cursor: pointer; transition: background 0.2s; flex-shrink: 0;
-      border: none; padding: 0;
+      position: relative;
+      width: 40px;
+      height: 22px;
+      background: var(--border);
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      border: none;
+      padding: 0;
     }
     .toggle.on { background: var(--success); }
     .toggle::after {
-      content: ''; position: absolute;
-      width: 18px; height: 18px; border-radius: 50%;
-      background: #fff; top: 2px; left: 2px;
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      top: 2px;
+      left: 2px;
       transition: transform 0.2s;
       box-shadow: 0 1px 4px rgba(0,0,0,0.18);
     }
@@ -84,108 +143,123 @@
     /* ── Form inside modal ── */
     .form-group { display: flex; flex-direction: column; margin-bottom: 14px; }
     .form-group label {
-      font-size: 11px; font-weight: 700; color: var(--text-2);
-      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
       display: block;
     }
     .form-group input, .form-group select {
-      width: 100%; padding: 11px 13px;
-      border: 2px solid var(--border); border-radius: var(--radius-sm);
-      font-size: 15px; font-family: 'DM Sans', sans-serif;
-      background: var(--surface-2); color: var(--text);
-      -webkit-appearance: none; appearance: none;
+      width: 100%;
+      padding: 11px 13px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface-2);
+      color: var(--text);
+      -webkit-appearance: none;
+      appearance: none;
     }
     .form-group input:focus, .form-group select:focus {
-      outline: none; border-color: var(--brand); background: #fff;
+      outline: none;
+      border-color: var(--brand);
+      background: #fff;
     }
 
     /* ── Type radio group (Income/Expense) ── */
-    /* Enhanced Radio Button Cards */
     .type-radio-group {
       display: flex;
       gap: 12px;
       margin-bottom: 20px;
     }
-
-.type-radio-card {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 16px;
-  background: var(--surface-2);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-    
-.type-radio-card:hover {
-  border-color: var(--brand);
-  background: #f8f8ff;
-}
-.type-radio-card.selected {
-  border-color: var(--brand);
-  background: linear-gradient(135deg, rgba(91,94,244,0.08) 0%, rgba(139,92,246,0.08) 100%);
-}
-    
-.type-radio-card input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-  margin: 0;
-}
-
+    .type-radio-card {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .type-radio-card:hover {
+      border-color: var(--brand);
+      background: #f8f8ff;
+    }
+    .type-radio-card.selected {
+      border-color: var(--brand);
+      background: linear-gradient(135deg, rgba(91,94,244,0.08) 0%, rgba(139,92,246,0.08) 100%);
+    }
+    .type-radio-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+    }
     .type-radio-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: 700;
-}
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 700;
+    }
     .type-radio-card[data-type="expense"] .type-radio-icon {
-  background: #fee2e2;
-  border: 1.5px solid #fca5a5;
-  color: #dc2626;
-}
-
-.type-radio-card[data-type="income"] .type-radio-icon {
-  background: #dcfce7;
-  border: 1.5px solid #86efac;
-  color: #16a34a;
-}
-    
-.type-radio-label {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-}
-  
-
+      background: #fee2e2;
+      border: 1.5px solid #fca5a5;
+      color: #dc2626;
+    }
+    .type-radio-card[data-type="income"] .type-radio-icon {
+      background: #dcfce7;
+      border: 1.5px solid #86efac;
+      color: #16a34a;
+    }
+    .type-radio-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
     .type-radio-card.selected .type-radio-label {
-  color: var(--brand);
-}
-    
+      color: var(--brand);
+    }
 
     /* ── Icon picker ── */
     .icon-picker-label {
-      font-size: 11px; font-weight: 700; color: var(--text-2);
-      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      display: block;
     }
     .icon-grid {
-      display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-bottom: 14px;
     }
     .icon-option {
-      width: 100%; aspect-ratio: 1; border-radius: 10px;
-      background: var(--surface-2); border: 2px solid transparent;
-      font-size: 20px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 2px solid transparent;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: all 0.15s;
     }
     .icon-option.selected { border-color: var(--brand); background: #ededff; }
@@ -193,17 +267,30 @@
 
     /* ── Color picker ── */
     .color-grid {
-      display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-bottom: 14px;
     }
     .color-option {
-      width: 100%; aspect-ratio: 1; border-radius: 10px;
-      border: 2.5px solid transparent; cursor: pointer;
-      transition: all 0.15s; position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 10px;
+      border: 2.5px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
     }
     .color-option.selected::after {
-      content: '✓'; position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 800; color: #fff;
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
       text-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
     .color-option.selected { border-color: var(--text); }
@@ -212,49 +299,64 @@
     .budget-input-wrap { position: relative; }
     .budget-input-wrap input { padding-left: 44px; }
     .budget-curr-label {
-      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-      font-size: 12px; color: var(--text-3); pointer-events: none; font-weight: 600;
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: var(--text-3);
+      pointer-events: none;
+      font-weight: 600;
     }
     .budget-field-hidden { display: none; }
 
     /* ── Category preview ── */
     .cat-preview {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px; background: var(--surface-2);
-      border-radius: var(--radius-sm); margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
     }
     .cat-preview-icon {
-      width: 44px; height: 44px; border-radius: 13px;
-      display: flex; align-items: center; justify-content: center; font-size: 22px;
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
     }
     .cat-preview-name { font-weight: 700; font-size: 15px; color: var(--text); }
-    .cat-preview-sub  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .cat-preview-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 
-    /* ── Section divider & tabs ── */
+    /* ── Section divider ── */
     .section-divider {
-      font-size: 11px; font-weight: 700; color: var(--text-3);
-      text-transform: uppercase; letter-spacing: 0.06em;
-      padding: 10px 0 6px; border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 10px 0 6px;
+      border-bottom: 1px solid var(--border);
       margin-bottom: 4px;
     }
-    .cat-tabs {
-      display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border);
-    }
-    .cat-tab-btn {
-      flex: 1; background: none; border: none; padding: 10px 0;
-      font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px;
-      color: var(--text-3); cursor: pointer; transition: all 0.15s;
-      border-bottom: 2px solid transparent;
-    }
-    .cat-tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+    /* ── Panels ── */
     .cat-panel { display: none; }
     .cat-panel.active { display: block; }
 
     /* ── Spinner ── */
     .spinner-brand {
-      display: inline-block; width: 28px; height: 28px;
-      border: 3px solid #ededff; border-top-color: var(--brand);
-      border-radius: 50%; animation: spin 0.7s linear infinite;
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      border: 3px solid #ededff;
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
     }
   </style>
 </head>
@@ -270,24 +372,22 @@
     </div>
   </div>
 
-<!-- Header -->
-<div class="header">
-  <h1>⚙️ Categories</h1>
-  <div class="header-actions">
-    <button class="hdr-icon-btn" id="syncBtn" title="Sync">↻</button>
-    <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+  <!-- Header -->
+  <div class="header">
+    <h1>⚙️ Categories</h1>
+    <div class="header-actions">
+      <button class="hdr-icon-btn" id="syncBtn" title="Sync">↻</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+    </div>
   </div>
-</div>
 
   <!-- Add custom category -->
   <button class="add-cat-btn" onclick="openAddModal()">＋ Add Custom Category</button>
 
-  <!-- Tabs for Expense / Income -->
-  <div class="card" style="padding-bottom: 8px;">
-    <div class="cat-tabs">
-      <button class="cat-tab-btn active" data-tab="expense">💸 Expenses</button>
-      <button class="cat-tab-btn" data-tab="income">💰 Income</button>
-    </div>
+  <!-- Pill-style Tabs (matching Expenses.html) -->
+  <div class="cat-tabs">
+    <button class="cat-tab-btn active" data-tab="expense">💸 Expenses</button>
+    <button class="cat-tab-btn" data-tab="income">💰 Income</button>
   </div>
 
   <!-- Expense Panel -->
@@ -342,7 +442,7 @@
       <input type="text" id="catName" placeholder="e.g. Freelance, Salary" maxlength="30" oninput="updatePreview()">
     </div>
     
-    <!-- Type Radio Group - Better styled radio buttons -->
+    <!-- Type Radio Group -->
     <div class="form-group">
       <label>Category Type</label>
       <div class="type-radio-group" id="typeRadioGroup">
@@ -367,7 +467,6 @@
         <input type="number" id="catBudget" placeholder="No limit" min="0" step="1" inputmode="numeric" oninput="updatePreview()">
       </div>
     </div>
-    
 
     <!-- Color picker -->
     <span class="icon-picker-label">Background Color</span>
@@ -377,9 +476,6 @@
     <span class="icon-picker-label">Icon</span>
     <div class="icon-grid" id="iconGrid"></div>
 
-    
-
-
     <div class="modal-footer" id="catModalFooter">
       <button class="btn-cancel" onclick="closeCatModal()">Cancel</button>
       <button class="btn-save" onclick="saveCategory()">Save</button>
@@ -387,7 +483,7 @@
   </div>
 </div>
 
-<!-- ── Edit Built-in Modal (expense only) ── -->
+<!-- ── Edit Built-in Modal ── -->
 <div class="modal-backdrop" id="editBuiltinBackdrop">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -500,15 +596,15 @@ function render() {
     }).join('');
   }
 
-// Render default incomes
-document.getElementById('defaultIncomeList').innerHTML = defaultIncomes.map((cat, idx) => {
-  const i = allCats.indexOf(cat);
-  return `<div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
-      <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
-      <div class="cat-info"><div class="cat-name-text">${escapeHtml(cat.value)}</div></div>
-      <div class="cat-actions"><button class="action-btn" onclick="openEditIncomeDefault(${i})" title="Edit">✏️</button><button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button></div>
-    </div>`;
-}).join('') || '<div class="empty-state"><span class="empty-icon">💰</span><p>No default income categories</p></div>';
+  // Render default incomes
+  document.getElementById('defaultIncomeList').innerHTML = defaultIncomes.map((cat, idx) => {
+    const i = allCats.indexOf(cat);
+    return `<div class="cat-row ${cat.hidden ? 'hidden-cat' : ''}">
+        <div class="cat-icon-preview" style="background:${cat.bg}">${cat.icon}</div>
+        <div class="cat-info"><div class="cat-name-text">${escapeHtml(cat.value)}</div></div>
+        <div class="cat-actions"><button class="action-btn" onclick="openEditIncomeDefault(${i})" title="Edit">✏️</button><button class="toggle ${cat.hidden ? '' : 'on'}" onclick="toggleHide(${i})"></button></div>
+      </div>`;
+  }).join('') || '<div class="empty-state"><span class="empty-icon">💰</span><p>No default income categories</p></div>';
 
   // Render custom incomes
   const customIncomeCard = document.getElementById('customIncomeCard');
@@ -586,6 +682,7 @@ async function deleteCustom(i) {
     showToast('❌ Delete failed', 'error');
   }
 }
+
 async function persistToSheet() {
   if (!spreadsheetId) { showToast('⚠️ Not connected', 'error'); return false; }
   if (isSaving) return false;
@@ -606,21 +703,23 @@ async function isCategoryUsedInExpenses(categoryName) {
   if (!spreadsheetId) return false;
   
   try {
-    // Get all expenses from Daily Log sheet (column C contains category)
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
       range: `${EXPENSES_SHEET}!C:C`
     });
     
     const rows = res.result.values || [];
-    // Check if category exists in any expense row (skip header row)
     return rows.slice(1).some(row => row[0] === categoryName);
   } catch (e) {
     console.error('Error checking category usage:', e);
     return false;
   }
 }
-function closeCatModal() { document.getElementById('catModalBackdrop').classList.remove('open'); editingIndex = null; }
+
+function closeCatModal() { 
+  document.getElementById('catModalBackdrop').classList.remove('open'); 
+  editingIndex = null; 
+}
 
 async function deleteCustomWithCheck(i) {
   const categoryToDelete = allCats[i];
@@ -650,6 +749,7 @@ async function deleteCustomWithCheck(i) {
     showToast('❌ Delete failed', 'error');
   }
 }
+
 function openEditBuiltin(i) {
   editingIndex = i;
   const cat = allCats[i];
@@ -686,8 +786,18 @@ async function saveBuiltin() {
   showToast('✅ Updated');
 }
 
-function selectBuiltinIcon(icon) { builtinSelectedIcon = icon; buildBuiltinIconGrid(); updateBuiltinPreview(); }
-function selectBuiltinColor(i) { builtinSelectedColor = COLOR_OPTIONS[i]; buildBuiltinColorGrid(); updateBuiltinPreview(); }
+function selectBuiltinIcon(icon) { 
+  builtinSelectedIcon = icon; 
+  buildBuiltinIconGrid(); 
+  updateBuiltinPreview(); 
+}
+
+function selectBuiltinColor(i) { 
+  builtinSelectedColor = COLOR_OPTIONS[i]; 
+  buildBuiltinColorGrid(); 
+  updateBuiltinPreview(); 
+}
+
 function updateBuiltinPreview() {
   const name = document.getElementById('builtinName').value.trim();
   const budget = document.getElementById('builtinBudget').value;
@@ -701,17 +811,23 @@ function updateBuiltinPreview() {
     document.getElementById('builtinPreviewBudget').textContent = budget ? `EGP ${Number(budget).toLocaleString('en-US')} / month` : 'No budget limit';
   }
 }
+
 function buildBuiltinIconGrid() { 
   document.getElementById('builtinIconGrid').innerHTML = ICON_OPTIONS.map(icon => 
     `<button class="icon-option ${icon === builtinSelectedIcon ? 'selected' : ''}" onclick="selectBuiltinIcon('${icon}')">${icon}</button>`
   ).join(''); 
 }
+
 function buildBuiltinColorGrid() { 
   document.getElementById('builtinColorGrid').innerHTML = COLOR_OPTIONS.map((c, i) => 
     `<div class="color-option ${c.bg === builtinSelectedColor.bg ? 'selected' : ''}" style="background:${c.bg}" onclick="selectBuiltinColor(${i})"></div>`
   ).join(''); 
 }
-function closeBuiltinModal() { document.getElementById('editBuiltinBackdrop').classList.remove('open'); editingIndex = null; }
+
+function closeBuiltinModal() { 
+  document.getElementById('editBuiltinBackdrop').classList.remove('open'); 
+  editingIndex = null; 
+}
 
 // Add/Edit modal functions
 function openAddModal() { 
@@ -747,8 +863,8 @@ function openEditCustom(i) {
   buildIconGrid(); 
   buildColorGrid(); 
   updatePreview(); 
-document.getElementById('catModalFooter').innerHTML = `<button class="btn-danger" onclick="deleteCustomWithCheck(${i})">Delete</button><button class="btn-cancel" onclick="closeCatModal()">Cancel</button><button class="btn-save" onclick="saveCategory()">Save</button>`;
-document.getElementById('catModalBackdrop').classList.add('open');
+  document.getElementById('catModalFooter').innerHTML = `<button class="btn-danger" onclick="deleteCustomWithCheck(${i})">Delete</button><button class="btn-cancel" onclick="closeCatModal()">Cancel</button><button class="btn-save" onclick="saveCategory()">Save</button>`;
+  document.getElementById('catModalBackdrop').classList.add('open');
   setTimeout(() => initRadioCards(), 10);
 }
 
@@ -765,47 +881,56 @@ function handleTypeChange() {
     updatePreview();
   }
 }
+
 // Initialize radio card styling
 function initRadioCards() {
   const radioCards = document.querySelectorAll('.type-radio-card');
   radioCards.forEach(card => {
     const radio = card.querySelector('input[type="radio"]');
     
-    // Set initial selected state
     if (radio.checked) {
       card.classList.add('selected');
     }
     
-    // Handle click on card
     card.addEventListener('click', function(e) {
       const radioInput = this.querySelector('input[type="radio"]');
       radioInput.checked = true;
       
-      // Trigger change event
       const changeEvent = new Event('change', { bubbles: true });
       radioInput.dispatchEvent(changeEvent);
       
-      // Update UI
       document.querySelectorAll('.type-radio-card').forEach(c => c.classList.remove('selected'));
       this.classList.add('selected');
       
-      // Call handleTypeChange
       handleTypeChange();
     });
   });
 }
-function selectIcon(icon) { selectedIcon = icon; buildIconGrid(); updatePreview(); }
-function selectColor(i) { selectedColor = COLOR_OPTIONS[i]; buildColorGrid(); updatePreview(); }
+
+function selectIcon(icon) { 
+  selectedIcon = icon; 
+  buildIconGrid(); 
+  updatePreview(); 
+}
+
+function selectColor(i) { 
+  selectedColor = COLOR_OPTIONS[i]; 
+  buildColorGrid(); 
+  updatePreview(); 
+}
+
 function buildIconGrid() { 
   document.getElementById('iconGrid').innerHTML = ICON_OPTIONS.map(icon => 
     `<button class="icon-option ${icon === selectedIcon ? 'selected' : ''}" onclick="selectIcon('${icon}')">${icon}</button>`
   ).join(''); 
 }
+
 function buildColorGrid() { 
   document.getElementById('colorGrid').innerHTML = COLOR_OPTIONS.map((c, i) => 
     `<div class="color-option ${c.bg === selectedColor.bg ? 'selected' : ''}" style="background:${c.bg}" onclick="selectColor(${i})"></div>`
   ).join(''); 
 }
+
 function updatePreview() { 
   const name = document.getElementById('catName').value.trim(); 
   const budget = document.getElementById('catBudget').value; 
@@ -835,7 +960,7 @@ async function saveCategory() {
   showToast(editingIndex !== null ? '✅ Updated' : '✅ Added'); 
 }
 
-// Tab switching
+// Tab switching with pill-style tabs
 function initTabs() {
   document.querySelectorAll('.cat-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -847,6 +972,7 @@ function initTabs() {
     });
   });
 }
+
 // Sync function
 async function syncCategories() {
   showToast('Syncing...', 'info');
@@ -863,7 +989,10 @@ async function syncCategories() {
 // Load page
 async function loadPage() {
   await initPageAuth({
-    onLoadLocal: (email, sheetId) => { currentUserEmail = email; spreadsheetId = sheetId; },
+    onLoadLocal: (email, sheetId) => { 
+      currentUserEmail = email; 
+      spreadsheetId = sheetId; 
+    },
     onReady: async (sheetId, email, token) => {
       currentUserEmail = email; 
       spreadsheetId = sheetId; 
@@ -877,7 +1006,6 @@ async function loadPage() {
   document.querySelectorAll('input[name="catType"]').forEach(r => r.addEventListener('change', handleTypeChange));
   initRadioCards();
   
-  // Add sync button listener HERE (moved from outside)
   document.getElementById('syncBtn')?.addEventListener('click', syncCategories);
 }
 
