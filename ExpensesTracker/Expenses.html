@@ -249,6 +249,34 @@
     .cat-break-name { font-weight: 600; font-size: 14px; }
     .cat-break-amount { font-family: 'Sora', sans-serif; font-weight: 700; color: var(--brand); }
     .empty-state { text-align: center; padding: 40px; color: var(--text-3); }
+
+    /* ── Tap hint ── */
+    .tap-hint { font-size: 10px; color: var(--text-3); text-align: center; margin-top: 8px; letter-spacing: 0.02em; }
+
+    /* ── Day group (By Day tab) ── */
+    .day-group { margin-bottom: 0; }
+    .day-header { display: flex; justify-content: space-between; align-items: baseline; padding: 13px 0 9px; border-bottom: 2px solid var(--border); }
+    .day-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; color: var(--brand); }
+    .day-total { font-size: 12px; font-weight: 600; color: var(--text-2); }
+
+    /* ── Detail/drill-down modal ── */
+    .detail-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .detail-item:last-child { border-bottom: none; }
+    .detail-right { text-align: right; flex-shrink: 0; }
+    .detail-amt  { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); }
+    .detail-date { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .detail-note { font-size: 11px; color: var(--text-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn-primary {
+      flex: 2; padding: 13px; background: var(--brand-grad); color: #fff;
+      border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700;
+      cursor: pointer; font-family: 'Sora', sans-serif;
+      box-shadow: 0 4px 14px rgba(91,94,244,0.28);
+    }
+    .btn-primary:hover { opacity: 0.90; }
+    .cat-budget-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+    .cat-budget-over    { background: #fee2e2; color: #991b1b; }
+    .cat-budget-warning { background: #fef3c7; color: #92400e; }
+    .cat-budget-ok      { background: #d1fae5; color: #065f46; }
   </style>
 </head>
 <body>
@@ -341,6 +369,24 @@
 <div id="bottomNavMount"></div>
 <div class="toast" id="toast"></div>
 
+<!-- Category Drill-down Modal -->
+<div class="modal-backdrop" id="catDetailBackdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="modal-title" id="catDetailTitle" style="margin-bottom:0"></div>
+      <div style="text-align:right">
+        <div style="font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--brand)" id="catDetailTotal"></div>
+        <div style="font-size:11px;color:var(--text-3)" id="catDetailCount"></div>
+      </div>
+    </div>
+    <div id="catDetailList"></div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="catDetailCloseBtn">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Monthly breakdown modal (by category) -->
 <div class="modal-backdrop" id="monthBreakdownModal">
   <div class="modal">
@@ -361,9 +407,13 @@ let spreadsheetId = null;
 let activeCategory = '';
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-// Summary years state
-const AVAILABLE_YEARS = [2026, 2027, 2028, 2029, 2030];
-let selectedYearsSummary = new Set([2026]);
+// Summary years state — build range from current year to 2030
+const _currYear = new Date().getFullYear();
+const AVAILABLE_YEARS = [];
+for (let y = _currYear; y <= 2030; y++) AVAILABLE_YEARS.push(y);
+// Also include past years (current-5) so historical data shows
+for (let y = _currYear - 5; y < _currYear; y++) AVAILABLE_YEARS.unshift(y);
+let selectedYearsSummary = new Set([_currYear]);
 
 // ======================== HELPERS =========================
 function parseLocalDate(str) {
@@ -410,13 +460,12 @@ function updateStats(list) {
   if (prevTotal > 0) {
     const diff = total - prevTotal;
     const percent = (diff / prevTotal * 100).toFixed(1);
-    const diffAbs = formatMoney(Math.abs(diff));
     const compEl = document.getElementById('comparisonText');
     if (diff > 0) {
-      compEl.innerHTML = `⬆️ ${diffAbs} more than previous month (+${percent}%)`;
+      compEl.innerHTML = `⬆️ +${percent}% vs previous month`;
       compEl.className = 'stats-comparison negative';
     } else if (diff < 0) {
-      compEl.innerHTML = `⬇️ ${diffAbs} less than previous month (${percent}%)`;
+      compEl.innerHTML = `⬇️ ${percent}% vs previous month`;
       compEl.className = 'stats-comparison positive';
     } else {
       compEl.innerHTML = `↔️ Same as previous month`;
@@ -532,7 +581,7 @@ function updateSelectedYearsTextSummary() {
   const textSpan = document.getElementById('selectedYearsTextSummary');
   const selected = Array.from(selectedYearsSummary).sort((a,b)=>a-b);
   if (selected.length === 0) textSpan.textContent = 'No years selected';
-  else if (selected.length === AVAILABLE_YEARS.length) textSpan.textContent = 'All years (2026-2030)';
+  else if (selected.length === AVAILABLE_YEARS.length) textSpan.textContent = `All years (${AVAILABLE_YEARS[0]}-${AVAILABLE_YEARS[AVAILABLE_YEARS.length-1]})`;
   else textSpan.textContent = selected.join(', ');
 }
 
@@ -614,12 +663,52 @@ function openMonthBreakdown(year, month) {
 
 function closeMonthBreakdown() { document.getElementById('monthBreakdownModal').classList.remove('open'); }
 
-// Category detail modal (simple alert fallback, but reuses existing logic if needed)
+// Category drill-down modal (full version like original)
 function openCategoryDetail(category) {
   const filtered = getFilteredExpenses();
-  const catExps = filtered.filter(e => e.category === category);
-  const total = catExps.reduce((s,e)=>s+e.amount,0);
-  alert(`${category}\nTotal: ${formatMoney(total)}\n${catExps.length} expenses`);
+  const catExps = filtered
+    .filter(e => e.category === category)
+    .sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
+  const total = catExps.reduce((s, e) => s + e.amount, 0);
+
+  document.getElementById('catDetailTitle').innerHTML =
+    `<span style="margin-right:6px">${getCategoryIcon(category)}</span>${category}`;
+  document.getElementById('catDetailTotal').textContent = formatMoney(total);
+  document.getElementById('catDetailCount').textContent =
+    `${catExps.length} ${catExps.length === 1 ? 'expense' : 'expenses'}`;
+
+  document.getElementById('catDetailList').innerHTML = catExps.length
+    ? catExps.map(e => `
+        <div class="detail-item">
+          <div class="cat-icon" style="background:${getCategoryColor(e.category)};width:40px;height:40px;border-radius:12px;font-size:19px;flex-shrink:0">${getCategoryIcon(e.category)}</div>
+          <div class="exp-details" style="flex:1;min-width:0">
+            <div class="exp-cat" style="font-size:14px;font-weight:600;color:var(--text)">${e.date}</div>
+            ${e.notes ? `<div class="detail-note">📝 ${e.notes}</div>` : ''}
+          </div>
+          <div class="detail-right">
+            <div class="detail-amt">${formatMoney(e.amount)}</div>
+          </div>
+        </div>`).join('')
+    : '<div class="empty-state"><div class="empty-icon">📭</div><p>No expenses</p></div>';
+
+  document.getElementById('catDetailBackdrop').classList.add('open');
+}
+
+function closeCatDetail() {
+  document.getElementById('catDetailBackdrop').classList.remove('open');
+}
+
+// ── Tabs ─────────────────────────────────────────────────
+function setupTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('summaryTab').classList.toggle('active', id === 'summary');
+      document.getElementById('bydayTab').classList.toggle('active',   id === 'byday');
+    });
+  });
 }
 
 // ======================== DATA LOADING ==========================
@@ -698,11 +787,14 @@ document.getElementById('yearSelect')?.addEventListener('change', renderAll);
 document.getElementById('refreshBtn')?.addEventListener('click', manualSync);
 document.getElementById('closeBreakdownBtn')?.addEventListener('click', closeMonthBreakdown);
 document.getElementById('monthBreakdownModal')?.addEventListener('click', e => { if(e.target === e.currentTarget) closeMonthBreakdown(); });
+document.getElementById('catDetailCloseBtn')?.addEventListener('click', closeCatDetail);
+document.getElementById('catDetailBackdrop')?.addEventListener('click', e => { if(e.target === e.currentTarget) closeCatDetail(); });
 document.addEventListener('click', function(e) {
   const dropdown = document.getElementById('yearDropdownSummary');
   if (dropdown && !dropdown.contains(e.target)) dropdown.classList.remove('open');
 });
 
+setupTabs();
 populateYearsAndMonths();
 renderBottomNav('expenses');
 initPage();
