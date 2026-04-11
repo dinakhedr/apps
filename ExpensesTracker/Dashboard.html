@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Dashboard</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
+  <link rel="shortcut icon" href="icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="utils.js"></script>
+  <script src="auth.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    /* Dashboard specific styles */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    /* KPI Cards Row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .kpi-card {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      padding: 18px 16px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.65);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .kpi-value {
+      font-family: 'Sora', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+    }
+    .kpi-trend {
+      font-size: 11px;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .trend-up { color: #fca5a5; }
+    .trend-down { color: #6ee7b7; }
+    .trend-neutral { color: rgba(255,255,255,0.6); }
+
+    /* Savings Rate Card (full width) */
+    .savings-card {
+      background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(5,150,105,0.15) 100%);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(16,185,129,0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .savings-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+    }
+    .savings-value {
+      font-family: 'Sora', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: #6ee7b7;
+    }
+    .savings-badge {
+      background: rgba(16,185,129,0.25);
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #6ee7b7;
+    }
+
+    /* Section headers */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .section-header h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .section-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--brand);
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Top categories list */
+    .category-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .category-item:last-child {
+      border-bottom: none;
+    }
+    .category-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+    .category-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .category-info {
+      flex: 1;
+    }
+    .category-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .category-budget {
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .category-amount {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--brand);
+    }
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 3px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    .progress-fill.ok { background: var(--success); }
+    .progress-fill.warning { background: var(--warning); }
+    .progress-fill.over { background: var(--danger); }
+
+    /* Upcoming items */
+    .upcoming-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .upcoming-item:last-child {
+      border-bottom: none;
+    }
+    .upcoming-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .upcoming-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .upcoming-info {
+      flex: 1;
+    }
+    .upcoming-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .upcoming-date {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .upcoming-amount {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--brand);
+    }
+    .upcoming-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    /* Recent activity */
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+    .activity-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .activity-details {
+      flex: 1;
+    }
+    .activity-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .activity-date {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .activity-amount {
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .activity-amount.expense { color: var(--danger); }
+    .activity-amount.income { color: var(--success); }
+
+    /* Chart container */
+    .chart-container {
+      position: relative;
+      height: 220px;
+      margin: 8px 0;
+    }
+    canvas {
+      max-width: 100%;
+    }
+    .chart-legend {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--text-2);
+    }
+    .chart-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    /* Alert banner */
+    .alert-banner {
+      background: #fef3c7;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .alert-banner.warning {
+      background: #fee2e2;
+    }
+    .alert-icon {
+      font-size: 20px;
+    }
+    .alert-text {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: #92400e;
+    }
+    .alert-banner.warning .alert-text {
+      color: #991b1b;
+    }
+
+    /* Quick actions row */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .quick-btn {
+      background: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+      box-shadow: var(--shadow-sm);
+    }
+    .quick-btn:active {
+      transform: scale(0.96);
+    }
+    .quick-btn.income {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+    }
+
+    /* Trend insights mini cards */
+    .insights-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .insight-card {
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .insight-value {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .insight-label {
+      font-size: 9px;
+      color: var(--text-3);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(91,94,244,0.9);
+      backdrop-filter: blur(8px);
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p>Loading dashboard...</p>
+  </div>
+</div>
+
+<div class="container" id="mainApp" style="display:none">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>📊 Dashboard</h1>
+    <div class="header-actions">
+      <button class="hdr-icon-btn" id="syncBtn" title="Sync">↻</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <button class="quick-btn" onclick="window.location.href='Home.html'">➕ Add Expense</button>
+    <button class="quick-btn income" id="addIncomeBtn">💰 Add Income</button>
+  </div>
+
+  <!-- Alert Banner (if any budget overages) -->
+  <div id="alertBanner" style="display:none"></div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">💰 Income</div>
+      <div class="kpi-value" id="totalIncome">EGP 0</div>
+      <div class="kpi-trend" id="incomeTrend"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">💸 Expenses</div>
+      <div class="kpi-value" id="totalExpenses">EGP 0</div>
+      <div class="kpi-trend" id="expenseTrend"></div>
+    </div>
+  </div>
+
+  <!-- Savings Rate Card -->
+  <div class="savings-card">
+    <div>
+      <div class="savings-label">Net Cash Flow</div>
+      <div class="savings-value" id="netCashFlow">EGP 0</div>
+    </div>
+    <div class="savings-badge" id="savingsRate">0% saved</div>
+  </div>
+
+  <!-- Chart Card -->
+  <div class="card">
+    <div class="card-title">
+      <span class="card-title-icon">📈</span>
+      Income vs Expenses (Last 6 Months)
+    </div>
+    <div class="chart-container">
+      <canvas id="trendChart"></canvas>
+    </div>
+    <div class="chart-legend">
+      <span><div class="legend-dot" style="background:#10b981"></div> Income</span>
+      <span><div class="legend-dot" style="background:#ef4444"></div> Expenses</span>
+    </div>
+  </div>
+
+  <!-- Top Spending Categories -->
+  <div class="card">
+    <div class="section-header">
+      <h3>🔝 Top Spending Categories</h3>
+      <button class="section-link" onclick="window.location.href='Categories.html'">Manage →</button>
+    </div>
+    <div id="topCategoriesList"></div>
+  </div>
+
+  <!-- Upcoming Payments -->
+  <div class="card">
+    <div class="section-header">
+      <h3>⏰ Upcoming Payments</h3>
+      <button class="section-link" onclick="window.location.href='Installments.html'">View All →</button>
+    </div>
+    <div id="upcomingList"></div>
+  </div>
+
+  <!-- Trend Insights -->
+  <div class="insights-row" id="insightsRow">
+    <div class="insight-card">
+      <div class="insight-value" id="bestMonth">—</div>
+      <div class="insight-label">Best Month</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-value" id="worstMonth">—</div>
+      <div class="insight-label">Worst Month</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-value" id="avgSpend">—</div>
+      <div class="insight-label">Avg Monthly</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-value" id="topCategory">—</div>
+      <div class="insight-label">Most Used</div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="card">
+    <div class="section-header">
+      <h3>📝 Recent Activity</h3>
+      <button class="section-link" onclick="window.location.href='Expenses.html'">See All →</button>
+    </div>
+    <div id="recentActivityList"></div>
+  </div>
+
+</div>
+
+<div id="bottomNavMount"></div>
+<div class="toast" id="toast"></div>
+
+<!-- Add Income Modal (simple) -->
+<div class="modal-backdrop" id="incomeModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💰 Add Income</div>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="incomeDate" value="">
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select id="incomeCategory"></select>
+    </div>
+    <div class="form-group">
+      <label>Amount (EGP)</label>
+      <div class="amount-wrap">
+        <span class="currency-flag">🇪🇬</span>
+        <input type="number" id="incomeAmount" placeholder="0.00" step="0.01" min="0.01">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <input type="text" id="incomeNotes" placeholder="e.g., monthly salary">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeIncomeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveIncome()">Add Income</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ======================== STATE ==========================
+let expenses = [];
+let incomes = [];
+let installments = [];
+let recurringList = [];
+let spreadsheetId = null;
+let currentUserEmail = null;
+let currentAccessToken = null;
+let trendChart = null;
+
+// ======================== DATA LOADING ===================
+async function loadAllData() {
+  await loadExpenses();
+  await loadIncomes();
+  await loadInstallments();
+  await loadRecurring();
+  renderDashboard();
+}
+
+async function loadExpenses() {
+  if (!spreadsheetId) return;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${EXPENSES_SHEET}!A2:F`
+    });
+    const rows = res.result.values || [];
+    expenses = rows
+      .filter(r => r[2] && r[3])
+      .map((r, i) => ({
+        id: (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
+        date: r[1] || r[0],
+        category: r[2],
+        amount: parseFloat(r[3]),
+        notes: r[4] || '',
+        timestamp: r[0] || new Date().toISOString()
+      }));
+  } catch (e) {
+    console.error('loadExpenses error', e);
+  }
+}
+
+async function loadIncomes() {
+  if (!spreadsheetId) return;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${INCOME_LOG_SHEET}!A2:F`
+    });
+    const rows = res.result.values || [];
+    incomes = rows
+      .filter(r => r[2] && r[3])
+      .map((r, i) => ({
+        id: (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
+        date: r[1] || r[0],
+        category: r[2],
+        amount: parseFloat(r[3]),
+        notes: r[4] || '',
+        timestamp: r[0] || new Date().toISOString()
+      }));
+  } catch (e) {
+    console.error('loadIncomes error', e);
+  }
+}
+
+async function loadInstallments() {
+  if (!spreadsheetId) return;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${INSTALLMENTS_SHEET}!A2:H`
+    });
+    const rows = res.result.values || [];
+    installments = rows
+      .filter(r => r[0] && r[1])
+      .map(r => ({
+        id: r[0],
+        itemName: r[1],
+        bankKey: r[2],
+        totalAmount: parseFloat(r[3]),
+        monthsCount: parseInt(r[4]),
+        startYear: parseInt(r[5]),
+        startMonth: parseInt(r[6]),
+        monthlyAmount: parseFloat(r[7])
+      }));
+  } catch (e) {
+    console.error('loadInstallments error', e);
+  }
+}
+
+async function loadRecurring() {
+  if (!spreadsheetId) return;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${RECURRING_SHEET}!A2:H`
+    });
+    const rows = res.result.values || [];
+    recurringList = rows
+      .filter(r => r[1])
+      .map(r => ({
+        id: r[0] ? parseInt(r[0]) : Date.now(),
+        name: r[1] || '',
+        category: r[2] || 'Other',
+        frequency: r[3] || 'Monthly',
+        amount: parseFloat(r[4]) || 0,
+        startMonth: parseInt(r[5]) || 1,
+        paymentDay: parseInt(r[6]) || 1,
+        active: r[7] === 'true'
+      }));
+  } catch (e) {
+    console.error('loadRecurring error', e);
+  }
+}
+
+// ======================== HELPERS ========================
+function parseLocalDate(str) {
+  if (!str) return new Date();
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function getCurrentMonthExpenses() {
+  const now = new Date();
+  return expenses.filter(e => {
+    const d = parseLocalDate(e.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+}
+
+function getCurrentMonthIncomes() {
+  const now = new Date();
+  return incomes.filter(i => {
+    const d = parseLocalDate(i.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+}
+
+function getMonthlyTotals(monthsBack = 6) {
+  const now = new Date();
+  const labels = [];
+  const incomeData = [];
+  const expenseData = [];
+  
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    labels.push(MONTHS_SHORT[month] + ' ' + year.toString().slice(-2));
+    
+    const monthIncome = incomes
+      .filter(inc => {
+        const d = parseLocalDate(inc.date);
+        return d.getMonth() === month && d.getFullYear() === year;
+      })
+      .reduce((sum, inc) => sum + inc.amount, 0);
+    
+    const monthExpense = expenses
+      .filter(exp => {
+        const d = parseLocalDate(exp.date);
+        return d.getMonth() === month && d.getFullYear() === year;
+      })
+      .reduce((sum, exp) => sum + exp.amount, 0);
+    
+    incomeData.push(monthIncome);
+    expenseData.push(monthExpense);
+  }
+  
+  return { labels, incomeData, expenseData };
+}
+
+function getUpcomingPayments() {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const currentDay = now.getDate();
+  const upcoming = [];
+  
+  // Recurring expenses due in next 30 days
+  recurringList.forEach(sub => {
+    if (!sub.active) return;
+    
+    let dueDate = null;
+    if (sub.frequency === 'Monthly') {
+      let dueYear = currentYear;
+      let dueMonth = currentMonth;
+      if (sub.paymentDay < currentDay) {
+        dueMonth++;
+        if (dueMonth > 11) { dueMonth = 0; dueYear++; }
+      }
+      const lastDay = new Date(dueYear, dueMonth + 1, 0).getDate();
+      const day = Math.min(sub.paymentDay, lastDay);
+      dueDate = new Date(dueYear, dueMonth, day);
+    } else if (sub.frequency === 'Quarterly') {
+      // Simplified: check if within 30 days
+      const start = new Date(sub.startYear || currentYear, (sub.startMonth || 1) - 1, 1);
+      let nextDate = new Date(start);
+      while (nextDate <= now) {
+        nextDate.setMonth(nextDate.getMonth() + 3);
+      }
+      dueDate = nextDate;
+    } else if (sub.frequency === 'Annual') {
+      let dueYear = currentYear;
+      if ((sub.startMonth || 1) <= currentMonth + 1 && sub.paymentDay < currentDay) {
+        dueYear++;
+      }
+      const lastDay = new Date(dueYear, (sub.startMonth || 1), 0).getDate();
+      const day = Math.min(sub.paymentDay, lastDay);
+      dueDate = new Date(dueYear, (sub.startMonth || 1) - 1, day);
+    }
+    
+    if (dueDate && dueDate >= now) {
+      const daysDiff = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+      if (daysDiff <= 30) {
+        upcoming.push({
+          type: 'recurring',
+          name: sub.name,
+          amount: sub.amount,
+          date: dueDate,
+          days: daysDiff
+        });
+      }
+    }
+  });
+  
+  // Installment payments due
+  installments.forEach(inst => {
+    const paidLogsKey = `paid_${currentUserEmail}`;
+    const paidLogs = localStorage.getItem(paidLogsKey);
+    const paidSet = paidLogs ? new Set(JSON.parse(paidLogs)) : new Set();
+    
+    const startDate = new Date(inst.startYear, inst.startMonth - 1, 1);
+    for (let i = 0; i < inst.monthsCount; i++) {
+      const paymentDate = new Date(startDate);
+      paymentDate.setMonth(startDate.getMonth() + i);
+      
+      if (paymentDate >= now) {
+        const monthKey = `${paymentDate.getFullYear()}-${paymentDate.getMonth()}`;
+        if (!paidSet.has(`${inst.id}_${monthKey}`)) {
+          const daysDiff = Math.ceil((paymentDate - now) / (1000 * 60 * 60 * 24));
+          if (daysDiff <= 30) {
+            upcoming.push({
+              type: 'installment',
+              name: inst.itemName,
+              amount: inst.monthlyAmount,
+              date: paymentDate,
+              days: daysDiff
+            });
+            break;
+          }
+        }
+      }
+    }
+  });
+  
+  upcoming.sort((a, b) => a.date - b.date);
+  return upcoming.slice(0, 5);
+}
+
+function getRecentActivity() {
+  const allActivities = [
+    ...expenses.map(e => ({ ...e, type: 'expense', amount: -e.amount })),
+    ...incomes.map(i => ({ ...i, type: 'income', amount: i.amount }))
+  ];
+  allActivities.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
+  return allActivities.slice(0, 7);
+}
+
+function getBudgetAlerts() {
+  const currentMonthExpenses = getCurrentMonthExpenses();
+  const categorySpending = {};
+  currentMonthExpenses.forEach(e => {
+    categorySpending[e.category] = (categorySpending[e.category] || 0) + e.amount;
+  });
+  
+  const alerts = [];
+  CATEGORIES.forEach(cat => {
+    if (cat.budget && cat.budget > 0 && categorySpending[cat.value]) {
+      const spent = categorySpending[cat.value];
+      const pct = (spent / cat.budget) * 100;
+      if (pct >= 100) {
+        alerts.push({ category: cat.value, spent, budget: cat.budget, pct, over: true });
+      } else if (pct >= 80) {
+        alerts.push({ category: cat.value, spent, budget: cat.budget, pct, over: false });
+      }
+    }
+  });
+  return alerts;
+}
+
+// ======================== RENDER ==========================
+function renderDashboard() {
+  const currentExpenses = getCurrentMonthExpenses();
+  const currentIncomes = getCurrentMonthIncomes();
+  
+  const totalExpense = currentExpenses.reduce((s, e) => s + e.amount, 0);
+  const totalIncome = currentIncomes.reduce((s, i) => s + i.amount, 0);
+  const netCash = totalIncome - totalExpense;
+  const savingsRate = totalIncome > 0 ? (netCash / totalIncome * 100).toFixed(0) : 0;
+  
+  // Update KPI cards
+  document.getElementById('totalIncome').textContent = formatMoney(totalIncome);
+  document.getElementById('totalExpenses').textContent = formatMoney(totalExpense);
+  document.getElementById('netCashFlow').textContent = netCash >= 0 ? formatMoney(netCash) : `-${formatMoney(Math.abs(netCash))}`;
+  document.getElementById('netCashFlow').style.color = netCash >= 0 ? '#6ee7b7' : '#fca5a5';
+  document.getElementById('savingsRate').textContent = `${savingsRate}% saved`;
+  
+  // Compare with last month
+  const lastMonthExpenses = expenses.filter(e => {
+    const d = parseLocalDate(e.date);
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
+  }).reduce((s, e) => s + e.amount, 0);
+  
+  const lastMonthIncomes = incomes.filter(i => {
+    const d = parseLocalDate(i.date);
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
+  }).reduce((s, i) => s + i.amount, 0);
+  
+  const expenseChange = lastMonthExpenses ? ((totalExpense - lastMonthExpenses) / lastMonthExpenses * 100).toFixed(0) : 0;
+  const incomeChange = lastMonthIncomes ? ((totalIncome - lastMonthIncomes) / lastMonthIncomes * 100).toFixed(0) : 0;
+  
+  document.getElementById('expenseTrend').innerHTML = expenseChange <= 0 
+    ? `<span class="trend-down">▼ ${Math.abs(expenseChange)}% vs last month</span>`
+    : `<span class="trend-up">▲ ${expenseChange}% vs last month</span>`;
+  
+  document.getElementById('incomeTrend').innerHTML = incomeChange >= 0
+    ? `<span class="trend-down">▼ ${Math.abs(incomeChange)}% vs last month</span>`
+    : `<span class="trend-up">▲ ${Math.abs(incomeChange)}% vs last month</span>`;
+  
+  // Render chart
+  const { labels, incomeData, expenseData } = getMonthlyTotals(6);
+  if (trendChart) trendChart.destroy();
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Income',
+          data: incomeData,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.1)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: 'Expenses',
+          data: expenseData,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239,68,68,0.05)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: '#e8e8f0' } } }
+    }
+  });
+  
+  // Top categories
+  const categoryTotals = {};
+  currentExpenses.forEach(e => {
+    categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount;
+  });
+  const topCategories = Object.entries(categoryTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  
+  const topCategoriesHtml = topCategories.map(([cat, amt]) => {
+    const icon = getCategoryIcon(cat);
+    const bg = getCategoryColor(cat);
+    const budget = getCategoryBudget(cat);
+    let budgetHtml = '';
+    let progressClass = 'ok';
+    let pct = 0;
+    if (budget && budget > 0) {
+      pct = Math.min((amt / budget) * 100, 100);
+      progressClass = pct >= 100 ? 'over' : pct >= 80 ? 'warning' : 'ok';
+      budgetHtml = `<div class="progress-bar"><div class="progress-fill ${progressClass}" style="width: ${pct}%"></div></div>`;
+    }
+    return `
+      <div class="category-item">
+        <div class="category-left">
+          <div class="category-icon" style="background:${bg}">${icon}</div>
+          <div class="category-info">
+            <div class="category-name">${cat}</div>
+            ${budget ? `<div class="category-budget">Budget: ${formatMoney(budget)}</div>` : ''}
+            ${budgetHtml}
+          </div>
+        </div>
+        <div class="category-amount">${formatMoney(amt)}</div>
+      </div>`;
+  }).join('');
+  document.getElementById('topCategoriesList').innerHTML = topCategoriesHtml || '<div class="empty-state">No expenses this month</div>';
+  
+  // Upcoming payments
+  const upcoming = getUpcomingPayments();
+  const upcomingHtml = upcoming.map(p => {
+    const dateStr = p.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    const daysText = p.days === 0 ? 'Today' : p.days === 1 ? 'Tomorrow' : `in ${p.days} days`;
+    return `
+      <div class="upcoming-item">
+        <div class="upcoming-left">
+          <div class="upcoming-icon">${p.type === 'installment' ? '📆' : '🔄'}</div>
+          <div class="upcoming-info">
+            <div class="upcoming-name">${escapeHtml(p.name)}</div>
+            <div class="upcoming-date">${dateStr} · ${daysText}</div>
+          </div>
+        </div>
+        <div class="upcoming-amount">${formatMoney(p.amount)}</div>
+      </div>`;
+  }).join('');
+  document.getElementById('upcomingList').innerHTML = upcomingHtml || '<div class="empty-state">No upcoming payments in next 30 days 🎉</div>';
+  
+  // Trend insights
+  const monthlyTotals = [];
+  for (let i = 0; i < 12; i++) {
+    const date = new Date();
+    date.setMonth(date.getMonth() - i);
+    const monthExpense = expenses.filter(e => {
+      const d = parseLocalDate(e.date);
+      return d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear();
+    }).reduce((s, e) => s + e.amount, 0);
+    monthlyTotals.push({ month: date.getMonth(), year: date.getFullYear(), amount: monthExpense });
+  }
+  const best = monthlyTotals.reduce((min, m) => m.amount < min.amount ? m : min, monthlyTotals[0]);
+  const worst = monthlyTotals.reduce((max, m) => m.amount > max.amount ? m : max, monthlyTotals[0]);
+  const avgSpend = monthlyTotals.reduce((s, m) => s + m.amount, 0) / monthlyTotals.length;
+  const topCat = topCategories.length ? topCategories[0][0] : '—';
+  
+  document.getElementById('bestMonth').textContent = best.amount > 0 ? `${MONTHS_SHORT[best.month]} ${formatMoney(best.amount)}` : '—';
+  document.getElementById('worstMonth').textContent = worst.amount > 0 ? `${MONTHS_SHORT[worst.month]} ${formatMoney(worst.amount)}` : '—';
+  document.getElementById('avgSpend').textContent = formatMoney(avgSpend);
+  document.getElementById('topCategory').textContent = topCat !== '—' ? topCat.substring(0, 3) : '—';
+  
+  // Recent activity
+  const recent = getRecentActivity();
+  const recentHtml = recent.map(a => {
+    const icon = a.type === 'expense' ? getCategoryIcon(a.category) : '💰';
+    const bg = a.type === 'expense' ? getCategoryColor(a.category) : '#d1fae5';
+    const amountClass = a.type === 'expense' ? 'expense' : 'income';
+    const sign = a.type === 'expense' ? '-' : '+';
+    return `
+      <div class="activity-item">
+        <div class="activity-icon" style="background:${bg}">${icon}</div>
+        <div class="activity-details">
+          <div class="activity-title">${a.type === 'expense' ? a.category : a.category || 'Income'}</div>
+          <div class="activity-date">${formatDate(a.date)}</div>
+        </div>
+        <div class="activity-amount ${amountClass}">${sign}${formatMoney(Math.abs(a.amount))}</div>
+      </div>`;
+  }).join('');
+  document.getElementById('recentActivityList').innerHTML = recentHtml || '<div class="empty-state">No recent activity</div>';
+  
+  // Budget alerts
+  const alerts = getBudgetAlerts();
+  const alertBanner = document.getElementById('alertBanner');
+  if (alerts.length) {
+    const overLimit = alerts.filter(a => a.over);
+    const nearLimit = alerts.filter(a => !a.over);
+    let alertHtml = '';
+    if (overLimit.length) {
+      alertHtml = `
+        <div class="alert-banner warning" onclick="window.location.href='Categories.html'">
+          <span class="alert-icon">⚠️</span>
+          <span class="alert-text">${overLimit.map(a => a.category).join(', ')} ${overLimit.length === 1 ? 'is' : 'are'} over budget!</span>
+          <span>›</span>
+        </div>`;
+    }
+    if (nearLimit.length && !overLimit.length) {
+      alertHtml = `
+        <div class="alert-banner" onclick="window.location.href='Categories.html'">
+          <span class="alert-icon">📊</span>
+          <span class="alert-text">${nearLimit.map(a => a.category).join(', ')} ${nearLimit.length === 1 ? 'is' : 'are'} near budget limit</span>
+          <span>›</span>
+        </div>`;
+    }
+    alertBanner.innerHTML = alertHtml;
+    alertBanner.style.display = 'block';
+  } else {
+    alertBanner.style.display = 'none';
+  }
+}
+
+// ======================== INCOME MODAL ====================
+function openIncomeModal() {
+  document.getElementById('incomeDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('incomeAmount').value = '';
+  document.getElementById('incomeNotes').value = '';
+  buildIncomeCategorySelect();
+  document.getElementById('incomeModal').classList.add('open');
+}
+
+function closeIncomeModal() {
+  document.getElementById('incomeModal').classList.remove('open');
+}
+
+function buildIncomeCategorySelect() {
+  const select = document.getElementById('incomeCategory');
+  const incomeCats = getIncomeCategories();
+  select.innerHTML = '<option value="" disabled selected>Select category…</option>' +
+    incomeCats.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
+}
+
+async function saveIncome() {
+  const date = document.getElementById('incomeDate').value;
+  const category = document.getElementById('incomeCategory').value;
+  const amount = parseFloat(document.getElementById('incomeAmount').value);
+  const notes = document.getElementById('incomeNotes').value.trim();
+  
+  if (!date) { showToast('❌ Select date', 'error'); return; }
+  if (!category) { showToast('❌ Select category', 'error'); return; }
+  if (!amount || amount <= 0) { showToast('❌ Enter valid amount', 'error'); return; }
+  
+  const newIncome = {
+    id: await getNextIncomeId(),
+    date,
+    category,
+    amount,
+    notes: notes || '',
+    timestamp: new Date().toISOString()
+  };
+  
+  try {
+    await addIncomeToSheet(newIncome);
+    incomes.unshift(newIncome);
+    renderDashboard();
+    closeIncomeModal();
+    showToast('✅ Income added!');
+  } catch (e) {
+    showToast('❌ Failed to save', 'error');
+  }
+}
+
+async function addIncomeToSheet(inc) {
+  if (!spreadsheetId) return false;
+  try {
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: `${INCOME_LOG_SHEET}!A2:F`,
+      valueInputOption: 'RAW',
+      resource: { values: [[inc.timestamp, inc.date, inc.category, inc.amount, inc.notes || '', inc.id]] }
+    });
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
+// ======================== SYNC ============================
+async function syncAll() {
+  showToast('🔄 Syncing...', 'info');
+  await loadAllData();
+  showToast('✅ Dashboard updated');
+}
+
+// ======================== AUTH & INIT =====================
+async function ensureIncomeTab() {
+  try {
+    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
+    const exists = meta.result.sheets.some(s => s.properties.title === INCOME_LOG_SHEET);
+    if (!exists) {
+      await gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        resource: { requests: [{ addSheet: { properties: { title: INCOME_LOG_SHEET } } }] }
+      });
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${INCOME_LOG_SHEET}!A1:F1`,
+        valueInputOption: 'RAW',
+        resource: { values: [['Timestamp', 'Date', 'Category', 'Amount', 'Notes', 'ID']] }
+      });
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+async function initDashboard() {
+  await initPageAuth({
+    onLoadLocal: (email, sheetId) => {
+      currentUserEmail = email;
+      spreadsheetId = sheetId;
+      document.getElementById('loadingOverlay').style.display = 'flex';
+    },
+    onReady: async (sheetId, email, token) => {
+      currentUserEmail = email;
+      spreadsheetId = sheetId;
+      currentAccessToken = token;
+      
+      await ensureCategoriesTab(spreadsheetId);
+      await ensureIncomeTab();
+      await loadAllData();
+      
+      document.getElementById('loadingOverlay').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+    }
+  });
+}
+
+// ======================== EVENT LISTENERS =================
+document.getElementById('syncBtn').addEventListener('click', syncAll);
+document.getElementById('addIncomeBtn').addEventListener('click', openIncomeModal);
+document.getElementById('incomeModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeIncomeModal();
+});
+
+// ======================== START ===========================
+renderBottomNav('home');
+initDashboard();
+</script>
+</body>
+</html>
