@@ -36,27 +36,49 @@
     margin-bottom: 14px;
   }
   .kpi-card {
-    background: rgba(255,255,255,0.12);
-    backdrop-filter: blur(10px);
     border-radius: var(--radius-lg);
-    padding: 18px 16px;
-    border: 1px solid rgba(255,255,255,0.2);
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .kpi-card.income-card {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+  }
+  .kpi-card.expense-card {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 4px 20px rgba(239,68,68,0.3);
   }
   .kpi-label {
     font-size: 11px;
     font-weight: 700;
-    color: rgba(255,255,255,0.65);
+    color: rgba(255,255,255,0.85);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     margin-bottom: 6px;
   }
   .kpi-value {
     font-family: 'Sora', sans-serif;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 800;
     color: #fff;
-    line-height: 1.1;
+    line-height: 1.2;
   }
+  .kpi-trend {
+    font-size: 11px;
+    margin-top: 8px;
+  }
+  .trend-badge {
+    display: inline-block;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .trend-up { color: #bbf7d0; }
+  .trend-down { color: #fecaca; }
+
   
   /* Savings card for Home page */
   .savings-card {
@@ -293,13 +315,15 @@
 
   <!-- KPI Cards Row (Dashboard style) -->
   <div class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-label">💰 This Month Income</div>
+    <div class="kpi-card income-card">
+      <div class="kpi-label">This Month Income</div>
       <div class="kpi-value" id="kpiIncome">EGP 0</div>
+      <div class="kpi-trend" id="incomeTrendHome"></div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">💸 This Month Expenses</div>
+    <div class="kpi-card expense-card">
+      <div class="kpi-label">This Month Expenses</div>
       <div class="kpi-value" id="kpiExpenses">EGP 0</div>
+      <div class="kpi-trend" id="expensesTrendHome"></div>
     </div>
   </div>
 
@@ -481,14 +505,97 @@ function getCurrentMonthIncomes() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 }
+// Get this month's recurring expenses (from Recurring Log)
+async function getCurrentMonthRecurringExpensesHome() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${RECURRING_LOG_SHEET}!A2:F`
+    });
+    const rows = res.result.values || [];
+    let total = 0;
+    rows.forEach(r => {
+      if (r[1]) {
+        const d = parseLocalDate(r[1]);
+        if (d.getMonth() === month && d.getFullYear() === year) {
+          total += parseFloat(r[4]) || 0;
+        }
+      }
+    });
+    return total;
+  } catch (e) {
+    console.error('getCurrentMonthRecurringExpenses error', e);
+    return 0;
+  }
+}
 
-// ── Update KPI stats ──────────────────────────────────────
-function updateKPIStats() {
-  const currentExpenses = getCurrentMonthExpenses();
-  const currentIncomes = getCurrentMonthIncomes();
+// Get this month's installment expenses (from Installments Log)
+async function getCurrentMonthInstallmentsExpensesHome() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${INSTALLMENTS_LOG_SHEET}!A2:E`
+    });
+    const rows = res.result.values || [];
+    let total = 0;
+    rows.forEach(r => {
+      if (r[2]) {
+        const d = parseLocalDate(r[2]);
+        if (d.getMonth() === month && d.getFullYear() === year) {
+          total += parseFloat(r[3]) || 0;
+        }
+      }
+    });
+    return total;
+  } catch (e) {
+    console.error('getCurrentMonthInstallmentsExpenses error', e);
+    return 0;
+  }
+}
+
+// Get previous month's total expenses for comparison
+function getPrevMonthTotalExpensesHome() {
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevYear = prevMonth.getFullYear();
+  const prevMonthNum = prevMonth.getMonth();
   
-  const totalExpense = currentExpenses.reduce((s, e) => s + e.amount, 0);
+  const dailyTotal = expenses.filter(e => {
+    const d = parseLocalDate(e.date);
+    return d.getMonth() === prevMonthNum && d.getFullYear() === prevYear;
+  }).reduce((s, e) => s + e.amount, 0);
+  
+  return dailyTotal;
+}
+
+function getPrevMonthIncomeHome() {
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevYear = prevMonth.getFullYear();
+  const prevMonthNum = prevMonth.getMonth();
+  
+  return incomes.filter(i => {
+    const d = parseLocalDate(i.date);
+    return d.getMonth() === prevMonthNum && d.getFullYear() === prevYear;
+  }).reduce((s, i) => s + i.amount, 0);
+}
+// ── Update KPI stats ──────────────────────────────────────
+async function updateKPIStats() {
+  const currentExpenses = getCurrentMonthExpenses();
+  const dailyTotal = currentExpenses.reduce((s, e) => s + e.amount, 0);
+  
+  const recurringTotal = await getCurrentMonthRecurringExpensesHome();
+  const installmentsTotal = await getCurrentMonthInstallmentsExpensesHome();
+  const currentIncomes = getCurrentMonthIncomes();
   const totalIncome = currentIncomes.reduce((s, i) => s + i.amount, 0);
+  
+  const totalExpense = dailyTotal + recurringTotal + installmentsTotal;
   const netCash = totalIncome - totalExpense;
   
   document.getElementById('kpiIncome').textContent = formatMoney(totalIncome);
@@ -498,11 +605,11 @@ function updateKPIStats() {
   netElement.textContent = netCash >= 0 ? formatMoney(netCash) : `-${formatMoney(Math.abs(netCash))}`;
   netElement.style.color = netCash >= 0 ? '#6ee7b7' : '#fca5a5';
   
-  // Update comparison badge
-  const prevTotal = expenses.filter(e => isInPrevMonth(e.date)).reduce((s, e) => s + e.amount, 0);
-  if (prevTotal > 0) {
-    const diff = totalExpense - prevTotal;
-    const pct = Math.abs((diff / prevTotal) * 100).toFixed(0);
+  // Update comparison badge (net cash flow)
+  const prevTotalExpense = getPrevMonthTotalExpensesHome();
+  if (prevTotalExpense > 0) {
+    const diff = totalExpense - prevTotalExpense;
+    const pct = Math.abs((diff / prevTotalExpense) * 100).toFixed(0);
     const badge = document.getElementById('compareBadgeHome');
     if (diff > 0) {
       badge.innerHTML = `▲ ${pct}% more vs last month`;
@@ -517,6 +624,33 @@ function updateKPIStats() {
     }
   } else {
     document.getElementById('compareBadgeHome').innerHTML = `First month tracking`;
+  }
+  
+  // Income trend
+  const prevIncome = getPrevMonthIncomeHome();
+  const incomeTrendEl = document.getElementById('incomeTrendHome');
+  if (prevIncome > 0) {
+    const incomeChange = ((totalIncome - prevIncome) / prevIncome * 100).toFixed(0);
+    if (incomeChange >= 0) {
+      incomeTrendEl.innerHTML = `<span class="trend-badge"><span class="trend-up">▲ ${incomeChange}% vs last month</span></span>`;
+    } else {
+      incomeTrendEl.innerHTML = `<span class="trend-badge"><span class="trend-down">▼ ${Math.abs(incomeChange)}% vs last month</span></span>`;
+    }
+  } else {
+    incomeTrendEl.innerHTML = '<span class="trend-badge"><span class="trend-up">▲ New</span></span>';
+  }
+  
+  // Expenses trend
+  const expensesTrendEl = document.getElementById('expensesTrendHome');
+  if (prevTotalExpense > 0) {
+    const expensesChange = ((totalExpense - prevTotalExpense) / prevTotalExpense * 100).toFixed(0);
+    if (expensesChange <= 0) {
+      expensesTrendEl.innerHTML = `<span class="trend-badge"><span class="trend-down">▼ ${Math.abs(expensesChange)}% vs last month</span></span>`;
+    } else {
+      expensesTrendEl.innerHTML = `<span class="trend-badge"><span class="trend-up">▲ ${expensesChange}% vs last month</span></span>`;
+    }
+  } else {
+    expensesTrendEl.innerHTML = '<span class="trend-badge"><span class="trend-down">▼ New</span></span>';
   }
 }
 
@@ -625,8 +759,8 @@ function updateBudgetOverview() {
 }
 
 // ── Render all ────────────────────────────────────────────
-function renderAll() {
-  updateKPIStats();
+async function renderAll() {
+  await updateKPIStats();
   updateBudgetOverview();
   renderRecentActivity();
 }
