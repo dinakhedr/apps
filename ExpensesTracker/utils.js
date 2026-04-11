@@ -467,3 +467,6 @@ function logout(redirectTo = 'Home.html') {
   keys.forEach(k => localStorage.removeItem(k));
   window.location.href = redirectTo;
 }
+// Expose async ID generators to window for use in other pages
+window.getNextExpenseId = getNextExpenseId;
+window.getNextIncomeId = getNextIncomeId;
