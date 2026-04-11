@@ -420,7 +420,7 @@
       opacity: 0.9;
     }
 
-    /* Month detail modal */
+    /* Month detail modal - with edit/delete menu */
     .detail-income-item {
       display: flex;
       align-items: center;
@@ -626,7 +626,7 @@
   </div>
 </div>
 
-<!-- Month Detail Modal -->
+<!-- Month Detail Modal - with edit/delete menu -->
 <div class="modal-backdrop" id="monthDetailModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -652,6 +652,20 @@
   </div>
 </div>
 
+<!-- Sheet menu for month detail modal -->
+<div class="sheet-backdrop" id="monthDetailSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Options</div>
+    <button class="sheet-action" id="monthDetailEditBtn">
+      <span class="sheet-action-icon">✏️</span> Edit
+    </button>
+    <button class="sheet-action danger" id="monthDetailDeleteBtn">
+      <span class="sheet-action-icon">🗑️</span> Delete
+    </button>
+  </div>
+</div>
+
 <script>
 // ======================== STATE ==========================
 let incomes = [];
@@ -660,6 +674,7 @@ let currentUserEmail = null;
 let currentAccessToken = null;
 let editingIncomeId = null;
 let selectedIncomeId = null;
+let monthDetailSelectedId = null;
 
 // Use the constant from utils.js
 const INCOME_SHEET = INCOME_LOG_SHEET;
@@ -740,7 +755,7 @@ function updateSelectedYearsText() {
   if (selected.length === 0) {
     textSpan.textContent = 'No years selected';
   } else if (selected.length === AVAILABLE_YEARS.length) {
-    textSpan.textContent = 'All years (2020-2030)';
+    textSpan.textContent = 'All years (2025-2030)';
   } else {
     textSpan.textContent = selected.join(', ');
   }
@@ -908,6 +923,7 @@ function openMonthDetail(year, month) {
             ${inc.notes ? `<div style="font-size:11px;color:var(--text-3);margin-top:2px">📝 ${escapeHtml(inc.notes)}</div>` : ''}
           </div>
           <div class="detail-income-amount">${formatMoney(inc.amount)}</div>
+          <button class="action-icon" onclick="openMonthDetailMenu(${inc.id})">⋮</button>
         </div>`;
     }).join('');
   }
@@ -917,6 +933,18 @@ function openMonthDetail(year, month) {
 
 function closeMonthDetailModal() {
   document.getElementById('monthDetailModal').classList.remove('open');
+  monthDetailSelectedId = null;
+}
+
+// Open menu for month detail items
+function openMonthDetailMenu(id) {
+  monthDetailSelectedId = id;
+  document.getElementById('monthDetailSheet').classList.add('open');
+}
+
+function closeMonthDetailSheet() {
+  document.getElementById('monthDetailSheet').classList.remove('open');
+  monthDetailSelectedId = null;
 }
 
 // ======================== CRUD OPERATIONS ========================
@@ -956,6 +984,8 @@ async function saveIncome() {
   renderIncomeList();
   buildYearCheckboxList();
   renderSummary();
+  // Refresh month detail if open
+  closeMonthDetailModal();
 }
 
 async function deleteIncome(id) {
@@ -968,6 +998,7 @@ async function deleteIncome(id) {
   renderIncomeList();
   buildYearCheckboxList();
   renderSummary();
+  closeMonthDetailModal();
 }
 
 // ======================== SHEET OPERATIONS ========================
@@ -1269,6 +1300,27 @@ document.getElementById('sheetDeleteBtn').addEventListener('click', async () => 
     await deleteIncome(id);
   }
 });
+
+// Month detail sheet listeners
+document.getElementById('monthDetailSheet').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeMonthDetailSheet();
+});
+document.getElementById('monthDetailEditBtn').onclick = function() {
+  if (monthDetailSelectedId) {
+    const idToEdit = monthDetailSelectedId;
+    closeMonthDetailSheet();
+    closeMonthDetailModal();
+    setTimeout(() => openEditIncomeModal(idToEdit), 200);
+  }
+};
+document.getElementById('monthDetailDeleteBtn').addEventListener('click', async () => {
+  if (monthDetailSelectedId) {
+    const idToDelete = monthDetailSelectedId;
+    closeMonthDetailSheet();
+    await deleteIncome(idToDelete);
+  }
+});
+
 document.getElementById('incomeModal').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeIncomeModal();
 });
