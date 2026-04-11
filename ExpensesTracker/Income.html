@@ -1255,12 +1255,13 @@ document.getElementById('syncBtn').addEventListener('click', manualSync);
 document.getElementById('incomeSheet').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeIncomeSheet();
 });
-document.getElementById('sheetEditBtn').addEventListener('click', () => {
+document.getElementById('sheetEditBtn').onclick = function() {
   if (selectedIncomeId) {
+    const idToEdit = selectedIncomeId;
     closeIncomeSheet();
-    setTimeout(() => openEditIncomeModal(selectedIncomeId), 100);
+    openEditIncomeModal(idToEdit);
   }
-});
+};
 document.getElementById('sheetDeleteBtn').addEventListener('click', async () => {
   if (selectedIncomeId) {
     const id = selectedIncomeId;
