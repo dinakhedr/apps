@@ -533,7 +533,7 @@ async function addExpense(date, category, amount, notes) {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div> Saving…';
 
-  const exp = { id: genExpenseId(), date, category, amount: parseFloat(amount), notes: notes || '', timestamp: new Date().toISOString() };
+  const exp = { id: await genExpenseId(), date, category, amount: parseFloat(amount), notes: notes || '', timestamp: new Date().toISOString() };
   expenses.unshift(exp);
   saveLocal();
   renderAll();
