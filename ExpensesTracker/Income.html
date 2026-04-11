@@ -1102,6 +1102,26 @@ async function addIncomeToSheet(inc) {
 async function deleteIncomeFromSheet(incId) {
   if (!spreadsheetId) return false;
   try {
+    // First, get the sheet ID for the Income Log sheet
+    const spreadsheet = await gapi.client.sheets.spreadsheets.get({
+      spreadsheetId,
+      fields: 'sheets.properties'
+    });
+    
+    let sheetId = null;
+    for (const sheet of spreadsheet.result.sheets) {
+      if (sheet.properties.title === INCOME_SHEET) {
+        sheetId = sheet.properties.sheetId;
+        break;
+      }
+    }
+    
+    if (sheetId === null) {
+      console.error('Income sheet not found');
+      return false;
+    }
+    
+    // Get all rows to find the matching ID
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
       range: `${INCOME_SHEET}!A2:F`
@@ -1110,20 +1130,31 @@ async function deleteIncomeFromSheet(incId) {
     let rowIndex = -1;
     for (let i = 0; i < rows.length; i++) {
       if (rows[i][5] && parseInt(rows[i][5]) === incId) {
-        rowIndex = i + 2;
+        rowIndex = i + 2; // +2 because rows are 0-indexed and we have header row
         break;
       }
     }
     if (rowIndex < 2) return false;
+    
+    // Delete the row using the correct sheet ID
     await gapi.client.sheets.spreadsheets.batchUpdate({
       spreadsheetId,
       resource: {
-        requests: [{ deleteDimension: { range: { sheetId: 0, dimension: 'ROWS', startIndex: rowIndex - 1, endIndex: rowIndex } } }]
+        requests: [{
+          deleteDimension: {
+            range: {
+              sheetId: sheetId,
+              dimension: 'ROWS',
+              startIndex: rowIndex - 1,
+              endIndex: rowIndex
+            }
+          }
+        }]
       }
     });
     return true;
   } catch (err) {
-    console.error(err);
+    console.error('deleteIncomeFromSheet error:', err);
     return false;
   }
 }
