@@ -1210,7 +1210,7 @@ async function completeLoginAndSetup(tokenResponse) {
     setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
     showToast(`✅ Welcome back, ${currentUserEmail.split('@')[0]}!`);
   } else {
-    renderAll();
+    // New user — no sheet yet, don't call renderAll() here (spreadsheetId is null)
     showScreen('setupScreen');
   }
   _setupRunning = false;
