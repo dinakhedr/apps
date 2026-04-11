@@ -1203,14 +1203,14 @@ async function saveRecurring() {
   const newSub={ 
     id: editingId !== null ? recurringList[editingId].id : Date.now() + Math.random(), 
     name, category, frequency, amount, startMonth, paymentDay, 
-    startYear: currentYear,
+    startYear: editingId !== null ? (recurringList[editingId].startYear || currentYear) : currentYear,
     active: editingId !== null ? recurringList[editingId].active : true 
   };
   if(editingId!==null) recurringList[editingId]=newSub; else recurringList.push(newSub);
+  closeModal();   // close immediately — don't wait for the API call
   render();
   const ok=await saveRecurringToSheet();
   showToast(ok?(editingId!==null?'✅ Updated':'✅ Added'):'❌ Failed to save',ok?'success':'error');
-  closeModal();
 }
 
 // Close on backdrop
@@ -1236,12 +1236,34 @@ async function loadRecurringFromSheet() {
   } catch(e){console.error(e);return false;}
 }
 async function saveRecurringToSheet() {
-  if(!spreadsheetId) return false;
+  if (!spreadsheetId) return false;
   try {
-    await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId,range:`${RECURRING_SHEET}!A2:I`});
-    if(recurringList.length) await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A2:I`,valueInputOption:'RAW',resource:{values:recurringList.map(recurringToRow)}});
+    // Use batchUpdate to clear + rewrite atomically — avoids data loss if the second call fails
+    const requests = [];
+    // First get the sheet ID for the Recurring tab
+    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId, fields: 'sheets.properties' });
+    const sheet = meta.result.sheets.find(s => s.properties.title === RECURRING_SHEET);
+    if (sheet) {
+      requests.push({
+        updateCells: {
+          range: { sheetId: sheet.properties.sheetId, startRowIndex: 1 },
+          fields: 'userEnteredValue'
+        }
+      });
+    }
+    if (requests.length) {
+      await gapi.client.sheets.spreadsheets.batchUpdate({ spreadsheetId, resource: { requests } });
+    }
+    if (recurringList.length) {
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId, range: `${RECURRING_SHEET}!A2:I`,
+        valueInputOption: 'RAW',
+        resource: { values: recurringList.map(recurringToRow) }
+      });
+    }
+    saveRecurringLocal();
     return true;
-  } catch(e){console.error(e);return false;}
+  } catch(e) { console.error('saveRecurringToSheet error:', e); return false; }
 }
 async function ensureRecurringTab() {
   try {
