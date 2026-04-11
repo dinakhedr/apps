@@ -533,7 +533,7 @@ async function addExpense(date, category, amount, notes) {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div> Saving…';
 
-  const exp = { id: await genExpenseId(), date, category, amount: parseFloat(amount), notes: notes || '', timestamp: new Date().toISOString() };
+  const exp = { id: await getNextExpenseId(), date, category, amount: parseFloat(amount), notes: notes || '', timestamp: new Date().toISOString() };
   expenses.unshift(exp);
   saveLocal();
   renderAll();
@@ -779,7 +779,7 @@ async function loadExpensesFromSheet(showMsg = false) {
       .filter(r => r[2] && r[3])   // skip rows missing category or amount
       .map((r, i) => ({
         // Use the sheet's ID column (F). If missing/corrupt use a stable
-        // value derived from row position — NEVER call genExpenseId() here, which
+        // value derived from row position — NEVER call getNextExpenseId() here, which
         // would assign a different ID every read and appear as new expenses.
         id:        (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
         date:      r[1] || r[0],
