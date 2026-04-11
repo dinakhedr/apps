@@ -78,9 +78,11 @@ const DEFAULT_EXPENSE_CATEGORIES = [
   { value: 'Health',        icon: '💊', bg: '#ffccd9', chart: '#f48fb1', catKind: 'expense' },
   { value: 'Home Repairs',  icon: '🛠️', bg: '#ffd1d1', chart: '#e57373', catKind: 'expense' },
   { value: 'Internet',      icon: '📶', bg: '#cce0ff', chart: '#4fc3f7', catKind: 'expense' },
+  { value: 'Lent Money',    icon: '🤝', bg: '#fef3c7', chart: '#f59e0b', catKind: 'expense' },
   { value: 'Personal Care', icon: '🧴', bg: '#ffccd9', chart: '#f48fb1', catKind: 'expense' },
   { value: 'Pets',          icon: '🐾', bg: '#e8d5b7', chart: '#d4a574', catKind: 'expense' },
   { value: 'Petrol',        icon: '⛽', bg: '#ffd1d1', chart: '#e57373', catKind: 'expense' },
+  { value: 'Repayment Paid',  icon: '💸', bg: '#fee2e2', chart: '#ef4444', catKind: 'expense' },
   { value: 'Ride Hailing',  icon: '🚕', bg: '#ffe5b4', chart: '#f4c542', catKind: 'expense' },
   { value: 'Smoking',       icon: '🚬', bg: '#e0e0e0', chart: '#9e9e9e', catKind: 'expense' },
   { value: 'Subscriptions', icon: '💻', bg: '#cce7ff', chart: '#64b5f6', catKind: 'expense' },
@@ -92,17 +94,17 @@ const DEFAULT_EXPENSE_CATEGORIES = [
 // ── Default INCOME Categories (type: 'income') ────────────
 const DEFAULT_INCOME_CATEGORIES = [
   { value: 'Salary',              icon: '💵', bg: '#d1fae5', chart: '#34d399', catKind: 'income' },
-  { value: 'Commission',          icon: '📊', bg: '#ede9fe', chart: '#a78bfa', catKind: 'income' },
-  { value: 'Overtime',            icon: '⏰', bg: '#fef3c7', chart: '#fbbf24', catKind: 'income' },
-  { value: 'Freelance',           icon: '💻', bg: '#dbeafe', chart: '#60a5fa', catKind: 'income' },
-  { value: 'Rental Income',       icon: '🏠', bg: '#fce7f3', chart: '#f472b6', catKind: 'income' },
   { value: 'Bank Interest',       icon: '🏦', bg: '#e0e7ff', chart: '#818cf8', catKind: 'income' },
   { value: 'Certificate Interest', icon: '📋', bg: '#fef9c3', chart: '#facc15', catKind: 'income' },
-  { value: 'Dividends',           icon: '📈', bg: '#d1fae5', chart: '#10b981', catKind: 'income' },
-  { value: 'Gift',                icon: '🎁', bg: '#fce7f3', chart: '#f472b6', catKind: 'income' },
-  { value: 'Refund',              icon: '🔄', bg: '#e0f2fe', chart: '#38bdf8', catKind: 'income' },
+  { value: 'Freelance',           icon: '💻', bg: '#dbeafe', chart: '#60a5fa', catKind: 'income' },
   { value: 'Bonus',               icon: '🎉', bg: '#fef3c7', chart: '#fbbf24', catKind: 'income' },
-  { value: 'Other Income',        icon: '💰', bg: '#e0e0e0', chart: '#9e9e9e', catKind: 'income' },
+  { value: 'Commission',          icon: '📊', bg: '#ede9fe', chart: '#a78bfa', catKind: 'income' },
+  { value: 'Borrowed Money',      icon: '🏦', bg: '#fef3c7', chart: '#f59e0b', catKind: 'income' },
+  { value: 'Repayment Received',  icon: '💰', bg: '#d1fae5', chart: '#10b981', catKind: 'income' },
+  { value: 'Gift',                icon: '🎁', bg: '#fce7f3', chart: '#f472b6', catKind: 'income' },  
+  { value: 'Overtime',            icon: '⏰', bg: '#fef3c7', chart: '#fbbf24', catKind: 'income' },
+  { value: 'Refund',              icon: '🔄', bg: '#e0f2fe', chart: '#38bdf8', catKind: 'income' },
+  { value: 'Rental Income',       icon: '🏠', bg: '#fce7f3', chart: '#f472b6', catKind: 'income' },
 ];
 
 // Combine all default categories
