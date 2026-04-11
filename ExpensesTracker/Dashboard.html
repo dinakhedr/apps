@@ -550,7 +550,8 @@ const CHART_COLORS = {
   income: '#10b981',
   daily: '#3b82f6',
   recurring: '#f59e0b',
-  installments: '#06b6d4'
+  installments: '#06b6d4',
+  total: '#ef4444'
 };
 
 // ======================== DATA LOADING ===================
@@ -941,18 +942,35 @@ async function renderChart() {
     }
   });
   
-  // Update legend to only show active datasets
-  const activeDatasets = datasets.map(d => d.label);
-  let legendHtml = '';
-  if (activeDatasets.includes('Income')) legendHtml += `<span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.income}"></div> Income</span>`;
-  if (activeDatasets.includes('Total Expenses')) legendHtml += `<span class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Total Expenses</span>`;
-  if (activeDatasets.includes('Daily Expenses')) legendHtml += `<span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.daily}"></div> Daily</span>`;
-  if (activeDatasets.includes('Recurring Expenses')) legendHtml += `<span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.recurring}"></div> Recurring</span>`;
-  if (activeDatasets.includes('Installments')) legendHtml += `<span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.installments}"></div> Installments</span>`;
-  
-  document.getElementById('chartLegend').innerHTML = legendHtml || '<span style="color: rgba(255,255,255,0.5);">Select at least one item</span>';
-}
+  // Interactive filter pills
+  const FILTERS = [
+    { key: 'Income',             color: CHART_COLORS.income,       label: 'Income' },
+    { key: 'Total Expenses',     color: CHART_COLORS.total,        label: 'Total Exp.' },
+    { key: 'Daily Expenses',     color: CHART_COLORS.daily,        label: 'Daily' },
+    { key: 'Recurring Expenses', color: CHART_COLORS.recurring,    label: 'Recurring' },
+    { key: 'Installments',       color: CHART_COLORS.installments, label: 'Installments' },
+  ];
 
+  const legendEl = document.getElementById('chartLegend');
+  legendEl.innerHTML = FILTERS.map(f => `
+    <div class="filter-pill active" data-label="${f.key}"
+         style="background:${f.color}22; border-color:${f.color}; color:${f.color};">
+      <div class="filter-pill-dot" style="background:${f.color}"></div>
+      ${f.label}
+    </div>
+  `).join('');
+
+  legendEl.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const label = pill.dataset.label;
+      const dsIndex = trendChart.data.datasets.findIndex(d => d.label === label);
+      if (dsIndex === -1) return;
+      const isActive = pill.classList.toggle('active');
+      trendChart.setDatasetVisibility(dsIndex, isActive);
+      trendChart.update();
+    });
+  });
+}
 // ======================== TOP CATEGORIES =================
 function renderTopCategories() {
   const currentExpenses = getCurrentMonthDailyExpenses();
