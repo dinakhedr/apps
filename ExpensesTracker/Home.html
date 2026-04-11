@@ -37,10 +37,55 @@
       font-size: 13px; color: rgba(255,255,255,0.95); font-weight: 500;
     }
     .compare-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+
+
+    /* Inline comparison badge (inside stats card) */
+    .stats-compare {display: flex;align-items: center;gap: 6px;flex-wrap: wrap;}
+    .compare-badge-inline {font-size: 11px;font-weight: 700;padding: 2px 8px;border-radius: 20px;display: inline-block;}
+    .compare-badge-inline.compare-up {background: rgba(239,68,68,0.25);color: #fca5a5;}
+    .compare-badge-inline.compare-down {background: rgba(16,185,129,0.25);color: #6ee7b7;}
+    .compare-badge-inline.compare-same {background: rgba(255,255,255,0.18);color: rgba(255,255,255,0.7);}
+    
     .compare-up    { background: rgba(239,68,68,0.25);   color: #fca5a5; }
     .compare-down  { background: rgba(16,185,129,0.25);  color: #6ee7b7; }
     .compare-same  { background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.7); }
 
+        /* ── Dashboard button ── */
+    .dashboard-btn {
+      width: 100%;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .dashboard-btn:active {
+      transform: scale(0.98);
+      background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.15) 100%);
+    }
+    .dashboard-btn-icon {
+      font-size: 28px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
+    .dashboard-btn-text {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+      flex: 1;
+      margin-left: 12px;
+    }
+    .dashboard-btn-arrow {
+      font-size: 20px;
+      color: rgba(255,255,255,0.7);
+    }
     /* ── Stats card ── */
     .stats-card {
       background: var(--brand-grad); border-radius: var(--radius-lg);
@@ -190,21 +235,19 @@
     </div>
   </div>
 
-  <!-- Stats -->
+  <!-- Stats & Comparison -->
   <div class="stats-card">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div>
         <div class="stats-label">This Month Total</div>
         <div class="stats-total" id="totalAmount">EGP 0.00</div>
         <div class="stats-month" id="monthBadge"></div>
+        <div class="stats-compare" id="statsCompare" style="display:none; margin-top: 8px;">
+          <span id="statsCompareText" style="font-size: 12px; font-weight: 600;"></span>
+          <span class="compare-badge-inline" id="statsCompareBadge"></span>
+        </div>
       </div>
     </div>
-  </div>
-
-  <!-- Month comparison moved below stats card -->
-  <div class="month-compare" id="monthCompare" style="display:none">
-    <span id="compareText"></span>
-    <span class="compare-badge" id="compareBadge"></span>
   </div>
 
   <!-- Add Expense -->
@@ -237,6 +280,13 @@
     <div class="sync-strip" id="syncStatus">✅ Synced to Google Drive</div>
   </div>
 
+  <!-- Dashboard Button -->
+  <button class="dashboard-btn" onclick="window.location.href='Dashboard.html'">
+    <span class="dashboard-btn-icon">📊</span>
+    <span class="dashboard-btn-text">View Dashboard</span>
+    <span class="dashboard-btn-arrow">→</span>
+  </button>
+  
   <!-- Budget Overview -->
   <div class="card" id="budgetCard" style="display:none">
     <div class="card-title" style="justify-content:space-between">
@@ -259,16 +309,10 @@
     </div>
     <div id="expensesList"></div>
   </div>
-  <!-- Manage Categories button -->
+</div>
 
-  <!-- Recurring Expenses button -->
-
-</div><!-- /mainApp -->
-
-<!-- ── Toast ── -->
 
 <div id="bottomNavMount"></div>
-
 <div class="toast" id="toast"></div>
 
 <!-- ── Edit Expense Modal ── -->
@@ -368,24 +412,33 @@ function todayStr() { return new Date().toISOString().split('T')[0]; }
 function updateMonthCompare() {
   const thisTotal = expenses.filter(e => isInCurrentMonth(e.date)).reduce((s,e) => s + e.amount, 0);
   const prevTotal = expenses.filter(e => isInPrevMonth(e.date)).reduce((s,e) => s + e.amount, 0);
-  const el   = document.getElementById('monthCompare');
-  const text = document.getElementById('compareText');
-  const badge= document.getElementById('compareBadge');
-  if (prevTotal === 0) { el.style.display = 'none'; return; }
-  el.style.display = 'flex';
+  
+  const statsCompare = document.getElementById('statsCompare');
+  const statsCompareText = document.getElementById('statsCompareText');
+  const statsCompareBadge = document.getElementById('statsCompareBadge');
+  
+  if (prevTotal === 0) { 
+    statsCompare.style.display = 'none';
+    return; 
+  }
+  
+  statsCompare.style.display = 'block';
   const diff = thisTotal - prevTotal;
-  const pct  = Math.abs((diff / prevTotal) * 100).toFixed(0);
+  const pct = Math.abs((diff / prevTotal) * 100).toFixed(0);
   const sign = diff > 0 ? '▲' : diff < 0 ? '▼' : '';
-  text.textContent = 'vs last month';
+  const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '';
+  
+  statsCompareText.textContent = `vs last month ${arrow} `;
+  
   if (diff > 0) {
-    badge.textContent = `${sign} ${pct}%`;
-    badge.className   = 'compare-badge compare-up';
+    statsCompareBadge.textContent = `${sign} ${pct}% more`;
+    statsCompareBadge.className = 'compare-badge-inline compare-up';
   } else if (diff < 0) {
-    badge.textContent = `${sign} ${pct}%`;
-    badge.className   = 'compare-badge compare-down';
+    statsCompareBadge.textContent = `${sign} ${pct}% less`;
+    statsCompareBadge.className = 'compare-badge-inline compare-down';
   } else {
-    badge.textContent = 'No change';
-    badge.className   = 'compare-badge compare-same';
+    statsCompareBadge.textContent = 'No change';
+    statsCompareBadge.className = 'compare-badge-inline compare-same';
   }
 }
 
