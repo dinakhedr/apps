@@ -1110,21 +1110,21 @@ async function deleteIncomeFromSheet(incId) {
     
     let sheetId = null;
     for (const sheet of spreadsheet.result.sheets) {
-      if (sheet.properties.title === INCOME_SHEET) {
+      if (sheet.properties.title === INCOME_LOG_SHEET) {
         sheetId = sheet.properties.sheetId;
         break;
       }
     }
     
     if (sheetId === null) {
-      console.error('Income sheet not found');
+      console.error('Income Log sheet not found');
       return false;
     }
     
     // Get all rows to find the matching ID
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${INCOME_SHEET}!A2:F`
+      range: `${INCOME_LOG_SHEET}!A2:F`
     });
     const rows = res.result.values || [];
     let rowIndex = -1;
