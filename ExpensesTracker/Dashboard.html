@@ -425,24 +425,6 @@
     <div class="chart-container">
       <canvas id="trendChart"></canvas>
     </div>
-    <!-- Dynamic checkbox controls -->
-    <div class="chart-controls" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 8px 0 4px 0;">
-      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer;">
-        <input type="checkbox" id="showIncome" checked style="width: 16px; height: 16px; cursor: pointer;"> Income
-      </label>
-      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer;">
-        <input type="checkbox" id="showTotalExpenses" checked style="width: 16px; height: 16px; cursor: pointer;"> Total Expenses
-      </label>
-      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer;">
-        <input type="checkbox" id="showDaily" checked style="width: 16px; height: 16px; cursor: pointer;"> Daily
-      </label>
-      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer;">
-        <input type="checkbox" id="showRecurring" checked style="width: 16px; height: 16px; cursor: pointer;"> Recurring
-      </label>
-      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer;">
-        <input type="checkbox" id="showInstallments" checked style="width: 16px; height: 16px; cursor: pointer;"> Installments
-      </label>
-    </div>
     <div class="chart-filters" id="chartLegend"></div>
   </div>
 
@@ -1249,14 +1231,7 @@ document.getElementById('syncBtn').addEventListener('click', syncAll);
 document.getElementById('addExpenseBtn').addEventListener('click', openExpenseModal);
 document.getElementById('addIncomeBtn').addEventListener('click', openIncomeModal);
 document.getElementById('manageCategoriesBtn').addEventListener('click', () => {window.location.href = 'Expenses.html';});
-document.getElementById('chartYearSelect').addEventListener('change', () => renderChart());
-// Add checkbox event listeners
-const checkboxes = ['showIncome', 'showTotalExpenses', 'showDaily', 'showRecurring', 'showInstallments'];
-checkboxes.forEach(id => {
-  const cb = document.getElementById(id);
-  if (cb) cb.addEventListener('change', () => renderChart());
-});
-  
+document.getElementById('chartYearSelect').addEventListener('change', () => renderChart());  
 document.getElementById('expenseModal').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeExpenseModal();
 });
