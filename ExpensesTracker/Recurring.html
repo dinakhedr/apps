@@ -575,6 +575,9 @@
     <button class="sheet-action" onclick="sheetEdit()">
       <span class="sheet-action-icon">✏️</span>Edit
     </button>
+    <button class="sheet-action" id="sheetDeleteBtn" onclick="sheetDelete()" style="color:var(--danger)">
+      <span class="sheet-action-icon">🗑️</span>Delete
+    </button>
   </div>
 </div>
 
@@ -1109,29 +1112,53 @@ async function markAsPaid(index) {
 
 // ── More sheet ─────────────────────────────────────────────
 function openMoreSheet(index) {
-  sheetTargetIdx=index;
-  const sub=recurringList[index];
-  document.getElementById('sheetTitle').textContent=sub.name;
-  document.getElementById('sheetPauseLabel').textContent=sub.active?'Pause':'Resume';
-  document.getElementById('sheetPauseIcon').textContent=sub.active?'⏸️':'▶️';
+  sheetTargetIdx = index;
+  const sub = recurringList[index];
+  document.getElementById('sheetTitle').textContent = sub.name;
+  document.getElementById('sheetPauseLabel').textContent = sub.active ? 'Pause' : 'Resume';
+  document.getElementById('sheetPauseIcon').textContent  = sub.active ? '⏸️' : '▶️';
+
+  // Show delete only if no log records exist for this recurring ID
+  const logs = window._allPaidLogs || [];
+  const hasLogs = logs.some(l => String(l.recurringId) === String(sub.id));
+  const deleteBtn = document.getElementById('sheetDeleteBtn');
+  if (deleteBtn) deleteBtn.style.display = hasLogs ? 'none' : '';
+
   document.getElementById('moreSheet').classList.add('open');
 }
-function closeMoreSheet() { document.getElementById('moreSheet').classList.remove('open'); sheetTargetIdx=null; }
+function closeMoreSheet() { document.getElementById('moreSheet').classList.remove('open'); sheetTargetIdx = null; }
+
 async function sheetToggleActive() {
-  if(sheetTargetIdx===null) return; closeMoreSheet();
-  recurringList[sheetTargetIdx].active=!recurringList[sheetTargetIdx].active; render();
-  const ok=await saveRecurringToSheet();
-  showToast(ok?(recurringList[sheetTargetIdx].active?'▶️ Resumed':'⏸️ Paused'):'❌ Failed',ok?'success':'error');
+  if (sheetTargetIdx === null) return;
+  const wasActive = recurringList[sheetTargetIdx].active;
+  closeMoreSheet();
+  recurringList[sheetTargetIdx].active = !wasActive;
+  render();
+  const ok = await saveRecurringToSheet();
+  showToast(ok ? (wasActive ? '⏸️ Paused' : '▶️ Resumed') : '❌ Failed', ok ? 'success' : 'error');
 }
-function sheetEdit()   { if(sheetTargetIdx===null) return; const i=sheetTargetIdx; closeMoreSheet(); openEditModal(i); }
+function sheetEdit() { if (sheetTargetIdx === null) return; const i = sheetTargetIdx; closeMoreSheet(); openEditModal(i); }
+
 async function sheetDelete() {
-  if(sheetTargetIdx===null) return;
-  const sub=recurringList[sheetTargetIdx];
-  if(!confirm(`Delete "${sub.name}" permanently?`)) return;
-  const i=sheetTargetIdx; closeMoreSheet();
-  recurringList.splice(i,1); render();
-  const ok=await saveRecurringToSheet();
-  showToast(ok?`🗑️ ${sub.name} deleted`:'❌ Delete failed',ok?'success':'error');
+  if (sheetTargetIdx === null) return;
+  const sub = recurringList[sheetTargetIdx];
+
+  // Double-check log records using the Recurring ID
+  const logs = window._allPaidLogs || [];
+  const hasLogs = logs.some(l => String(l.recurringId) === String(sub.id));
+  if (hasLogs) {
+    showToast('❌ Cannot delete — has payment records. Pause instead.', 'error');
+    closeMoreSheet();
+    return;
+  }
+
+  if (!confirm(`Delete "${sub.name}" permanently?\n\nThis cannot be undone.`)) return;
+  const i = sheetTargetIdx;
+  closeMoreSheet();
+  recurringList.splice(i, 1);
+  render();
+  const ok = await saveRecurringToSheet();
+  showToast(ok ? `🗑️ ${sub.name} deleted` : '❌ Delete failed', ok ? 'success' : 'error');
 }
 
 // ── CRUD Modals ────────────────────────────────────────────
@@ -1238,23 +1265,40 @@ async function ensureRecurringTab() {
 }
 async function ensureRecurringLogTab() {
   try {
-    const meta=await gapi.client.sheets.spreadsheets.get({spreadsheetId});
-    const exists=meta.result.sheets.some(s=>s.properties.title===RECURRING_LOG_SHEET);
-    if(!exists) {
-      await gapi.client.sheets.spreadsheets.batchUpdate({spreadsheetId,resource:{requests:[{addSheet:{properties:{title:RECURRING_LOG_SHEET}}}]}});
-      await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_LOG_SHEET}!A1:F1`,valueInputOption:'RAW',resource:{values:[['Timestamp','Date','Name','Category','Amount','Notes']]}});
+    const meta = await gapi.client.sheets.spreadsheets.get({spreadsheetId});
+    const exists = meta.result.sheets.some(s => s.properties.title === RECURRING_LOG_SHEET);
+    if (!exists) {
+      await gapi.client.sheets.spreadsheets.batchUpdate({spreadsheetId, resource:{requests:[{addSheet:{properties:{title:RECURRING_LOG_SHEET}}}]}});
+      await gapi.client.sheets.spreadsheets.values.update({spreadsheetId, range:`${RECURRING_LOG_SHEET}!A1:G1`, valueInputOption:'RAW', resource:{values:[['Timestamp','Date','Name','Category','Amount','Notes','RecurringID']]}});
+    } else {
+      // Migrate old log that may be missing the RecurringID column
+      const hdr = await gapi.client.sheets.spreadsheets.values.get({spreadsheetId, range:`${RECURRING_LOG_SHEET}!A1:G1`});
+      const headers = hdr.result.values?.[0] || [];
+      if (!headers.includes('RecurringID')) {
+        await gapi.client.sheets.spreadsheets.values.update({spreadsheetId, range:`${RECURRING_LOG_SHEET}!G1`, valueInputOption:'RAW', resource:{values:[['RecurringID']]}});
+      }
     }
-  } catch(e){console.warn(e);}
+  } catch(e) { console.warn(e); }
 }
-async function writeToRecurringLog(sub,paidDate) {
-  const row=[new Date().toISOString(),paidDate,sub.name,sub.category,sub.amount,`Recurring: ${sub.name}`];
-  try { await gapi.client.sheets.spreadsheets.values.append({spreadsheetId,range:`${RECURRING_LOG_SHEET}!A2:F`,valueInputOption:'RAW',resource:{values:[row]}}); return true; }
-  catch(e){console.error(e);return false;}
+async function writeToRecurringLog(sub, paidDate) {
+  const row = [new Date().toISOString(), paidDate, sub.name, sub.category, sub.amount, `Recurring: ${sub.name}`, sub.id];
+  try {
+    await gapi.client.sheets.spreadsheets.values.append({spreadsheetId, range:`${RECURRING_LOG_SHEET}!A2:G`, valueInputOption:'RAW', resource:{values:[row]}});
+    return true;
+  } catch(e) { console.error(e); return false; }
 }
 async function loadRecurringLog() {
   try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_LOG_SHEET}!A2:F`});
-    return (res.result.values || []).map(r => ({ timestamp: r[0] || '', date: r[1] || '', name: r[2] || '', category: r[3] || '', amount: parseFloat(r[4]) || 0, notes: r[5] || '' }));
+    const res = await gapi.client.sheets.spreadsheets.values.get({spreadsheetId, range:`${RECURRING_LOG_SHEET}!A2:G`});
+    return (res.result.values || []).map(r => ({
+      timestamp:   r[0] || '',
+      date:        r[1] || '',
+      name:        r[2] || '',
+      category:    r[3] || '',
+      amount:      parseFloat(r[4]) || 0,
+      notes:       r[5] || '',
+      recurringId: r[6] || ''   // Recurring tab ID for delete-guard
+    }));
   } catch(e) {
     console.error('loadRecurringLog error:', e);
     try { await ensureRecurringLogTab(); } catch(e2) {}
