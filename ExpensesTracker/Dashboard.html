@@ -156,24 +156,36 @@
     canvas {
       max-width: 100%;
     }
-    .chart-legend {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 12px;
-      font-size: 10px;
-    }
-    .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-    }
+/* REPLACE the .chart-legend, .legend-item, .legend-dot styles with: */
+.chart-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: center;
+}
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.18s;
+  user-select: none;
+  opacity: 0.38;
+}
+.filter-pill.active {
+  opacity: 1;
+}
+.filter-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
 
     /* Top categories list */
     .category-item {
@@ -431,7 +443,7 @@
         <input type="checkbox" id="showInstallments" checked style="width: 16px; height: 16px; cursor: pointer;"> Installments
       </label>
     </div>
-    <div class="chart-legend" id="chartLegend"></div>
+    <div class="chart-filters" id="chartLegend"></div>
   </div>
 
   <!-- Top Spending Categories -->
