@@ -206,7 +206,7 @@
       margin-bottom: 4px;
     }
 
-    /* Summary card */
+    /* Summary card - matching Installments design */
     .summary-card {
       background: var(--surface);
       border-radius: var(--radius-lg);
@@ -214,54 +214,49 @@
       box-shadow: var(--shadow);
       overflow: hidden;
     }
-    .summary-card .card-title {
-      font-family: 'Sora', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      padding: 18px 20px 12px 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-    .summary-card .card-title-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 9px;
+    .summary-header {
       background: var(--brand-grad);
-      display: inline-flex;
+      color: #fff;
+      padding: 16px 20px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      font-size: 14px;
     }
-
-    /* Year selector */
-    .year-selector-wrap {
-      padding: 0 20px 16px 20px;
+    .summary-header h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
     }
-    .year-selector {
-      width: 100%;
-      padding: 12px 14px;
-      border: 2px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-size: 14px;
-      font-family: 'DM Sans', sans-serif;
-      background: var(--surface-2);
+    .summary-year-header {
+      background: linear-gradient(135deg, #f5f5fa 0%, #ffffff 100%);
       color: var(--text);
+      padding: 14px 20px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .year-selector:focus {
-      outline: none;
-      border-color: var(--brand);
-      background: #fff;
+    .summary-year-total {
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--brand-grad);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
     }
-
-    /* Summary month rows */
     .summary-month-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 20px;
+      padding: 14px 20px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
       transition: background 0.12s;
@@ -280,7 +275,7 @@
     }
     .summary-month-name {
       font-weight: 600;
-      font-size: 14px;
+      font-size: 15px;
       color: var(--text);
     }
     .summary-month-count {
@@ -290,7 +285,7 @@
     .summary-month-amount {
       font-family: 'Sora', sans-serif;
       font-weight: 700;
-      font-size: 15px;
+      font-size: 16px;
       color: var(--brand);
     }
     .summary-empty {
@@ -302,24 +297,127 @@
       font-size: 48px;
       margin-bottom: 12px;
     }
-    .summary-total-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 20px;
+
+    /* Year dropdown - matching Installments */
+    .year-dropdown {
+      position: relative;
+      margin: 16px 20px 20px 20px;
+    }
+    .year-dropdown-btn {
       background: var(--surface-2);
-      border-top: 1px solid var(--border);
-      font-weight: 700;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
     }
-    .summary-total-label {
-      font-size: 13px;
+    .year-dropdown-btn:hover {
+      border-color: var(--brand);
+      background: #fff;
+    }
+    .year-dropdown-arrow {
+      font-size: 12px;
       color: var(--text-2);
+      transition: transform 0.2s;
     }
-    .summary-total-amount {
-      font-family: 'Sora', sans-serif;
-      font-size: 16px;
-      font-weight: 800;
+    .year-dropdown.open .year-dropdown-arrow {
+      transform: rotate(180deg);
+    }
+    .year-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      z-index: 100;
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+    }
+    .year-dropdown.open .year-dropdown-menu {
+      display: block;
+    }
+    .year-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border-bottom: 1px solid var(--border);
+    }
+    .year-dropdown-item.selected {
+      background: #e8f5e9;
+    }
+    .year-dropdown-item:hover {
+      background: var(--surface-2);
+    }
+    .year-dropdown-item input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--brand);
+    }
+    .year-dropdown-item label {
+      flex: 1;
+      cursor: pointer;
+      margin: 0;
+      text-transform: none;
+      letter-spacing: normal;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .year-dropdown-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      position: sticky;
+      bottom: 0;
+    }
+    .year-dropdown-footer-left {
+      display: flex;
+      gap: 12px;
+    }
+    .year-dropdown-footer button {
+      background: none;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .year-select-all {
       color: var(--brand);
+    }
+    .year-clear-all {
+      color: var(--danger);
+    }
+    .year-done-btn {
+      background: var(--brand);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+    }
+    .year-done-btn:hover {
+      opacity: 0.9;
     }
 
     /* Month detail modal */
@@ -458,18 +556,30 @@
     </div>
   </div>
 
-  <!-- Year Summary Panel -->
+  <!-- Year Summary Panel - Matching Installments design -->
   <div id="summaryPanel" class="income-panel">
     <div class="summary-card">
-      <div class="card-title">
-        <span class="card-title-icon">📊</span>
-        Income Summary
+      <div class="summary-header">
+        <h3>📊 Income Summary</h3>
       </div>
-      <div class="year-selector-wrap">
-        <select class="year-selector" id="summaryYearSelect">
-          <option value="">Select year</option>
-        </select>
+      
+      <div class="year-dropdown" id="yearDropdown">
+        <div class="year-dropdown-btn" onclick="toggleYearDropdown()">
+          <span id="selectedYearsText">Select years</span>
+          <span class="year-dropdown-arrow">▼</span>
+        </div>
+        <div class="year-dropdown-menu" id="yearDropdownMenu">
+          <div id="yearCheckboxList"></div>
+          <div class="year-dropdown-footer">
+            <div class="year-dropdown-footer-left">
+              <button class="year-select-all" onclick="selectAllYears(); event.stopPropagation();">Select All</button>
+              <button class="year-clear-all" onclick="clearAllYears(); event.stopPropagation();">Clear All</button>
+            </div>
+            <button class="year-done-btn" onclick="closeYearDropdown(); event.stopPropagation();">Done</button>
+          </div>
+        </div>
       </div>
+
       <div id="summaryContainer"></div>
     </div>
   </div>
@@ -554,6 +664,10 @@ let selectedIncomeId = null;
 // Use the constant from utils.js
 const INCOME_SHEET = INCOME_LOG_SHEET;
 
+// Available years for dropdown (2020-2030)
+const AVAILABLE_YEARS = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030];
+let selectedYears = new Set();
+
 // ======================== HELPERS ========================
 function getFilteredIncomes() {
   const month = parseInt(document.getElementById('monthSelect').value);
@@ -610,6 +724,74 @@ function renderIncomeList() {
   }).join('');
 }
 
+// ======================== YEAR DROPDOWN ========================
+function toggleYearDropdown() {
+  const dropdown = document.getElementById('yearDropdown');
+  dropdown.classList.toggle('open');
+}
+
+function closeYearDropdown() {
+  document.getElementById('yearDropdown').classList.remove('open');
+}
+
+function updateSelectedYearsText() {
+  const textSpan = document.getElementById('selectedYearsText');
+  const selected = Array.from(selectedYears).sort((a, b) => a - b);
+  if (selected.length === 0) {
+    textSpan.textContent = 'No years selected';
+  } else if (selected.length === AVAILABLE_YEARS.length) {
+    textSpan.textContent = 'All years (2020-2030)';
+  } else {
+    textSpan.textContent = selected.join(', ');
+  }
+}
+
+function buildYearCheckboxList() {
+  const container = document.getElementById('yearCheckboxList');
+  container.innerHTML = AVAILABLE_YEARS.map(year => {
+    const isSelected = selectedYears.has(year);
+    return `
+      <div class="year-dropdown-item ${isSelected ? 'selected' : ''}" onclick="toggleYearCheckbox(${year})">
+        <input type="checkbox" id="year_${year}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleYearCheckbox(${year})">
+        <label for="year_${year}" onclick="event.stopPropagation(); toggleYearCheckbox(${year})">${year}</label>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleYearCheckbox(year) {
+  if (selectedYears.has(year)) {
+    selectedYears.delete(year);
+  } else {
+    selectedYears.add(year);
+  }
+  buildYearCheckboxList();
+  updateSelectedYearsText();
+  renderSummary();
+}
+
+function selectAllYears() {
+  AVAILABLE_YEARS.forEach(year => selectedYears.add(year));
+  buildYearCheckboxList();
+  updateSelectedYearsText();
+  renderSummary();
+}
+
+function clearAllYears() {
+  selectedYears.clear();
+  buildYearCheckboxList();
+  updateSelectedYearsText();
+  renderSummary();
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+  const dropdown = document.getElementById('yearDropdown');
+  if (dropdown && !dropdown.contains(event.target)) {
+    dropdown.classList.remove('open');
+  }
+});
+
 // ======================== YEAR SUMMARY ========================
 function getYearSummary(year) {
   const monthlyTotals = {};
@@ -637,76 +819,67 @@ function getYearTotal(year) {
   return Object.values(summary.monthlyTotals).reduce((sum, val) => sum + val, 0);
 }
 
-function populateSummaryYearSelect() {
-  const select = document.getElementById('summaryYearSelect');
-  const yearsSet = new Set();
-  incomes.forEach(inc => {
-    const d = parseLocalDate(inc.date);
-    yearsSet.add(d.getFullYear());
-  });
-  
-  const currentYear = new Date().getFullYear();
-  if (yearsSet.size === 0) yearsSet.add(currentYear);
-  
-  const years = Array.from(yearsSet).sort((a, b) => b - a);
-  select.innerHTML = '<option value="">Select year</option>' + 
-    years.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
-}
-
 function renderSummary() {
-  const select = document.getElementById('summaryYearSelect');
-  const year = parseInt(select.value);
   const container = document.getElementById('summaryContainer');
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth();
   
-  if (!year) {
+  let yearsToShow = AVAILABLE_YEARS.filter(y => selectedYears.has(y));
+  
+  if (yearsToShow.length === 0) {
     container.innerHTML = `
       <div class="summary-empty">
         <div class="summary-empty-icon">📭</div>
-        <p>Select a year to view summary</p>
-      </div>
-    `;
-    return;
-  }
-  
-  const summary = getYearSummary(year);
-  const monthlyTotals = summary.monthlyTotals;
-  const monthlyCounts = summary.monthlyCounts;
-  const yearTotal = getYearTotal(year);
-  const hasData = Object.values(monthlyTotals).some(v => v > 0);
-  
-  if (!hasData) {
-    container.innerHTML = `
-      <div class="summary-empty">
-        <div class="summary-empty-icon">📭</div>
-        <p>No income entries for ${year}</p>
+        <p>No years selected</p>
+        <p style="font-size: 12px; margin-top: 8px;">Select years from the dropdown above to view summary</p>
       </div>
     `;
     return;
   }
   
   let html = '';
-  for (let i = 0; i < 12; i++) {
-    const amount = monthlyTotals[i];
-    const count = monthlyCounts[i];
-    const monthName = MONTHS_FULL[i];
+  
+  yearsToShow.forEach(year => {
+    const summary = getYearSummary(year);
+    const monthlyTotals = summary.monthlyTotals;
+    const monthlyCounts = summary.monthlyCounts;
+    const yearTotal = getYearTotal(year);
     
-    html += `
-      <div class="summary-month-row" onclick="openMonthDetail(${year}, ${i})">
-        <div class="summary-month-left">
-          <span class="summary-month-name">${monthName}</span>
-          ${count > 0 ? `<span class="summary-month-count">${count} ${count === 1 ? 'entry' : 'entries'}</span>` : ''}
-        </div>
-        <div class="summary-month-amount">${amount > 0 ? formatMoney(amount) : '—'}</div>
+    const hasData = Object.values(monthlyTotals).some(v => v > 0);
+    if (!hasData) return;
+    
+    html += `<div class="summary-year-header">
+        <span>📅 ${year}</span>
+        <span class="summary-year-total">Total: ${formatMoney(yearTotal)}</span>
       </div>`;
+    
+    for (let i = 0; i < 12; i++) {
+      const amount = monthlyTotals[i];
+      const count = monthlyCounts[i];
+      if (amount > 0) {
+        const monthName = MONTHS_FULL[i];
+        html += `
+          <div class="summary-month-row" onclick="openMonthDetail(${year}, ${i})">
+            <div class="summary-month-left">
+              <span class="summary-month-name">${monthName}</span>
+              <span class="summary-month-count">${count} ${count === 1 ? 'entry' : 'entries'}</span>
+            </div>
+            <div class="summary-month-amount">${formatMoney(amount)}</div>
+          </div>`;
+      }
+    }
+  });
+  
+  if (html === '') {
+    container.innerHTML = `
+      <div class="summary-empty">
+        <div class="summary-empty-icon">📭</div>
+        <p>No income entries for selected years</p>
+      </div>
+    `;
+  } else {
+    container.innerHTML = html;
   }
-  
-  html += `
-    <div class="summary-total-row">
-      <span class="summary-total-label">Total ${year}</span>
-      <span class="summary-total-amount">${formatMoney(yearTotal)}</span>
-    </div>`;
-  
-  container.innerHTML = html;
 }
 
 function openMonthDetail(year, month) {
@@ -781,7 +954,7 @@ async function saveIncome() {
   closeIncomeModal();
   updateStats();
   renderIncomeList();
-  populateSummaryYearSelect();
+  buildYearCheckboxList();
   renderSummary();
 }
 
@@ -793,7 +966,7 @@ async function deleteIncome(id) {
   showToast('🗑️ Income deleted');
   updateStats();
   renderIncomeList();
-  populateSummaryYearSelect();
+  buildYearCheckboxList();
   renderSummary();
 }
 
@@ -1005,7 +1178,8 @@ function setupTabs() {
       } else {
         document.getElementById('monthlyPanel').style.display = 'none';
         document.getElementById('summaryPanel').style.display = 'block';
-        populateSummaryYearSelect();
+        buildYearCheckboxList();
+        updateSelectedYearsText();
         renderSummary();
       }
     });
@@ -1022,7 +1196,7 @@ async function manualSync() {
   await loadIncomesFromSheet();
   updateStats();
   renderIncomeList();
-  populateSummaryYearSelect();
+  buildYearCheckboxList();
   renderSummary();
   showToast(`✅ Synced ${incomes.length} income entries`);
 }
@@ -1052,9 +1226,15 @@ async function initPage() {
       document.getElementById('monthSelect').value = now.getMonth();
       document.getElementById('yearSelect').value = now.getFullYear();
       
+      // Auto-select current year and previous year
+      const currentYear = now.getFullYear();
+      selectedYears.add(currentYear);
+      selectedYears.add(currentYear - 1);
+      buildYearCheckboxList();
+      updateSelectedYearsText();
+      
       updateStats();
       renderIncomeList();
-      populateSummaryYearSelect();
       renderSummary();
       
       document.getElementById('loadingOverlay').style.display = 'none';
@@ -1071,7 +1251,6 @@ document.getElementById('yearSelect').addEventListener('change', () => {
   updateStats();
   renderIncomeList();
 });
-document.getElementById('summaryYearSelect').addEventListener('change', () => renderSummary());
 document.getElementById('syncBtn').addEventListener('click', manualSync);
 document.getElementById('incomeSheet').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeIncomeSheet();
