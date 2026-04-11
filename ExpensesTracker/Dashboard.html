@@ -35,22 +35,37 @@
       letter-spacing: -0.5px;
     }
 
-    /* KPI Cards Row */
-    .kpi-row {
+    /* 4-column KPI row */
+    .kpi-row-4 {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
       margin-bottom: 14px;
     }
     .kpi-card {
-      background: rgba(255,255,255,0.12);
       backdrop-filter: blur(10px);
       border-radius: var(--radius-lg);
-      padding: 18px 16px;
+      padding: 14px 12px;
       border: 1px solid rgba(255,255,255,0.2);
     }
+    .kpi-card.income {
+      background: linear-gradient(135deg, rgba(16,185,129,0.25) 0%, rgba(5,150,105,0.15) 100%);
+      border-color: rgba(16,185,129,0.4);
+    }
+    .kpi-card.daily {
+      background: linear-gradient(135deg, rgba(59,130,246,0.25) 0%, rgba(37,99,235,0.15) 100%);
+      border-color: rgba(59,130,246,0.4);
+    }
+    .kpi-card.recurring {
+      background: linear-gradient(135deg, rgba(245,158,11,0.25) 0%, rgba(217,119,6,0.15) 100%);
+      border-color: rgba(245,158,11,0.4);
+    }
+    .kpi-card.installments {
+      background: linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(124,58,237,0.15) 100%);
+      border-color: rgba(139,92,246,0.4);
+    }
     .kpi-label {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       color: rgba(255,255,255,0.65);
       text-transform: uppercase;
@@ -59,13 +74,13 @@
     }
     .kpi-value {
       font-family: 'Sora', sans-serif;
-      font-size: 28px;
+      font-size: 22px;
       font-weight: 800;
       color: #fff;
       line-height: 1.1;
     }
     .kpi-trend {
-      font-size: 11px;
+      font-size: 10px;
       margin-top: 6px;
       display: flex;
       align-items: center;
@@ -73,61 +88,102 @@
     }
     .trend-up { color: #fca5a5; }
     .trend-down { color: #6ee7b7; }
-    .trend-neutral { color: rgba(255,255,255,0.6); }
 
-    /* Savings Rate Card (full width) */
-    .savings-card {
-      background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(5,150,105,0.15) 100%);
+    /* Net Cash Card */
+    .net-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.08) 100%);
       backdrop-filter: blur(10px);
       border-radius: var(--radius-lg);
       padding: 16px 20px;
       margin-bottom: 20px;
-      border: 1px solid rgba(16,185,129,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .savings-label {
+    .net-label {
       font-size: 12px;
       font-weight: 600;
       color: rgba(255,255,255,0.7);
     }
-    .savings-value {
+    .net-value {
       font-family: 'Sora', sans-serif;
       font-size: 24px;
       font-weight: 800;
-      color: #6ee7b7;
     }
-    .savings-badge {
-      background: rgba(16,185,129,0.25);
+    .net-value.positive { color: #6ee7b7; }
+    .net-value.negative { color: #fca5a5; }
+    .net-badge {
+      background: rgba(255,255,255,0.15);
       padding: 4px 12px;
       border-radius: 30px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      color: #6ee7b7;
+      color: rgba(255,255,255,0.8);
     }
 
-    /* Section headers */
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
+    /* Quick Actions Row */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
     }
-    .section-header h3 {
-      font-family: 'Sora', sans-serif;
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .section-link {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--brand);
-      text-decoration: none;
-      background: none;
+    .quick-btn {
+      background: #fff;
       border: none;
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand);
       cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+      box-shadow: var(--shadow-sm);
+    }
+    .quick-btn:active {
+      transform: scale(0.96);
+    }
+    .quick-btn.income {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+    }
+    .quick-btn.expense {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+      color: #fff;
+    }
+
+    /* Chart container */
+    .chart-container {
+      position: relative;
+      height: 260px;
+      margin: 8px 0;
+    }
+    canvas {
+      max-width: 100%;
+    }
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 12px;
+      font-size: 10px;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
     }
 
     /* Top categories list */
@@ -184,217 +240,30 @@
     .progress-fill {
       height: 100%;
       border-radius: 3px;
-      transition: width 0.3s;
     }
     .progress-fill.ok { background: var(--success); }
     .progress-fill.warning { background: var(--warning); }
     .progress-fill.over { background: var(--danger); }
 
-    /* Upcoming items */
-    .upcoming-item {
+    .section-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .upcoming-item:last-child {
-      border-bottom: none;
-    }
-    .upcoming-left {
-      display: flex;
       align-items: center;
-      gap: 10px;
-    }
-    .upcoming-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: var(--surface-2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-    }
-    .upcoming-info {
-      flex: 1;
-    }
-    .upcoming-name {
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text);
-    }
-    .upcoming-date {
-      font-size: 11px;
-      color: var(--text-3);
-      margin-top: 2px;
-    }
-    .upcoming-amount {
-      font-weight: 700;
-      font-size: 14px;
-      color: var(--brand);
-    }
-    .upcoming-badge {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
-      background: #fef3c7;
-      color: #d97706;
-    }
-
-    /* Recent activity */
-    .activity-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .activity-item:last-child {
-      border-bottom: none;
-    }
-    .activity-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-    }
-    .activity-details {
-      flex: 1;
-    }
-    .activity-title {
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text);
-    }
-    .activity-date {
-      font-size: 11px;
-      color: var(--text-3);
-      margin-top: 2px;
-    }
-    .activity-amount {
-      font-weight: 700;
-      font-size: 14px;
-    }
-    .activity-amount.expense { color: var(--danger); }
-    .activity-amount.income { color: var(--success); }
-
-    /* Chart container */
-    .chart-container {
-      position: relative;
-      height: 220px;
-      margin: 8px 0;
-    }
-    canvas {
-      max-width: 100%;
-    }
-    .chart-legend {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin-top: 12px;
-      font-size: 11px;
-      color: var(--text-2);
-    }
-    .chart-legend span {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-    }
-
-    /* Alert banner */
-    .alert-banner {
-      background: #fef3c7;
-      border-radius: var(--radius-sm);
-      padding: 12px 16px;
       margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
     }
-    .alert-banner.warning {
-      background: #fee2e2;
-    }
-    .alert-icon {
-      font-size: 20px;
-    }
-    .alert-text {
-      flex: 1;
-      font-size: 13px;
-      font-weight: 600;
-      color: #92400e;
-    }
-    .alert-banner.warning .alert-text {
-      color: #991b1b;
-    }
-
-    /* Quick actions row */
-    .quick-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .quick-btn {
-      background: #fff;
-      border: none;
-      border-radius: var(--radius-sm);
-      padding: 12px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--brand);
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.15s;
-      box-shadow: var(--shadow-sm);
-    }
-    .quick-btn:active {
-      transform: scale(0.96);
-    }
-    .quick-btn.income {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: #fff;
-    }
-
-    /* Trend insights mini cards */
-    .insights-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .insight-card {
-      background: var(--surface-2);
-      border-radius: var(--radius-sm);
-      padding: 12px 8px;
-      text-align: center;
-    }
-    .insight-value {
+    .section-header h3 {
       font-family: 'Sora', sans-serif;
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--text);
     }
-    .insight-label {
-      font-size: 9px;
-      color: var(--text-3);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+    .section-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--brand);
+      background: none;
+      border: none;
+      cursor: pointer;
     }
 
     /* Loading overlay */
@@ -407,6 +276,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    /* Modal form styles */
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
   </style>
 </head>
@@ -426,102 +302,69 @@
     <h1>📊 Dashboard</h1>
     <div class="header-actions">
       <button class="hdr-icon-btn" id="syncBtn" title="Sync">↻</button>
+      <button class="hdr-icon-btn" onclick="window.location.href='Settings.html'" title="Settings">⚙️</button>
       <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
     </div>
   </div>
 
-  <!-- Quick Actions -->
-  <div class="quick-actions">
-    <button class="quick-btn" onclick="window.location.href='Home.html'">➕ Add Expense</button>
-    <button class="quick-btn income" id="addIncomeBtn">💰 Add Income</button>
-  </div>
-
-  <!-- Alert Banner (if any budget overages) -->
-  <div id="alertBanner" style="display:none"></div>
-
-  <!-- KPI Cards -->
-  <div class="kpi-row">
-    <div class="kpi-card">
+  <!-- 4-Column KPI Cards -->
+  <div class="kpi-row-4">
+    <div class="kpi-card income">
       <div class="kpi-label">💰 Income</div>
       <div class="kpi-value" id="totalIncome">EGP 0</div>
       <div class="kpi-trend" id="incomeTrend"></div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">💸 Expenses</div>
-      <div class="kpi-value" id="totalExpenses">EGP 0</div>
-      <div class="kpi-trend" id="expenseTrend"></div>
+    <div class="kpi-card daily">
+      <div class="kpi-label">📝 Daily Expenses</div>
+      <div class="kpi-value" id="dailyExpenses">EGP 0</div>
+      <div class="kpi-trend" id="dailyTrend"></div>
+    </div>
+    <div class="kpi-card recurring">
+      <div class="kpi-label">🔄 Recurring</div>
+      <div class="kpi-value" id="recurringExpenses">EGP 0</div>
+      <div class="kpi-trend" id="recurringTrend"></div>
+    </div>
+    <div class="kpi-card installments">
+      <div class="kpi-label">📆 Installments</div>
+      <div class="kpi-value" id="installmentsExpenses">EGP 0</div>
+      <div class="kpi-trend" id="installmentsTrend"></div>
     </div>
   </div>
 
-  <!-- Savings Rate Card -->
-  <div class="savings-card">
+  <!-- Net Cash Card -->
+  <div class="net-card">
     <div>
-      <div class="savings-label">Net Cash Flow</div>
-      <div class="savings-value" id="netCashFlow">EGP 0</div>
+      <div class="net-label">Net Cash Flow</div>
+      <div class="net-value" id="netCashFlow">EGP 0</div>
     </div>
-    <div class="savings-badge" id="savingsRate">0% saved</div>
+    <div class="net-badge" id="netBadge">vs last month</div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <button class="quick-btn expense" id="addExpenseBtn">➕ Add Expense</button>
+    <button class="quick-btn income" id="addIncomeBtn">💰 Add Income</button>
   </div>
 
   <!-- Chart Card -->
   <div class="card">
     <div class="card-title">
       <span class="card-title-icon">📈</span>
-      Income vs Expenses (Last 6 Months)
+      Spending Breakdown (Last 6 Months)
     </div>
     <div class="chart-container">
       <canvas id="trendChart"></canvas>
     </div>
-    <div class="chart-legend">
-      <span><div class="legend-dot" style="background:#10b981"></div> Income</span>
-      <span><div class="legend-dot" style="background:#ef4444"></div> Expenses</span>
-    </div>
+    <div class="chart-legend" id="chartLegend"></div>
   </div>
 
   <!-- Top Spending Categories -->
   <div class="card">
     <div class="section-header">
       <h3>🔝 Top Spending Categories</h3>
-      <button class="section-link" onclick="window.location.href='Categories.html'">Manage →</button>
+      <button class="section-link" id="manageCategoriesBtn">Manage →</button>
     </div>
     <div id="topCategoriesList"></div>
-  </div>
-
-  <!-- Upcoming Payments -->
-  <div class="card">
-    <div class="section-header">
-      <h3>⏰ Upcoming Payments</h3>
-      <button class="section-link" onclick="window.location.href='Installments.html'">View All →</button>
-    </div>
-    <div id="upcomingList"></div>
-  </div>
-
-  <!-- Trend Insights -->
-  <div class="insights-row" id="insightsRow">
-    <div class="insight-card">
-      <div class="insight-value" id="bestMonth">—</div>
-      <div class="insight-label">Best Month</div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-value" id="worstMonth">—</div>
-      <div class="insight-label">Worst Month</div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-value" id="avgSpend">—</div>
-      <div class="insight-label">Avg Monthly</div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-value" id="topCategory">—</div>
-      <div class="insight-label">Most Used</div>
-    </div>
-  </div>
-
-  <!-- Recent Activity -->
-  <div class="card">
-    <div class="section-header">
-      <h3>📝 Recent Activity</h3>
-      <button class="section-link" onclick="window.location.href='Expenses.html'">See All →</button>
-    </div>
-    <div id="recentActivityList"></div>
   </div>
 
 </div>
@@ -529,29 +372,68 @@
 <div id="bottomNavMount"></div>
 <div class="toast" id="toast"></div>
 
-<!-- Add Income Modal (simple) -->
+<!-- Add Expense Modal (copied from Home.html) -->
+<div class="modal-backdrop" id="expenseModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ Add Expense</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="required">Date</label>
+        <input type="date" id="expenseDate" required>
+      </div>
+      <div class="form-group">
+        <label class="required">Category</label>
+        <select id="expenseCategory" required>
+          <option value="" disabled selected>Select…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="required">Amount (EGP)</label>
+        <div class="amount-wrap">
+          <span class="currency-flag">🇪🇬</span>
+          <input type="number" id="expenseAmount" placeholder="0.00" step="0.01" min="0.01" inputmode="decimal" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="expenseNotes" placeholder="e.g. lunch with team">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeExpenseModal()">Cancel</button>
+      <button class="btn-save" onclick="saveExpense()">Add Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Income Modal -->
 <div class="modal-backdrop" id="incomeModal">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">💰 Add Income</div>
-    <div class="form-group">
-      <label>Date</label>
-      <input type="date" id="incomeDate" value="">
-    </div>
-    <div class="form-group">
-      <label>Category</label>
-      <select id="incomeCategory"></select>
-    </div>
-    <div class="form-group">
-      <label>Amount (EGP)</label>
-      <div class="amount-wrap">
-        <span class="currency-flag">🇪🇬</span>
-        <input type="number" id="incomeAmount" placeholder="0.00" step="0.01" min="0.01">
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="required">Date</label>
+        <input type="date" id="incomeDate" required>
       </div>
-    </div>
-    <div class="form-group">
-      <label>Notes (optional)</label>
-      <input type="text" id="incomeNotes" placeholder="e.g., monthly salary">
+      <div class="form-group">
+        <label class="required">Category</label>
+        <select id="incomeCategory" required>
+          <option value="" disabled selected>Select…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="required">Amount (EGP)</label>
+        <div class="amount-wrap">
+          <span class="currency-flag">🇪🇬</span>
+          <input type="number" id="incomeAmount" placeholder="0.00" step="0.01" min="0.01" inputmode="decimal" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="incomeNotes" placeholder="e.g. monthly salary">
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeIncomeModal()">Cancel</button>
@@ -564,146 +446,202 @@
 // ======================== STATE ==========================
 let expenses = [];
 let incomes = [];
-let installments = [];
 let recurringList = [];
+let installments = [];
+let paymentLogs = [];
 let spreadsheetId = null;
 let currentUserEmail = null;
 let currentAccessToken = null;
 let trendChart = null;
 
 // ======================== DATA LOADING ===================
-async function loadAllData() {
-  await loadExpenses();
-  await loadIncomes();
-  await loadInstallments();
-  await loadRecurring();
-  renderDashboard();
-}
-
-async function loadExpenses() {
-  if (!spreadsheetId) return;
-  try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `${EXPENSES_SHEET}!A2:F`
-    });
-    const rows = res.result.values || [];
-    expenses = rows
-      .filter(r => r[2] && r[3])
-      .map((r, i) => ({
-        id: (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
-        date: r[1] || r[0],
-        category: r[2],
-        amount: parseFloat(r[3]),
-        notes: r[4] || '',
-        timestamp: r[0] || new Date().toISOString()
-      }));
-  } catch (e) {
-    console.error('loadExpenses error', e);
-  }
-}
-
-async function loadIncomes() {
-  if (!spreadsheetId) return;
-  try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `${INCOME_LOG_SHEET}!A2:F`
-    });
-    const rows = res.result.values || [];
-    incomes = rows
-      .filter(r => r[2] && r[3])
-      .map((r, i) => ({
-        id: (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
-        date: r[1] || r[0],
-        category: r[2],
-        amount: parseFloat(r[3]),
-        notes: r[4] || '',
-        timestamp: r[0] || new Date().toISOString()
-      }));
-  } catch (e) {
-    console.error('loadIncomes error', e);
-  }
-}
-
-async function loadInstallments() {
-  if (!spreadsheetId) return;
-  try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `${INSTALLMENTS_SHEET}!A2:H`
-    });
-    const rows = res.result.values || [];
-    installments = rows
-      .filter(r => r[0] && r[1])
-      .map(r => ({
-        id: r[0],
-        itemName: r[1],
-        bankKey: r[2],
-        totalAmount: parseFloat(r[3]),
-        monthsCount: parseInt(r[4]),
-        startYear: parseInt(r[5]),
-        startMonth: parseInt(r[6]),
-        monthlyAmount: parseFloat(r[7])
-      }));
-  } catch (e) {
-    console.error('loadInstallments error', e);
-  }
-}
-
-async function loadRecurring() {
-  if (!spreadsheetId) return;
-  try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `${RECURRING_SHEET}!A2:H`
-    });
-    const rows = res.result.values || [];
-    recurringList = rows
-      .filter(r => r[1])
-      .map(r => ({
-        id: r[0] ? parseInt(r[0]) : Date.now(),
-        name: r[1] || '',
-        category: r[2] || 'Other',
-        frequency: r[3] || 'Monthly',
-        amount: parseFloat(r[4]) || 0,
-        startMonth: parseInt(r[5]) || 1,
-        paymentDay: parseInt(r[6]) || 1,
-        active: r[7] === 'true'
-      }));
-  } catch (e) {
-    console.error('loadRecurring error', e);
-  }
-}
-
-// ======================== HELPERS ========================
 function parseLocalDate(str) {
   if (!str) return new Date();
   const [y, m, d] = str.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
-function getCurrentMonthExpenses() {
+function getCurrentMonthYear() {
   const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() };
+}
+
+// Get this month's daily expenses
+function getCurrentMonthDailyExpenses() {
+  const { year, month } = getCurrentMonthYear();
   return expenses.filter(e => {
     const d = parseLocalDate(e.date);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    return d.getMonth() === month && d.getFullYear() === year;
   });
 }
 
+// Get this month's recurring expenses (from Recurring Log)
+async function getCurrentMonthRecurringExpenses() {
+  const { year, month } = getCurrentMonthYear();
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${RECURRING_LOG_SHEET}!A2:F`
+    });
+    const rows = res.result.values || [];
+    let total = 0;
+    rows.forEach(r => {
+      if (r[1]) {
+        const d = parseLocalDate(r[1]);
+        if (d.getMonth() === month && d.getFullYear() === year) {
+          total += parseFloat(r[4]) || 0;
+        }
+      }
+    });
+    return total;
+  } catch (e) {
+    console.error('getCurrentMonthRecurringExpenses error', e);
+    return 0;
+  }
+}
+
+// Get this month's installment expenses (from Installments Log)
+async function getCurrentMonthInstallmentsExpenses() {
+  const { year, month } = getCurrentMonthYear();
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${INSTALLMENTS_LOG_SHEET}!A2:E`
+    });
+    const rows = res.result.values || [];
+    let total = 0;
+    rows.forEach(r => {
+      if (r[2]) {
+        const d = parseLocalDate(r[2]);
+        if (d.getMonth() === month && d.getFullYear() === year) {
+          total += parseFloat(r[3]) || 0;
+        }
+      }
+    });
+    return total;
+  } catch (e) {
+    console.error('getCurrentMonthInstallmentsExpenses error', e);
+    return 0;
+  }
+}
+
+// Get this month's income
 function getCurrentMonthIncomes() {
-  const now = new Date();
+  const { year, month } = getCurrentMonthYear();
   return incomes.filter(i => {
     const d = parseLocalDate(i.date);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    return d.getMonth() === month && d.getFullYear() === year;
   });
 }
 
-function getMonthlyTotals(monthsBack = 6) {
+// Get previous month's expenses for comparison
+function getPrevMonthExpenses() {
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevYear = prevMonth.getFullYear();
+  const prevMonthNum = prevMonth.getMonth();
+  
+  const dailyTotal = expenses.filter(e => {
+    const d = parseLocalDate(e.date);
+    return d.getMonth() === prevMonthNum && d.getFullYear() === prevYear;
+  }).reduce((s, e) => s + e.amount, 0);
+  
+  return dailyTotal;
+}
+
+function getPrevMonthIncome() {
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevYear = prevMonth.getFullYear();
+  const prevMonthNum = prevMonth.getMonth();
+  
+  return incomes.filter(i => {
+    const d = parseLocalDate(i.date);
+    return d.getMonth() === prevMonthNum && d.getFullYear() === prevYear;
+  }).reduce((s, i) => s + i.amount, 0);
+}
+
+// ======================== RENDER KPI =====================
+async function renderKPI() {
+  const dailyExpensesList = getCurrentMonthDailyExpenses();
+  const dailyTotal = dailyExpensesList.reduce((s, e) => s + e.amount, 0);
+  
+  const recurringTotal = await getCurrentMonthRecurringExpenses();
+  const installmentsTotal = await getCurrentMonthInstallmentsExpenses();
+  const incomeList = getCurrentMonthIncomes();
+  const incomeTotal = incomeList.reduce((s, i) => s + i.amount, 0);
+  
+  const totalExpenses = dailyTotal + recurringTotal + installmentsTotal;
+  const netCash = incomeTotal - totalExpenses;
+  
+  // Update KPI values
+  document.getElementById('totalIncome').textContent = formatMoney(incomeTotal);
+  document.getElementById('dailyExpenses').textContent = formatMoney(dailyTotal);
+  document.getElementById('recurringExpenses').textContent = formatMoney(recurringTotal);
+  document.getElementById('installmentsExpenses').textContent = formatMoney(installmentsTotal);
+  
+  const netElement = document.getElementById('netCashFlow');
+  netElement.textContent = netCash >= 0 ? formatMoney(netCash) : `-${formatMoney(Math.abs(netCash))}`;
+  netElement.className = netCash >= 0 ? 'net-value positive' : 'net-value negative';
+  
+  const savingsRate = incomeTotal > 0 ? ((netCash / incomeTotal) * 100).toFixed(0) : 0;
+  document.getElementById('netBadge').innerHTML = `${savingsRate}% saved`;
+  
+  // Trends
+  const prevIncome = getPrevMonthIncome();
+  const prevDailyExpense = getPrevMonthExpenses();
+  
+  if (prevIncome > 0) {
+    const incomeChange = ((incomeTotal - prevIncome) / prevIncome * 100).toFixed(0);
+    const incomeTrend = document.getElementById('incomeTrend');
+    if (incomeChange >= 0) {
+      incomeTrend.innerHTML = `<span class="trend-up">▲ ${incomeChange}%</span>`;
+    } else {
+      incomeTrend.innerHTML = `<span class="trend-down">▼ ${Math.abs(incomeChange)}%</span>`;
+    }
+  } else {
+    document.getElementById('incomeTrend').innerHTML = '<span class="trend-up">▲ New</span>';
+  }
+  
+  if (prevDailyExpense > 0) {
+    const dailyChange = ((dailyTotal - prevDailyExpense) / prevDailyExpense * 100).toFixed(0);
+    const dailyTrend = document.getElementById('dailyTrend');
+    if (dailyChange <= 0) {
+      dailyTrend.innerHTML = `<span class="trend-down">▼ ${Math.abs(dailyChange)}%</span>`;
+    } else {
+      dailyTrend.innerHTML = `<span class="trend-up">▲ ${dailyChange}%</span>`;
+    }
+  } else {
+    document.getElementById('dailyTrend').innerHTML = '<span class="trend-down">▼ New</span>';
+  }
+  
+  document.getElementById('recurringTrend').innerHTML = '<span class="trend-down">=</span>';
+  document.getElementById('installmentsTrend').innerHTML = '<span class="trend-down">=</span>';
+}
+
+// ======================== CHART ==========================
+async function getMonthlyData(monthsBack = 6) {
   const now = new Date();
   const labels = [];
   const incomeData = [];
-  const expenseData = [];
+  const dailyData = [];
+  const recurringData = [];
+  const installmentsData = [];
+  
+  // Get all recurring logs and installment logs once
+  let recurringLogs = [];
+  let installmentLogs = [];
+  try {
+    const recurringRes = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId, range: `${RECURRING_LOG_SHEET}!A2:F`
+    });
+    recurringLogs = recurringRes.result.values || [];
+    
+    const installmentRes = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId, range: `${INSTALLMENTS_LOG_SHEET}!A2:E`
+    });
+    installmentLogs = installmentRes.result.values || [];
+  } catch(e) { console.error(e); }
   
   for (let i = monthsBack - 1; i >= 0; i--) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -711,236 +649,137 @@ function getMonthlyTotals(monthsBack = 6) {
     const month = date.getMonth();
     labels.push(MONTHS_SHORT[month] + ' ' + year.toString().slice(-2));
     
+    // Income
     const monthIncome = incomes
       .filter(inc => {
         const d = parseLocalDate(inc.date);
         return d.getMonth() === month && d.getFullYear() === year;
       })
       .reduce((sum, inc) => sum + inc.amount, 0);
+    incomeData.push(monthIncome);
     
-    const monthExpense = expenses
+    // Daily Expenses
+    const monthDaily = expenses
       .filter(exp => {
         const d = parseLocalDate(exp.date);
         return d.getMonth() === month && d.getFullYear() === year;
       })
       .reduce((sum, exp) => sum + exp.amount, 0);
+    dailyData.push(monthDaily);
     
-    incomeData.push(monthIncome);
-    expenseData.push(monthExpense);
-  }
-  
-  return { labels, incomeData, expenseData };
-}
-
-function getUpcomingPayments() {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
-  const currentDay = now.getDate();
-  const upcoming = [];
-  
-  // Recurring expenses due in next 30 days
-  recurringList.forEach(sub => {
-    if (!sub.active) return;
-    
-    let dueDate = null;
-    if (sub.frequency === 'Monthly') {
-      let dueYear = currentYear;
-      let dueMonth = currentMonth;
-      if (sub.paymentDay < currentDay) {
-        dueMonth++;
-        if (dueMonth > 11) { dueMonth = 0; dueYear++; }
-      }
-      const lastDay = new Date(dueYear, dueMonth + 1, 0).getDate();
-      const day = Math.min(sub.paymentDay, lastDay);
-      dueDate = new Date(dueYear, dueMonth, day);
-    } else if (sub.frequency === 'Quarterly') {
-      // Simplified: check if within 30 days
-      const start = new Date(sub.startYear || currentYear, (sub.startMonth || 1) - 1, 1);
-      let nextDate = new Date(start);
-      while (nextDate <= now) {
-        nextDate.setMonth(nextDate.getMonth() + 3);
-      }
-      dueDate = nextDate;
-    } else if (sub.frequency === 'Annual') {
-      let dueYear = currentYear;
-      if ((sub.startMonth || 1) <= currentMonth + 1 && sub.paymentDay < currentDay) {
-        dueYear++;
-      }
-      const lastDay = new Date(dueYear, (sub.startMonth || 1), 0).getDate();
-      const day = Math.min(sub.paymentDay, lastDay);
-      dueDate = new Date(dueYear, (sub.startMonth || 1) - 1, day);
-    }
-    
-    if (dueDate && dueDate >= now) {
-      const daysDiff = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
-      if (daysDiff <= 30) {
-        upcoming.push({
-          type: 'recurring',
-          name: sub.name,
-          amount: sub.amount,
-          date: dueDate,
-          days: daysDiff
-        });
-      }
-    }
-  });
-  
-  // Installment payments due
-  installments.forEach(inst => {
-    const paidLogsKey = `paid_${currentUserEmail}`;
-    const paidLogs = localStorage.getItem(paidLogsKey);
-    const paidSet = paidLogs ? new Set(JSON.parse(paidLogs)) : new Set();
-    
-    const startDate = new Date(inst.startYear, inst.startMonth - 1, 1);
-    for (let i = 0; i < inst.monthsCount; i++) {
-      const paymentDate = new Date(startDate);
-      paymentDate.setMonth(startDate.getMonth() + i);
-      
-      if (paymentDate >= now) {
-        const monthKey = `${paymentDate.getFullYear()}-${paymentDate.getMonth()}`;
-        if (!paidSet.has(`${inst.id}_${monthKey}`)) {
-          const daysDiff = Math.ceil((paymentDate - now) / (1000 * 60 * 60 * 24));
-          if (daysDiff <= 30) {
-            upcoming.push({
-              type: 'installment',
-              name: inst.itemName,
-              amount: inst.monthlyAmount,
-              date: paymentDate,
-              days: daysDiff
-            });
-            break;
-          }
+    // Recurring Expenses from logs
+    let monthRecurring = 0;
+    recurringLogs.forEach(log => {
+      if (log[1]) {
+        const d = parseLocalDate(log[1]);
+        if (d.getMonth() === month && d.getFullYear() === year) {
+          monthRecurring += parseFloat(log[4]) || 0;
         }
       }
-    }
-  });
-  
-  upcoming.sort((a, b) => a.date - b.date);
-  return upcoming.slice(0, 5);
-}
-
-function getRecentActivity() {
-  const allActivities = [
-    ...expenses.map(e => ({ ...e, type: 'expense', amount: -e.amount })),
-    ...incomes.map(i => ({ ...i, type: 'income', amount: i.amount }))
-  ];
-  allActivities.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
-  return allActivities.slice(0, 7);
-}
-
-function getBudgetAlerts() {
-  const currentMonthExpenses = getCurrentMonthExpenses();
-  const categorySpending = {};
-  currentMonthExpenses.forEach(e => {
-    categorySpending[e.category] = (categorySpending[e.category] || 0) + e.amount;
-  });
-  
-  const alerts = [];
-  CATEGORIES.forEach(cat => {
-    if (cat.budget && cat.budget > 0 && categorySpending[cat.value]) {
-      const spent = categorySpending[cat.value];
-      const pct = (spent / cat.budget) * 100;
-      if (pct >= 100) {
-        alerts.push({ category: cat.value, spent, budget: cat.budget, pct, over: true });
-      } else if (pct >= 80) {
-        alerts.push({ category: cat.value, spent, budget: cat.budget, pct, over: false });
+    });
+    recurringData.push(monthRecurring);
+    
+    // Installments Expenses from logs
+    let monthInstallments = 0;
+    installmentLogs.forEach(log => {
+      if (log[2]) {
+        const d = parseLocalDate(log[2]);
+        if (d.getMonth() === month && d.getFullYear() === year) {
+          monthInstallments += parseFloat(log[3]) || 0;
+        }
       }
-    }
-  });
-  return alerts;
+    });
+    installmentsData.push(monthInstallments);
+  }
+  
+  return { labels, incomeData, dailyData, recurringData, installmentsData };
 }
 
-// ======================== RENDER ==========================
-function renderDashboard() {
-  const currentExpenses = getCurrentMonthExpenses();
-  const currentIncomes = getCurrentMonthIncomes();
+async function renderChart() {
+  const { labels, incomeData, dailyData, recurringData, installmentsData } = await getMonthlyData(6);
   
-  const totalExpense = currentExpenses.reduce((s, e) => s + e.amount, 0);
-  const totalIncome = currentIncomes.reduce((s, i) => s + i.amount, 0);
-  const netCash = totalIncome - totalExpense;
-  const savingsRate = totalIncome > 0 ? (netCash / totalIncome * 100).toFixed(0) : 0;
-  
-  // Update KPI cards
-  document.getElementById('totalIncome').textContent = formatMoney(totalIncome);
-  document.getElementById('totalExpenses').textContent = formatMoney(totalExpense);
-  document.getElementById('netCashFlow').textContent = netCash >= 0 ? formatMoney(netCash) : `-${formatMoney(Math.abs(netCash))}`;
-  document.getElementById('netCashFlow').style.color = netCash >= 0 ? '#6ee7b7' : '#fca5a5';
-  document.getElementById('savingsRate').textContent = `${savingsRate}% saved`;
-  
-  // Compare with last month
-  const lastMonthExpenses = expenses.filter(e => {
-    const d = parseLocalDate(e.date);
-    const now = new Date();
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    return d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
-  }).reduce((s, e) => s + e.amount, 0);
-  
-  const lastMonthIncomes = incomes.filter(i => {
-    const d = parseLocalDate(i.date);
-    const now = new Date();
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    return d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
-  }).reduce((s, i) => s + i.amount, 0);
-  
-  const expenseChange = lastMonthExpenses ? ((totalExpense - lastMonthExpenses) / lastMonthExpenses * 100).toFixed(0) : 0;
-  const incomeChange = lastMonthIncomes ? ((totalIncome - lastMonthIncomes) / lastMonthIncomes * 100).toFixed(0) : 0;
-  
-  document.getElementById('expenseTrend').innerHTML = expenseChange <= 0 
-    ? `<span class="trend-down">▼ ${Math.abs(expenseChange)}% vs last month</span>`
-    : `<span class="trend-up">▲ ${expenseChange}% vs last month</span>`;
-  
-  document.getElementById('incomeTrend').innerHTML = incomeChange >= 0
-    ? `<span class="trend-down">▼ ${Math.abs(incomeChange)}% vs last month</span>`
-    : `<span class="trend-up">▲ ${Math.abs(incomeChange)}% vs last month</span>`;
-  
-  // Render chart
-  const { labels, incomeData, expenseData } = getMonthlyTotals(6);
   if (trendChart) trendChart.destroy();
+  
   const ctx = document.getElementById('trendChart').getContext('2d');
   trendChart = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels,
       datasets: [
         {
           label: 'Income',
           data: incomeData,
+          backgroundColor: 'rgba(16,185,129,0.7)',
           borderColor: '#10b981',
-          backgroundColor: 'rgba(16,185,129,0.1)',
-          borderWidth: 2,
-          tension: 0.3,
-          fill: true
+          borderWidth: 1,
+          borderRadius: 6
         },
         {
-          label: 'Expenses',
-          data: expenseData,
-          borderColor: '#ef4444',
-          backgroundColor: 'rgba(239,68,68,0.05)',
-          borderWidth: 2,
-          tension: 0.3,
-          fill: true
+          label: 'Daily Expenses',
+          data: dailyData,
+          backgroundColor: 'rgba(59,130,246,0.7)',
+          borderColor: '#3b82f6',
+          borderWidth: 1,
+          borderRadius: 6
+        },
+        {
+          label: 'Recurring',
+          data: recurringData,
+          backgroundColor: 'rgba(245,158,11,0.7)',
+          borderColor: '#f59e0b',
+          borderWidth: 1,
+          borderRadius: 6
+        },
+        {
+          label: 'Installments',
+          data: installmentsData,
+          backgroundColor: 'rgba(139,92,246,0.7)',
+          borderColor: '#8b5cf6',
+          borderWidth: 1,
+          borderRadius: 6
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: true,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, grid: { color: '#e8e8f0' } } }
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatMoney(ctx.raw)}` } }
+      },
+      scales: { y: { beginAtZero: true, grid: { color: '#e8e8f0' }, ticks: { callback: (v) => 'EGP ' + v.toLocaleString() } } }
     }
   });
   
-  // Top categories
+  // Custom legend
+  const legendHtml = `
+    <span class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Income</span>
+    <span class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Daily</span>
+    <span class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Recurring</span>
+    <span class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div> Installments</span>
+  `;
+  document.getElementById('chartLegend').innerHTML = legendHtml;
+}
+
+// ======================== TOP CATEGORIES =================
+function renderTopCategories() {
+  const currentExpenses = getCurrentMonthDailyExpenses();
   const categoryTotals = {};
   currentExpenses.forEach(e => {
     categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount;
   });
+  
   const topCategories = Object.entries(categoryTotals)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
   
-  const topCategoriesHtml = topCategories.map(([cat, amt]) => {
+  const container = document.getElementById('topCategoriesList');
+  if (!topCategories.length) {
+    container.innerHTML = '<div class="empty-state">No expenses this month</div>';
+    return;
+  }
+  
+  container.innerHTML = topCategories.map(([cat, amt]) => {
     const icon = getCategoryIcon(cat);
     const bg = getCategoryColor(cat);
     const budget = getCategoryBudget(cat);
@@ -957,7 +796,7 @@ function renderDashboard() {
         <div class="category-left">
           <div class="category-icon" style="background:${bg}">${icon}</div>
           <div class="category-info">
-            <div class="category-name">${cat}</div>
+            <div class="category-name">${escapeHtml(cat)}</div>
             ${budget ? `<div class="category-budget">Budget: ${formatMoney(budget)}</div>` : ''}
             ${budgetHtml}
           </div>
@@ -965,98 +804,81 @@ function renderDashboard() {
         <div class="category-amount">${formatMoney(amt)}</div>
       </div>`;
   }).join('');
-  document.getElementById('topCategoriesList').innerHTML = topCategoriesHtml || '<div class="empty-state">No expenses this month</div>';
+}
+
+// ======================== ADD EXPENSE ====================
+async function saveExpense() {
+  const date = document.getElementById('expenseDate').value;
+  const category = document.getElementById('expenseCategory').value;
+  const amount = parseFloat(document.getElementById('expenseAmount').value);
+  const notes = document.getElementById('expenseNotes').value.trim();
   
-  // Upcoming payments
-  const upcoming = getUpcomingPayments();
-  const upcomingHtml = upcoming.map(p => {
-    const dateStr = p.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-    const daysText = p.days === 0 ? 'Today' : p.days === 1 ? 'Tomorrow' : `in ${p.days} days`;
-    return `
-      <div class="upcoming-item">
-        <div class="upcoming-left">
-          <div class="upcoming-icon">${p.type === 'installment' ? '📆' : '🔄'}</div>
-          <div class="upcoming-info">
-            <div class="upcoming-name">${escapeHtml(p.name)}</div>
-            <div class="upcoming-date">${dateStr} · ${daysText}</div>
-          </div>
-        </div>
-        <div class="upcoming-amount">${formatMoney(p.amount)}</div>
-      </div>`;
-  }).join('');
-  document.getElementById('upcomingList').innerHTML = upcomingHtml || '<div class="empty-state">No upcoming payments in next 30 days 🎉</div>';
+  if (!date) { showToast('❌ Select date', 'error'); return; }
+  if (!category) { showToast('❌ Select category', 'error'); return; }
+  if (!amount || amount <= 0) { showToast('❌ Enter valid amount', 'error'); return; }
   
-  // Trend insights
-  const monthlyTotals = [];
-  for (let i = 0; i < 12; i++) {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    const monthExpense = expenses.filter(e => {
-      const d = parseLocalDate(e.date);
-      return d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear();
-    }).reduce((s, e) => s + e.amount, 0);
-    monthlyTotals.push({ month: date.getMonth(), year: date.getFullYear(), amount: monthExpense });
-  }
-  const best = monthlyTotals.reduce((min, m) => m.amount < min.amount ? m : min, monthlyTotals[0]);
-  const worst = monthlyTotals.reduce((max, m) => m.amount > max.amount ? m : max, monthlyTotals[0]);
-  const avgSpend = monthlyTotals.reduce((s, m) => s + m.amount, 0) / monthlyTotals.length;
-  const topCat = topCategories.length ? topCategories[0][0] : '—';
+  const newExpense = {
+    id: await getNextExpenseId(),
+    date,
+    category,
+    amount,
+    notes: notes || '',
+    timestamp: new Date().toISOString()
+  };
   
-  document.getElementById('bestMonth').textContent = best.amount > 0 ? `${MONTHS_SHORT[best.month]} ${formatMoney(best.amount)}` : '—';
-  document.getElementById('worstMonth').textContent = worst.amount > 0 ? `${MONTHS_SHORT[worst.month]} ${formatMoney(worst.amount)}` : '—';
-  document.getElementById('avgSpend').textContent = formatMoney(avgSpend);
-  document.getElementById('topCategory').textContent = topCat !== '—' ? topCat.substring(0, 3) : '—';
-  
-  // Recent activity
-  const recent = getRecentActivity();
-  const recentHtml = recent.map(a => {
-    const icon = a.type === 'expense' ? getCategoryIcon(a.category) : '💰';
-    const bg = a.type === 'expense' ? getCategoryColor(a.category) : '#d1fae5';
-    const amountClass = a.type === 'expense' ? 'expense' : 'income';
-    const sign = a.type === 'expense' ? '-' : '+';
-    return `
-      <div class="activity-item">
-        <div class="activity-icon" style="background:${bg}">${icon}</div>
-        <div class="activity-details">
-          <div class="activity-title">${a.type === 'expense' ? a.category : a.category || 'Income'}</div>
-          <div class="activity-date">${formatDate(a.date)}</div>
-        </div>
-        <div class="activity-amount ${amountClass}">${sign}${formatMoney(Math.abs(a.amount))}</div>
-      </div>`;
-  }).join('');
-  document.getElementById('recentActivityList').innerHTML = recentHtml || '<div class="empty-state">No recent activity</div>';
-  
-  // Budget alerts
-  const alerts = getBudgetAlerts();
-  const alertBanner = document.getElementById('alertBanner');
-  if (alerts.length) {
-    const overLimit = alerts.filter(a => a.over);
-    const nearLimit = alerts.filter(a => !a.over);
-    let alertHtml = '';
-    if (overLimit.length) {
-      alertHtml = `
-        <div class="alert-banner warning" onclick="window.location.href='Categories.html'">
-          <span class="alert-icon">⚠️</span>
-          <span class="alert-text">${overLimit.map(a => a.category).join(', ')} ${overLimit.length === 1 ? 'is' : 'are'} over budget!</span>
-          <span>›</span>
-        </div>`;
-    }
-    if (nearLimit.length && !overLimit.length) {
-      alertHtml = `
-        <div class="alert-banner" onclick="window.location.href='Categories.html'">
-          <span class="alert-icon">📊</span>
-          <span class="alert-text">${nearLimit.map(a => a.category).join(', ')} ${nearLimit.length === 1 ? 'is' : 'are'} near budget limit</span>
-          <span>›</span>
-        </div>`;
-    }
-    alertBanner.innerHTML = alertHtml;
-    alertBanner.style.display = 'block';
-  } else {
-    alertBanner.style.display = 'none';
+  try {
+    await addExpenseToSheet(newExpense);
+    expenses.unshift(newExpense);
+    closeExpenseModal();
+    await refreshAll();
+    showToast('✅ Expense added!');
+  } catch (e) {
+    showToast('❌ Failed to save', 'error');
   }
 }
 
-// ======================== INCOME MODAL ====================
+async function addExpenseToSheet(exp) {
+  if (!spreadsheetId) return false;
+  try {
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId, range: 'Daily Log!A2:F',
+      valueInputOption: 'RAW',
+      resource: { values: [[exp.timestamp, exp.date, exp.category, exp.amount, exp.notes || '', exp.id]] }
+    });
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
+function buildExpenseCategorySelect() {
+  const select = document.getElementById('expenseCategory');
+  const expenseCats = getExpenseCategories();
+  select.innerHTML = '<option value="" disabled selected>Select…</option>' + 
+    expenseCats.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
+}
+
+function openExpenseModal() {
+  document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('expenseAmount').value = '';
+  document.getElementById('expenseNotes').value = '';
+  buildExpenseCategorySelect();
+  document.getElementById('expenseModal').classList.add('open');
+}
+
+function closeExpenseModal() {
+  document.getElementById('expenseModal').classList.remove('open');
+}
+
+// ======================== ADD INCOME =====================
+function buildIncomeCategorySelect() {
+  const select = document.getElementById('incomeCategory');
+  const incomeCats = getIncomeCategories();
+  select.innerHTML = '<option value="" disabled selected>Select…</option>' + 
+    incomeCats.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
+}
+
 function openIncomeModal() {
   document.getElementById('incomeDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('incomeAmount').value = '';
@@ -1067,13 +889,6 @@ function openIncomeModal() {
 
 function closeIncomeModal() {
   document.getElementById('incomeModal').classList.remove('open');
-}
-
-function buildIncomeCategorySelect() {
-  const select = document.getElementById('incomeCategory');
-  const incomeCats = getIncomeCategories();
-  select.innerHTML = '<option value="" disabled selected>Select category…</option>' +
-    incomeCats.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
 }
 
 async function saveIncome() {
@@ -1098,8 +913,8 @@ async function saveIncome() {
   try {
     await addIncomeToSheet(newIncome);
     incomes.unshift(newIncome);
-    renderDashboard();
     closeIncomeModal();
+    await refreshAll();
     showToast('✅ Income added!');
   } catch (e) {
     showToast('❌ Failed to save', 'error');
@@ -1110,8 +925,7 @@ async function addIncomeToSheet(inc) {
   if (!spreadsheetId) return false;
   try {
     await gapi.client.sheets.spreadsheets.values.append({
-      spreadsheetId,
-      range: `${INCOME_LOG_SHEET}!A2:F`,
+      spreadsheetId, range: `${INCOME_LOG_SHEET}!A2:F`,
       valueInputOption: 'RAW',
       resource: { values: [[inc.timestamp, inc.date, inc.category, inc.amount, inc.notes || '', inc.id]] }
     });
@@ -1122,14 +936,63 @@ async function addIncomeToSheet(inc) {
   }
 }
 
-// ======================== SYNC ============================
+// ======================== LOAD DATA ======================
+async function loadExpenses() {
+  if (!spreadsheetId) return;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId, range: 'Daily Log!A2:F'
+    });
+    const rows = res.result.values || [];
+    expenses = rows
+      .filter(r => r[2] && r[3])
+      .map((r, i) => ({
+        id: (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
+        date: r[1] || r[0],
+        category: r[2],
+        amount: parseFloat(r[3]),
+        notes: r[4] || '',
+        timestamp: r[0] || new Date().toISOString()
+      }));
+  } catch (e) { console.error(e); }
+}
+
+async function loadIncomes() {
+  if (!spreadsheetId) return;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId, range: `${INCOME_LOG_SHEET}!A2:F`
+    });
+    const rows = res.result.values || [];
+    incomes = rows
+      .filter(r => r[2] && r[3])
+      .map((r, i) => ({
+        id: (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
+        date: r[1] || r[0],
+        category: r[2],
+        amount: parseFloat(r[3]),
+        notes: r[4] || '',
+        timestamp: r[0] || new Date().toISOString()
+      }));
+  } catch (e) { console.error(e); }
+}
+
+async function refreshAll() {
+  await loadExpenses();
+  await loadIncomes();
+  await renderKPI();
+  await renderChart();
+  renderTopCategories();
+}
+
+// ======================== SYNC ===========================
 async function syncAll() {
   showToast('🔄 Syncing...', 'info');
-  await loadAllData();
+  await refreshAll();
   showToast('✅ Dashboard updated');
 }
 
-// ======================== AUTH & INIT =====================
+// ======================== AUTH & INIT ====================
 async function ensureIncomeTab() {
   try {
     const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
@@ -1146,9 +1009,7 @@ async function ensureIncomeTab() {
         resource: { values: [['Timestamp', 'Date', 'Category', 'Amount', 'Notes', 'ID']] }
       });
     }
-  } catch (e) {
-    console.warn(e);
-  }
+  } catch (e) { console.warn(e); }
 }
 
 async function initDashboard() {
@@ -1165,7 +1026,7 @@ async function initDashboard() {
       
       await ensureCategoriesTab(spreadsheetId);
       await ensureIncomeTab();
-      await loadAllData();
+      await refreshAll();
       
       document.getElementById('loadingOverlay').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
@@ -1175,7 +1036,15 @@ async function initDashboard() {
 
 // ======================== EVENT LISTENERS =================
 document.getElementById('syncBtn').addEventListener('click', syncAll);
+document.getElementById('addExpenseBtn').addEventListener('click', openExpenseModal);
 document.getElementById('addIncomeBtn').addEventListener('click', openIncomeModal);
+document.getElementById('manageCategoriesBtn').addEventListener('click', () => {
+  window.location.href = 'Expenses.html';
+});
+
+document.getElementById('expenseModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeExpenseModal();
+});
 document.getElementById('incomeModal').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeIncomeModal();
 });
