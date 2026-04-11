@@ -413,6 +413,24 @@
     <div class="chart-container">
       <canvas id="trendChart"></canvas>
     </div>
+    <!-- Dynamic checkbox controls -->
+    <div class="chart-controls" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 8px 0 4px 0;">
+      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer;">
+        <input type="checkbox" id="showIncome" checked style="width: 16px; height: 16px; cursor: pointer;"> Income
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer;">
+        <input type="checkbox" id="showTotalExpenses" checked style="width: 16px; height: 16px; cursor: pointer;"> Total Expenses
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer;">
+        <input type="checkbox" id="showDaily" checked style="width: 16px; height: 16px; cursor: pointer;"> Daily
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer;">
+        <input type="checkbox" id="showRecurring" checked style="width: 16px; height: 16px; cursor: pointer;"> Recurring
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer;">
+        <input type="checkbox" id="showInstallments" checked style="width: 16px; height: 16px; cursor: pointer;"> Installments
+      </label>
+    </div>
     <div class="chart-legend" id="chartLegend"></div>
   </div>
 
@@ -787,81 +805,104 @@ async function renderChart() {
     }
   }
   
+  // Get checkbox states
+  const showIncome = document.getElementById('showIncome')?.checked ?? true;
+  const showTotalExpenses = document.getElementById('showTotalExpenses')?.checked ?? true;
+  const showDaily = document.getElementById('showDaily')?.checked ?? true;
+  const showRecurring = document.getElementById('showRecurring')?.checked ?? true;
+  const showInstallments = document.getElementById('showInstallments')?.checked ?? true;
+  
+  const datasets = [];
+  
+  if (showIncome) {
+    datasets.push({
+      label: 'Income',
+      data: incomeData,
+      borderColor: CHART_COLORS.income,
+      backgroundColor: 'rgba(16,185,129,0.10)',
+      borderWidth: 2.5,
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: CHART_COLORS.income,
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      spanGaps: false
+    });
+  }
+  
+  if (showTotalExpenses) {
+    datasets.push({
+      label: 'Total Expenses',
+      data: totalExpensesData,
+      borderColor: '#ef4444',
+      backgroundColor: 'rgba(239,68,68,0.08)',
+      borderWidth: 2.5,
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: '#ef4444',
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      spanGaps: false
+    });
+  }
+  
+  if (showDaily) {
+    datasets.push({
+      label: 'Daily Expenses',
+      data: dailyData,
+      borderColor: CHART_COLORS.daily,
+      backgroundColor: 'rgba(59,130,246,0.05)',
+      borderWidth: 2,
+      tension: 0.4,
+      fill: false,
+      pointBackgroundColor: CHART_COLORS.daily,
+      pointRadius: 2,
+      pointHoverRadius: 5,
+      spanGaps: false,
+      borderDash: [5, 5]
+    });
+  }
+  
+  if (showRecurring) {
+    datasets.push({
+      label: 'Recurring Expenses',
+      data: recurringData,
+      borderColor: CHART_COLORS.recurring,
+      backgroundColor: 'rgba(245,158,11,0.05)',
+      borderWidth: 2,
+      tension: 0.4,
+      fill: false,
+      pointBackgroundColor: CHART_COLORS.recurring,
+      pointRadius: 2,
+      pointHoverRadius: 5,
+      spanGaps: false,
+      borderDash: [5, 5]
+    });
+  }
+  
+  if (showInstallments) {
+    datasets.push({
+      label: 'Installments',
+      data: installmentsData,
+      borderColor: CHART_COLORS.installments,
+      backgroundColor: 'rgba(139,92,246,0.05)',
+      borderWidth: 2,
+      tension: 0.4,
+      fill: false,
+      pointBackgroundColor: CHART_COLORS.installments,
+      pointRadius: 2,
+      pointHoverRadius: 5,
+      spanGaps: false,
+      borderDash: [5, 5]
+    });
+  }
+  
   const ctx = document.getElementById('trendChart').getContext('2d');
   trendChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
-      datasets: [
-        {
-          label: 'Income',
-          data: incomeData,
-          borderColor: CHART_COLORS.income,
-          backgroundColor: 'rgba(16,185,129,0.10)',
-          borderWidth: 2.5,
-          tension: 0.4,
-          fill: true,
-          pointBackgroundColor: CHART_COLORS.income,
-          pointRadius: 3,
-          pointHoverRadius: 6,
-          spanGaps: false
-        },
-        {
-          label: 'Total Expenses',
-          data: totalExpensesData,
-          borderColor: '#ef4444',
-          backgroundColor: 'rgba(239,68,68,0.08)',
-          borderWidth: 2.5,
-          tension: 0.4,
-          fill: true,
-          pointBackgroundColor: '#ef4444',
-          pointRadius: 3,
-          pointHoverRadius: 6,
-          spanGaps: false
-        },
-        {
-          label: 'Daily Expenses',
-          data: dailyData,
-          borderColor: CHART_COLORS.daily,
-          backgroundColor: 'rgba(59,130,246,0.05)',
-          borderWidth: 2,
-          tension: 0.4,
-          fill: false,
-          pointBackgroundColor: CHART_COLORS.daily,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          spanGaps: false,
-          borderDash: [5, 5]
-        },
-        {
-          label: 'Recurring Expenses',
-          data: recurringData,
-          borderColor: CHART_COLORS.recurring,
-          backgroundColor: 'rgba(245,158,11,0.05)',
-          borderWidth: 2,
-          tension: 0.4,
-          fill: false,
-          pointBackgroundColor: CHART_COLORS.recurring,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          spanGaps: false,
-          borderDash: [5, 5]
-        },
-        {
-          label: 'Installments',
-          data: installmentsData,
-          borderColor: CHART_COLORS.installments,
-          backgroundColor: 'rgba(139,92,246,0.05)',
-          borderWidth: 2,
-          tension: 0.4,
-          fill: false,
-          pointBackgroundColor: CHART_COLORS.installments,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          spanGaps: false,
-          borderDash: [5, 5]
-        }
-      ]
+      datasets: datasets
     },
     options: {
       responsive: true,
@@ -888,15 +929,16 @@ async function renderChart() {
     }
   });
   
-  // Custom legend
-  const legendHtml = `
-    <span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.income}"></div> Income</span>
-    <span class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Total Expenses</span>
-    <span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.daily}"></div> Daily</span>
-    <span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.recurring}"></div> Recurring</span>
-    <span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.installments}"></div> Installments</span>
-  `;
-  document.getElementById('chartLegend').innerHTML = legendHtml;
+  // Update legend to only show active datasets
+  const activeDatasets = datasets.map(d => d.label);
+  let legendHtml = '';
+  if (activeDatasets.includes('Income')) legendHtml += `<span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.income}"></div> Income</span>`;
+  if (activeDatasets.includes('Total Expenses')) legendHtml += `<span class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Total Expenses</span>`;
+  if (activeDatasets.includes('Daily Expenses')) legendHtml += `<span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.daily}"></div> Daily</span>`;
+  if (activeDatasets.includes('Recurring Expenses')) legendHtml += `<span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.recurring}"></div> Recurring</span>`;
+  if (activeDatasets.includes('Installments')) legendHtml += `<span class="legend-item"><div class="legend-dot" style="background:${CHART_COLORS.installments}"></div> Installments</span>`;
+  
+  document.getElementById('chartLegend').innerHTML = legendHtml || '<span style="color: rgba(255,255,255,0.5);">Select at least one item</span>';
 }
 
 // ======================== TOP CATEGORIES =================
@@ -1178,7 +1220,13 @@ document.getElementById('addExpenseBtn').addEventListener('click', openExpenseMo
 document.getElementById('addIncomeBtn').addEventListener('click', openIncomeModal);
 document.getElementById('manageCategoriesBtn').addEventListener('click', () => {window.location.href = 'Expenses.html';});
 document.getElementById('chartYearSelect').addEventListener('change', () => renderChart());
-
+// Add checkbox event listeners
+const checkboxes = ['showIncome', 'showTotalExpenses', 'showDaily', 'showRecurring', 'showInstallments'];
+checkboxes.forEach(id => {
+  const cb = document.getElementById(id);
+  if (cb) cb.addEventListener('change', () => renderChart());
+});
+  
 document.getElementById('expenseModal').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeExpenseModal();
 });
