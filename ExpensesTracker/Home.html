@@ -505,73 +505,54 @@ function getCurrentMonthIncomes() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 }
-// Get this month's recurring expenses (from Recurring Log)
-async function getCurrentMonthRecurringExpensesHome() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+// ── Cached sheet data for KPI (fetched once per session load) ──
+let _kpiSheetCache = null;
+
+// Fetch recurring + installments rows once, cache in memory.
+// Subsequent renderAll() calls reuse the cache — no extra API calls.
+async function fetchKPISheetData() {
+  if (_kpiSheetCache) return _kpiSheetCache;
   try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `${RECURRING_LOG_SHEET}!A2:F`
-    });
-    const rows = res.result.values || [];
-    let total = 0;
-    rows.forEach(r => {
-      if (r[1]) {
-        const d = parseLocalDate(r[1]);
-        if (d.getMonth() === month && d.getFullYear() === year) {
-          total += parseFloat(r[4]) || 0;
-        }
-      }
-    });
-    return total;
+    const [recRes, instRes] = await Promise.all([
+      gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `${RECURRING_LOG_SHEET}!A2:F` }),
+      gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `${INSTALLMENTS_LOG_SHEET}!A2:E` })
+    ]);
+    _kpiSheetCache = {
+      recurringRows:     recRes.result.values  || [],
+      installmentRows:   instRes.result.values || []
+    };
   } catch (e) {
-    console.error('getCurrentMonthRecurringExpenses error', e);
-    return 0;
+    console.error('fetchKPISheetData error', e);
+    _kpiSheetCache = { recurringRows: [], installmentRows: [] };
   }
+  return _kpiSheetCache;
 }
 
-// Get this month's installment expenses (from Installments Log)
-async function getCurrentMonthInstallmentsExpensesHome() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  try {
-    const res = await gapi.client.sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `${INSTALLMENTS_LOG_SHEET}!A2:E`
-    });
-    const rows = res.result.values || [];
-    let total = 0;
-    rows.forEach(r => {
-      if (r[2]) {
-        const d = parseLocalDate(r[2]);
-        if (d.getMonth() === month && d.getFullYear() === year) {
-          total += parseFloat(r[3]) || 0;
-        }
-      }
-    });
-    return total;
-  } catch (e) {
-    console.error('getCurrentMonthInstallmentsExpenses error', e);
-    return 0;
-  }
+// Call this after a manual sync so the cache is refreshed
+function invalidateKPICache() { _kpiSheetCache = null; }
+
+// Sum recurring rows for a given year+month
+function sumRecurringForMonth(rows, year, month) {
+  let total = 0;
+  rows.forEach(r => {
+    if (r[1]) {
+      const d = parseLocalDate(r[1]);
+      if (d.getMonth() === month && d.getFullYear() === year) total += parseFloat(r[4]) || 0;
+    }
+  });
+  return total;
 }
 
-// Get previous month's total expenses for comparison
-function getPrevMonthTotalExpensesHome() {
-  const now = new Date();
-  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const prevYear = prevMonth.getFullYear();
-  const prevMonthNum = prevMonth.getMonth();
-  
-  const dailyTotal = expenses.filter(e => {
-    const d = parseLocalDate(e.date);
-    return d.getMonth() === prevMonthNum && d.getFullYear() === prevYear;
-  }).reduce((s, e) => s + e.amount, 0);
-  
-  return dailyTotal;
+// Sum installment rows for a given year+month
+function sumInstallmentsForMonth(rows, year, month) {
+  let total = 0;
+  rows.forEach(r => {
+    if (r[2]) {
+      const d = parseLocalDate(r[2]);
+      if (d.getMonth() === month && d.getFullYear() === year) total += parseFloat(r[3]) || 0;
+    }
+  });
+  return total;
 }
 
 function getPrevMonthIncomeHome() {
@@ -579,76 +560,93 @@ function getPrevMonthIncomeHome() {
   const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const prevYear = prevMonth.getFullYear();
   const prevMonthNum = prevMonth.getMonth();
-  
   return incomes.filter(i => {
     const d = parseLocalDate(i.date);
     return d.getMonth() === prevMonthNum && d.getFullYear() === prevYear;
   }).reduce((s, i) => s + i.amount, 0);
 }
+
 // ── Update KPI stats ──────────────────────────────────────
 async function updateKPIStats() {
-  const currentExpenses = getCurrentMonthExpenses();
-  const dailyTotal = currentExpenses.reduce((s, e) => s + e.amount, 0);
-  
-  const recurringTotal = await getCurrentMonthRecurringExpensesHome();
-  const installmentsTotal = await getCurrentMonthInstallmentsExpensesHome();
-  const currentIncomes = getCurrentMonthIncomes();
-  const totalIncome = currentIncomes.reduce((s, i) => s + i.amount, 0);
-  
-  const totalExpense = dailyTotal + recurringTotal + installmentsTotal;
-  const netCash = totalIncome - totalExpense;
-  
-  document.getElementById('kpiIncome').textContent = formatMoney(totalIncome);
+  const now          = new Date();
+  const curYear      = now.getFullYear();
+  const curMonth     = now.getMonth();
+  const prevDate     = new Date(curYear, curMonth - 1, 1);
+  const prevYear     = prevDate.getFullYear();
+  const prevMonth    = prevDate.getMonth();
+
+  // Fetch sheet data once (cached after first call)
+  const { recurringRows, installmentRows } = await fetchKPISheetData();
+
+  // ── This month totals ──
+  const dailyTotal       = getCurrentMonthExpenses().reduce((s, e) => s + e.amount, 0);
+  const recurringTotal   = sumRecurringForMonth(recurringRows,   curYear, curMonth);
+  const installTotal     = sumInstallmentsForMonth(installmentRows, curYear, curMonth);
+  const totalExpense     = dailyTotal + recurringTotal + installTotal;
+  const totalIncome      = getCurrentMonthIncomes().reduce((s, i) => s + i.amount, 0);
+  const netCash          = totalIncome - totalExpense;
+
+  // ── Previous month totals (same 3 sources for fair comparison) ──
+  const prevDailyTotal   = expenses.filter(e => {
+    const d = parseLocalDate(e.date);
+    return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+  }).reduce((s, e) => s + e.amount, 0);
+  const prevRecurring    = sumRecurringForMonth(recurringRows,   prevYear, prevMonth);
+  const prevInstall      = sumInstallmentsForMonth(installmentRows, prevYear, prevMonth);
+  const prevTotalExpense = prevDailyTotal + prevRecurring + prevInstall;
+  const prevIncome       = getPrevMonthIncomeHome();
+  const prevNetCash      = prevIncome - prevTotalExpense;
+
+  // ── Render cards ──
+  document.getElementById('kpiIncome').textContent   = formatMoney(totalIncome);
   document.getElementById('kpiExpenses').textContent = formatMoney(totalExpense);
-  
+
   const netElement = document.getElementById('netCashFlowHome');
   netElement.textContent = netCash >= 0 ? formatMoney(netCash) : `-${formatMoney(Math.abs(netCash))}`;
   netElement.style.color = netCash >= 0 ? '#6ee7b7' : '#fca5a5';
-  
-  // Update comparison badge (net cash flow)
-  const prevTotalExpense = getPrevMonthTotalExpensesHome();
-  if (prevTotalExpense > 0) {
-    const diff = totalExpense - prevTotalExpense;
-    const pct = Math.abs((diff / prevTotalExpense) * 100).toFixed(0);
-    const badge = document.getElementById('compareBadgeHome');
+
+  // ── Net cash flow comparison badge (net vs net, apples-to-apples) ──
+  const badge = document.getElementById('compareBadgeHome');
+  if (prevNetCash !== 0) {
+    const diff = netCash - prevNetCash;
+    const pct  = Math.abs((diff / Math.abs(prevNetCash)) * 100).toFixed(0);
     if (diff > 0) {
-      badge.innerHTML = `▲ ${pct}% more vs last month`;
-      badge.style.background = 'rgba(239,68,68,0.25)';
-      badge.style.color = '#fca5a5';
+      badge.innerHTML          = `▲ ${pct}% better vs last month`;
+      badge.style.background   = 'rgba(16,185,129,0.25)';
+      badge.style.color        = '#6ee7b7';
     } else if (diff < 0) {
-      badge.innerHTML = `▼ ${pct}% less vs last month`;
-      badge.style.background = 'rgba(16,185,129,0.25)';
-      badge.style.color = '#6ee7b7';
+      badge.innerHTML          = `▼ ${pct}% worse vs last month`;
+      badge.style.background   = 'rgba(239,68,68,0.25)';
+      badge.style.color        = '#fca5a5';
     } else {
-      badge.innerHTML = `No change vs last month`;
+      badge.innerHTML          = `No change vs last month`;
+      badge.style.background   = '';
+      badge.style.color        = '';
     }
   } else {
-    document.getElementById('compareBadgeHome').innerHTML = `First month tracking`;
+    badge.innerHTML = `First month tracking`;
+    badge.style.background = '';
+    badge.style.color = '';
   }
-  
-  // Income trend
-  const prevIncome = getPrevMonthIncomeHome();
+
+  // ── Income trend ──
   const incomeTrendEl = document.getElementById('incomeTrendHome');
   if (prevIncome > 0) {
-    const incomeChange = ((totalIncome - prevIncome) / prevIncome * 100).toFixed(0);
-    if (incomeChange >= 0) {
-      incomeTrendEl.innerHTML = `<span class="trend-badge"><span class="trend-up">▲ ${incomeChange}% vs last month</span></span>`;
-    } else {
-      incomeTrendEl.innerHTML = `<span class="trend-badge"><span class="trend-down">▼ ${Math.abs(incomeChange)}% vs last month</span></span>`;
-    }
+    const pct = ((totalIncome - prevIncome) / prevIncome * 100).toFixed(0);
+    incomeTrendEl.innerHTML = pct >= 0
+      ? `<span class="trend-badge"><span class="trend-up">▲ ${pct}% vs last month</span></span>`
+      : `<span class="trend-badge"><span class="trend-down">▼ ${Math.abs(pct)}% vs last month</span></span>`;
   } else {
     incomeTrendEl.innerHTML = '<span class="trend-badge"><span class="trend-up">▲ New</span></span>';
   }
-  
-  // Expenses trend
+
+  // ── Expenses trend ──
   const expensesTrendEl = document.getElementById('expensesTrendHome');
   if (prevTotalExpense > 0) {
-    const expensesChange = ((totalExpense - prevTotalExpense) / prevTotalExpense * 100).toFixed(0);
-    if (expensesChange <= 0) {
-      expensesTrendEl.innerHTML = `<span class="trend-badge"><span class="trend-down">▼ ${Math.abs(expensesChange)}% vs last month</span></span>`;
-    } else {
-      expensesTrendEl.innerHTML = `<span class="trend-badge"><span class="trend-up">▲ ${expensesChange}% vs last month</span></span>`;
-    }
+    const pct = ((totalExpense - prevTotalExpense) / prevTotalExpense * 100).toFixed(0);
+    expensesTrendEl.innerHTML = pct <= 0
+      ? `<span class="trend-badge"><span class="trend-down">▼ ${Math.abs(pct)}% vs last month</span></span>`
+      : `<span class="trend-badge"><span class="trend-up">▲ ${pct}% vs last month</span></span>`;
   } else {
     expensesTrendEl.innerHTML = '<span class="trend-badge"><span class="trend-down">▼ New</span></span>';
   }
@@ -1122,6 +1120,7 @@ async function deleteExpenseFromSheet(expId) {
 // ── Manual sync ───────────────────────────────────────────
 async function manualSync() {
   if (!spreadsheetId) { showToast('⚠️ No Google Sheet connected', 'error'); return; }
+  invalidateKPICache();   // force fresh sheet fetch on next renderAll
   const ok = await loadExpensesFromSheet(true);
   if (ok) setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
 }
