@@ -310,9 +310,16 @@
     }
     
     /* Trend styles */
-    .trend-up { color: #6ee7b7; }
-    .trend-down { color: #fca5a5; }
-    .kpi-trend { font-size: 11px; margin-top: 4px; }
+    .trend-up { color: #bbf7d0; }
+    .trend-down { color: #fecaca; }
+    .kpi-trend { font-size: 11px; margin-top: 8px; }
+    .trend-badge {
+      display: inline-block;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -658,24 +665,24 @@ async function renderKPI() {
     const incomeChange = ((incomeTotal - prevIncome) / prevIncome * 100).toFixed(0);
     const incomeTrend = document.getElementById('incomeTrend');
     if (incomeChange >= 0) {
-      incomeTrend.innerHTML = `<span class="trend-up">▲ ${incomeChange}% vs last month</span>`;
+      incomeTrend.innerHTML = `<span class="trend-badge"><span class="trend-up">▲ ${incomeChange}% vs last month</span></span>`;
     } else {
-      incomeTrend.innerHTML = `<span class="trend-down">▼ ${Math.abs(incomeChange)}% vs last month</span>`;
+      incomeTrend.innerHTML = `<span class="trend-badge"><span class="trend-down">▼ ${Math.abs(incomeChange)}% vs last month</span></span>`;
     }
   } else {
-    document.getElementById('incomeTrend').innerHTML = '<span class="trend-up">▲ New</span>';
+    document.getElementById('incomeTrend').innerHTML = '<span class="trend-badge"><span class="trend-up">▲ New</span></span>';
   }
   
   if (prevExpenses > 0) {
     const expensesChange = ((totalExpenses - prevExpenses) / prevExpenses * 100).toFixed(0);
     const expensesTrend = document.getElementById('expensesTrend');
     if (expensesChange <= 0) {
-      expensesTrend.innerHTML = `<span class="trend-down">▼ ${Math.abs(expensesChange)}% vs last month</span>`;
+      expensesTrend.innerHTML = `<span class="trend-badge"><span class="trend-down">▼ ${Math.abs(expensesChange)}% vs last month</span></span>`;
     } else {
-      expensesTrend.innerHTML = `<span class="trend-up">▲ ${expensesChange}% vs last month</span>`;
+      expensesTrend.innerHTML = `<span class="trend-badge"><span class="trend-up">▲ ${expensesChange}% vs last month</span></span>`;
     }
   } else {
-    document.getElementById('expensesTrend').innerHTML = '<span class="trend-down">▼ New</span>';
+    document.getElementById('expensesTrend').innerHTML = '<span class="trend-badge"><span class="trend-down">▼ New</span></span>';
   }
 }
 
