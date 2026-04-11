@@ -109,7 +109,282 @@
     .log-date   { font-size: 11px; color: var(--text-3); margin-top: 2px; }
     .log-amount { font-weight: 700; color: var(--success); font-size: 13px; flex-shrink: 0; }
 
-    /* ── Add/Edit modal form ── */
+    /* ── Summary Card (matching Installments) ── */
+    .summary-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .summary-header {
+      background: var(--brand-grad);
+      color: #fff;
+      padding: 16px 20px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .summary-header h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
+    }
+    .summary-year-header {
+      background: linear-gradient(135deg, #f5f5fa 0%, #ffffff 100%);
+      color: var(--text);
+      padding: 14px 20px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .summary-year-total {
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--brand-grad);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .summary-month-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .summary-month-row.past-month {
+      background: #e8f5e9;
+    }
+    .summary-month-row:hover {
+      background: var(--surface-2);
+    }
+    .summary-month-row:active {
+      background: #ededff;
+    }
+    .summary-month-left {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .summary-month-name {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .summary-month-count {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .summary-month-amount {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--brand);
+    }
+    .summary-empty {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-3);
+    }
+    .summary-empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    /* Year dropdown */
+    .year-dropdown {
+      position: relative;
+      margin: 16px 20px 20px 20px;
+    }
+    .year-dropdown-btn {
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .year-dropdown-btn:hover {
+      border-color: var(--brand);
+      background: #fff;
+    }
+    .year-dropdown-arrow {
+      font-size: 12px;
+      color: var(--text-2);
+      transition: transform 0.2s;
+    }
+    .year-dropdown.open .year-dropdown-arrow {
+      transform: rotate(180deg);
+    }
+    .year-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      z-index: 100;
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+    }
+    .year-dropdown.open .year-dropdown-menu {
+      display: block;
+    }
+    .year-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border-bottom: 1px solid var(--border);
+    }
+    .year-dropdown-item.selected {
+      background: #e8f5e9;
+    }
+    .year-dropdown-item:hover {
+      background: var(--surface-2);
+    }
+    .year-dropdown-item input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--brand);
+    }
+    .year-dropdown-item label {
+      flex: 1;
+      cursor: pointer;
+      margin: 0;
+      text-transform: none;
+      letter-spacing: normal;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .year-dropdown-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      position: sticky;
+      bottom: 0;
+    }
+    .year-dropdown-footer-left {
+      display: flex;
+      gap: 12px;
+    }
+    .year-dropdown-footer button {
+      background: none;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .year-select-all {
+      color: var(--brand);
+    }
+    .year-clear-all {
+      color: var(--danger);
+    }
+    .year-done-btn {
+      background: var(--brand);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+    }
+    .year-done-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Month detail modal */
+    .detail-recurring-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .detail-recurring-item:last-child {
+      border-bottom: none;
+    }
+    .detail-recurring-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .detail-recurring-info {
+      flex: 1;
+    }
+    .detail-recurring-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .detail-recurring-amount {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--brand);
+    }
+    .detail-recurring-status {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 4px;
+    }
+    .detail-status-paid {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .detail-status-pending {
+      background: #fef3c7;
+      color: #d97706;
+    }
+    .detail-right-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    /* Add/Edit modal form */
     .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .form-group { margin-bottom: 0; }
     .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
@@ -134,11 +409,11 @@
 
   <div class="header">
     <h1>🔄 Recurring</h1>
-<div class="header-actions">
-  <button class="hdr-icon-btn" id="syncBtn" onclick="syncAll()" title="Sync">↻</button>
-  <button class="hdr-icon-btn" onclick="window.location.href='Settings.html'" title="Settings">⚙️</button>
-  <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
-</div>
+    <div class="header-actions">
+      <button class="hdr-icon-btn" id="syncBtn" onclick="syncAll()" title="Sync">↻</button>
+      <button class="hdr-icon-btn" onclick="window.location.href='Settings.html'" title="Settings">⚙️</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+    </div>
   </div>
 
   <!-- Stats -->
@@ -189,6 +464,32 @@
       </div>
       <div id="logList"></div>
     </div>
+  </div>
+
+  <!-- Recurring Summary Section (matching Installments) -->
+  <div class="summary-card">
+    <div class="summary-header">
+      <h3>📊 Recurring Summary</h3>
+    </div>
+    
+    <div class="year-dropdown" id="yearDropdown">
+      <div class="year-dropdown-btn" onclick="toggleYearDropdown()">
+        <span id="selectedYearsText">Select years</span>
+        <span class="year-dropdown-arrow">▼</span>
+      </div>
+      <div class="year-dropdown-menu" id="yearDropdownMenu">
+        <div id="yearCheckboxList"></div>
+        <div class="year-dropdown-footer">
+          <div class="year-dropdown-footer-left">
+            <button class="year-select-all" onclick="selectAllYears(); event.stopPropagation();">Select All</button>
+            <button class="year-clear-all" onclick="clearAllYears(); event.stopPropagation();">Clear All</button>
+          </div>
+          <button class="year-done-btn" onclick="closeYearDropdown(); event.stopPropagation();">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="summaryContainer"></div>
   </div>
 
 </div>
@@ -251,6 +552,18 @@
   </div>
 </div>
 
+<!-- Month Detail Modal -->
+<div class="modal-backdrop" id="monthDetailModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="monthDetailTitle">Recurring Expenses</div>
+    <div id="monthDetailList"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeMonthDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- More sheet -->
 <div class="sheet-backdrop" id="moreSheet">
   <div class="sheet">
@@ -276,6 +589,10 @@ let editingId          = null;
 let sheetTargetIdx     = null;
 let activeTab          = 'active';
 
+// Summary years
+const AVAILABLE_YEARS = [2026, 2027, 2028, 2029, 2030];
+let selectedYears = new Set([new Date().getFullYear()]);
+
 // RECURRING_SHEET and RECURRING_LOG_SHEET are defined in utils.js
 const MONTHS = MONTHS_SHORT; // alias → defined in utils.js
 // MONTHS_FULL defined in utils.js
@@ -286,12 +603,10 @@ function getPaidSet()   { const r=localStorage.getItem(paidKey()); return r?new 
 function savePaidSet(s) { localStorage.setItem(paidKey(), JSON.stringify([...s])); }
 function isPaid(id)     { return getPaidSet().has(String(id)); }
 
-// categoryIcon lookup → use getRecurringCategoryIcon() from utils.js
-
 // ── Helpers ────────────────────────────────────────────────
-// todayStr() provided by utils.js
+function todayStr() { return new Date().toISOString().split('T')[0]; }
 
-// ── Tab switch (now includes 'all') ────────────────────────
+// ── Tab switch ─────────────────────────────────────────────
 function switchTab(tab) {
   activeTab = tab;
   document.getElementById('tabActiveBtn').classList.toggle('active', tab==='active');
@@ -312,18 +627,14 @@ function isDueThisMonth(sub) {
 }
 
 // ── Status info ────────────────────────────────────────────
-// Returns { state: 'paid'|'overdue'|'upcoming'|'future', label, payable }
 function getStatusInfo(sub) {
   const now=new Date(); const today=now.getDate();
   if (isPaid(sub.id)) {
-    const paidSet = getPaidSet();
-    // Try to get the actual paid date from the log entries cache
     const paidDate = window._paidDates && window._paidDates[String(sub.id)];
     const label = paidDate ? paidDate : `${MONTHS[new Date().getMonth()]} ${sub.paymentDay}`;
     return { state:'paid', label:`${label}`, payable:false };
   }
   if (!isDueThisMonth(sub)) {
-    // find next due month
     const next = getNextPaymentDate(sub);
     const lbl  = next ? `${MONTHS[next.getMonth()]} ${next.getDate()}` : '—';
     return { state:'future',  label:lbl,  payable:false };
@@ -352,6 +663,232 @@ function getNextPaymentDate(sub, ref=new Date()) {
     c.setDate(Math.min(paymentDay,new Date(c.getFullYear(),c.getMonth()+1,0).getDate())); return c;
   }
   return null;
+}
+
+// ======================== YEAR DROPDOWN ==========================
+function toggleYearDropdown() {
+  const dropdown = document.getElementById('yearDropdown');
+  dropdown.classList.toggle('open');
+}
+
+function closeYearDropdown() {
+  document.getElementById('yearDropdown').classList.remove('open');
+}
+
+function updateSelectedYearsText() {
+  const textSpan = document.getElementById('selectedYearsText');
+  const selected = Array.from(selectedYears).sort((a, b) => a - b);
+  if (selected.length === 0) {
+    textSpan.textContent = 'No years selected';
+  } else if (selected.length === AVAILABLE_YEARS.length) {
+    textSpan.textContent = 'All years (2026-2030)';
+  } else {
+    textSpan.textContent = selected.join(', ');
+  }
+}
+
+function buildYearCheckboxList() {
+  const container = document.getElementById('yearCheckboxList');
+  container.innerHTML = AVAILABLE_YEARS.map(year => {
+    const isSelected = selectedYears.has(year);
+    return `
+      <div class="year-dropdown-item ${isSelected ? 'selected' : ''}" onclick="toggleYearCheckbox(${year})">
+        <input type="checkbox" id="year_${year}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleYearCheckbox(${year})">
+        <label for="year_${year}" onclick="event.stopPropagation(); toggleYearCheckbox(${year})">${year}</label>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleYearCheckbox(year) {
+  if (selectedYears.has(year)) {
+    selectedYears.delete(year);
+  } else {
+    selectedYears.add(year);
+  }
+  buildYearCheckboxList();
+  updateSelectedYearsText();
+  renderSummary();
+}
+
+function selectAllYears() {
+  AVAILABLE_YEARS.forEach(year => selectedYears.add(year));
+  buildYearCheckboxList();
+  updateSelectedYearsText();
+  renderSummary();
+}
+
+function clearAllYears() {
+  selectedYears.clear();
+  buildYearCheckboxList();
+  updateSelectedYearsText();
+  renderSummary();
+}
+
+document.addEventListener('click', function(event) {
+  const dropdown = document.getElementById('yearDropdown');
+  if (dropdown && !dropdown.contains(event.target)) {
+    dropdown.classList.remove('open');
+  }
+});
+
+// ======================== YEAR SUMMARY ==========================
+function getYearSummary(year) {
+  const monthlyTotals = {};
+  const monthlyRecurring = {};
+  
+  for (let i = 0; i < 12; i++) {
+    monthlyTotals[i] = 0;
+    monthlyRecurring[i] = [];
+  }
+  
+  recurringList.forEach(sub => {
+    if (!sub.active) return;
+    
+    // Get all payment dates for this subscription
+    let currentDate = new Date(sub.startYear || new Date().getFullYear(), sub.startMonth - 1, 1);
+    const endYear = currentDate.getFullYear() + 5; // Look ahead 5 years
+    
+    while (currentDate.getFullYear() <= endYear) {
+      const paymentYear = currentDate.getFullYear();
+      const paymentMonth = currentDate.getMonth();
+      
+      if (paymentYear === year) {
+        monthlyTotals[paymentMonth] = (monthlyTotals[paymentMonth] || 0) + sub.amount;
+        monthlyRecurring[paymentMonth].push({
+          id: sub.id,
+          name: sub.name,
+          category: sub.category,
+          amount: sub.amount,
+          frequency: sub.frequency,
+          paymentDay: sub.paymentDay
+        });
+      }
+      
+      // Advance based on frequency
+      if (sub.frequency === 'Monthly') {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      } else if (sub.frequency === 'Quarterly') {
+        currentDate.setMonth(currentDate.getMonth() + 3);
+      } else if (sub.frequency === 'Annual') {
+        currentDate.setFullYear(currentDate.getFullYear() + 1);
+      }
+      
+      if (currentDate.getFullYear() > year + 1) break;
+    }
+  });
+  
+  return { monthlyTotals, monthlyRecurring };
+}
+
+function getYearTotal(year) {
+  const summary = getYearSummary(year);
+  return Object.values(summary.monthlyTotals).reduce((sum, val) => sum + val, 0);
+}
+
+function renderSummary() {
+  const container = document.getElementById('summaryContainer');
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  
+  let yearsToShow = AVAILABLE_YEARS.filter(y => selectedYears.has(y));
+  
+  if (yearsToShow.length === 0) {
+    container.innerHTML = `
+      <div class="summary-empty">
+        <div class="summary-empty-icon">📭</div>
+        <p>No years selected</p>
+        <p style="font-size: 12px; margin-top: 8px;">Select years from the dropdown above to view summary</p>
+      </div>
+    `;
+    return;
+  }
+  
+  let html = '';
+  
+  yearsToShow.forEach(year => {
+    const summary = getYearSummary(year);
+    const monthlyTotals = summary.monthlyTotals;
+    const monthlyRecurring = summary.monthlyRecurring;
+    const yearTotal = getYearTotal(year);
+    
+    const hasData = Object.values(monthlyTotals).some(v => v > 0);
+    if (!hasData) return;
+    
+    html += `<div class="summary-year-header">
+        <span>📅 ${year}</span>
+        <span class="summary-year-total">Total: ${formatMoney(yearTotal)}</span>
+      </div>`;
+    
+    for (let i = 0; i < 12; i++) {
+      const amount = monthlyTotals[i];
+      if (amount > 0) {
+        const monthName = MONTHS_FULL[i];
+        const count = monthlyRecurring[i].length;
+        const isPastMonth = (year === currentYear && i < currentMonth);
+        const pastClass = isPastMonth ? 'past-month' : '';
+        html += `
+          <div class="summary-month-row ${pastClass}" onclick="openMonthDetail(${year}, ${i})">
+            <div class="summary-month-left">
+              <span class="summary-month-name">${monthName}</span>
+              <span class="summary-month-count">${count} ${count === 1 ? 'recurring' : 'recurring'}</span>
+            </div>
+            <div class="summary-month-amount">${formatMoney(amount)}</div>
+          </div>`;
+      }
+    }
+  });
+  
+  if (html === '') {
+    container.innerHTML = `
+      <div class="summary-empty">
+        <div class="summary-empty-icon">📭</div>
+        <p>No recurring expenses scheduled for selected years</p>
+      </div>
+    `;
+  } else {
+    container.innerHTML = html;
+  }
+}
+
+function openMonthDetail(year, month) {
+  const summary = getYearSummary(year);
+  const recurringListMonth = summary.monthlyRecurring[month] || [];
+  const monthName = MONTHS_FULL[month];
+  
+  document.getElementById('monthDetailTitle').innerHTML = `📅 ${monthName} ${year}`;
+  
+  const container = document.getElementById('monthDetailList');
+  
+  if (recurringListMonth.length === 0) {
+    container.innerHTML = '<div class="empty-state">No recurring expenses for this month</div>';
+  } else {
+    const sorted = [...recurringListMonth].sort((a, b) => a.name.localeCompare(b.name));
+    
+    container.innerHTML = sorted.map(rec => {
+      const icon = getRecurringCategoryIcon(rec.category);
+      const freqBadge = rec.frequency === 'Monthly' ? 'Monthly' : rec.frequency === 'Quarterly' ? 'Quarterly' : 'Annual';
+      
+      return `
+        <div class="detail-recurring-item">
+          <div class="detail-recurring-icon" style="background:#f0fdf4">${icon}</div>
+          <div class="detail-recurring-info">
+            <div class="detail-recurring-name">${escapeHtml(rec.name)}</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px">${freqBadge} · Day ${rec.paymentDay}</div>
+          </div>
+          <div class="detail-right-col">
+            <div class="detail-recurring-amount">${formatMoney(rec.amount)}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+  
+  document.getElementById('monthDetailModal').classList.add('open');
+}
+
+function closeMonthDetailModal() {
+  document.getElementById('monthDetailModal').classList.remove('open');
 }
 
 // ── Render all tabs ────────────────────────────────────────
@@ -426,19 +963,16 @@ function render() {
     }).join('');
   }
 
-  // ── NEW "All" tab: list all subscriptions (active + inactive) sorted by payment day ──
+  // ── "All" tab: list all subscriptions (active + inactive) sorted by payment day ──
   const allListContainer = document.getElementById('allList');
   if (recurringList.length === 0) {
     allListContainer.innerHTML = '<div class="empty-state">No recurring expenses found</div>';
   } else {
-    // Create a copy and sort by payment day (1-31)
     const allSorted = [...recurringList].sort((a,b) => a.paymentDay - b.paymentDay);
     allListContainer.innerHTML = allSorted.map(sub => {
       const globalIdx = recurringList.findIndex(s=>s.id===sub.id);
       const icon = getRecurringCategoryIcon(sub.category);
-      // Show day only (no month)
       const dayText = `Day ${sub.paymentDay}`;
-      // For paused subscriptions, add a small badge
       const pausedMark = !sub.active ? '<span class="badge-inactive" style="margin-left:6px;">paused</span>' : '';
       return `
         <div class="sub-card" style="opacity: ${sub.active ? 1 : 0.7};">
@@ -459,7 +993,7 @@ function render() {
     }).join('');
   }
 
-  // Stats (same as before)
+  // Stats
   const monthly = computeMonthlyTotal();
   const statsRow = document.getElementById('statsRow');
   if (allActive.length>0) {
@@ -478,6 +1012,10 @@ function render() {
     else if (earliest instanceof Date) badge2.textContent=`${MONTHS[earliest.getMonth()]} ${earliest.getDate()}`;
     else badge2.textContent='✅ All paid';
   } else { statsRow.style.display='none'; }
+  
+  // Update summary
+  buildYearCheckboxList();
+  renderSummary();
 }
 
 function computeMonthlyTotal() {
@@ -491,7 +1029,7 @@ function computeMonthlyTotal() {
   },0);
 }
 
-// ── Recurring Log (unchanged) ──────────────────────────────
+// ── Recurring Log ──────────────────────────────────────────
 function renderLog(entries) {
   const now  = new Date();
   const card = document.getElementById('logCard');
@@ -541,7 +1079,7 @@ async function markAsPaid(index) {
   else   { showToast('❌ Failed to log payment','error'); paidSet.delete(String(sub.id)); savePaidSet(paidSet); render(); }
 }
 
-// ── More sheet (unchanged) ─────────────────────────────────
+// ── More sheet ─────────────────────────────────────────────
 function openMoreSheet(index) {
   sheetTargetIdx=index;
   const sub=recurringList[index];
@@ -568,7 +1106,7 @@ async function sheetDelete() {
   showToast(ok?`🗑️ ${sub.name} deleted`:'❌ Delete failed',ok?'success':'error');
 }
 
-// ── CRUD Modals (unchanged) ────────────────────────────────
+// ── CRUD Modals ────────────────────────────────────────────
 function openAddModal() {
   editingId=null;
   document.getElementById('modalTitle').innerText='➕ New Recurring Expense';
@@ -602,11 +1140,17 @@ async function saveRecurring() {
   const amount=parseFloat(document.getElementById('subAmount').value);
   const startMonth=parseInt(document.getElementById('subStartMonth').value);
   const paymentDay=parseInt(document.getElementById('subPaymentDay').value);
+  const currentYear = new Date().getFullYear();
   if(!name)                       {showToast('❌ Name required','error');return;}
   if(isNaN(amount)||amount<=0)    {showToast('❌ Valid amount required','error');return;}
   if(startMonth<1||startMonth>12) {showToast('❌ Start month invalid','error');return;}
   if(paymentDay<1||paymentDay>31) {showToast('❌ Payment day 1-31','error');return;}
-  const newSub={ id:editingId!==null?recurringList[editingId].id:Date.now()+Math.random(), name,category,frequency,amount,startMonth,paymentDay, active:editingId!==null?recurringList[editingId].active:true };
+  const newSub={ 
+    id: editingId !== null ? recurringList[editingId].id : Date.now() + Math.random(), 
+    name, category, frequency, amount, startMonth, paymentDay, 
+    startYear: currentYear,
+    active: editingId !== null ? recurringList[editingId].active : true 
+  };
   if(editingId!==null) recurringList[editingId]=newSub; else recurringList.push(newSub);
   render();
   const ok=await saveRecurringToSheet();
@@ -617,18 +1161,21 @@ async function saveRecurring() {
 // Close on backdrop
 document.getElementById('moreSheet').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMoreSheet();});
 document.getElementById('subModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+document.getElementById('monthDetailModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeMonthDetailModal();
+});
 
-// ── Sheet parsing (unchanged) ──────────────────────────────
+// ── Sheet parsing ──────────────────────────────────────────
 function parseRecurringRow(row) {
-  if(row.length<8) return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:'Other', frequency:row[2]||'Monthly', amount:parseFloat(row[3])||0, startMonth:parseInt(row[4])||1, paymentDay:parseInt(row[5])||1, active:row[6]==='true' };
-  return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:row[2]||'Other', frequency:row[3]||'Monthly', amount:parseFloat(row[4])||0, startMonth:parseInt(row[5])||1, paymentDay:parseInt(row[6])||1, active:row[7]==='true' };
+  if(row.length<8) return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:'Other', frequency:row[2]||'Monthly', amount:parseFloat(row[3])||0, startMonth:parseInt(row[4])||1, paymentDay:parseInt(row[5])||1, startYear:parseInt(row[6])||new Date().getFullYear(), active:row[7]==='true' };
+  return { id:row[0]?parseInt(row[0]):Date.now()+Math.random(), name:row[1]||'', category:row[2]||'Other', frequency:row[3]||'Monthly', amount:parseFloat(row[4])||0, startMonth:parseInt(row[5])||1, paymentDay:parseInt(row[6])||1, startYear:parseInt(row[7])||new Date().getFullYear(), active:row[8]==='true' };
 }
-function recurringToRow(s) { return [s.id,s.name,s.category,s.frequency,s.amount,s.startMonth,s.paymentDay,s.active?'true':'false']; }
+function recurringToRow(s) { return [s.id,s.name,s.category,s.frequency,s.amount,s.startMonth,s.paymentDay,s.startYear||new Date().getFullYear(),s.active?'true':'false']; }
 
 async function loadRecurringFromSheet() {
   if(!spreadsheetId) return false;
   try {
-    const res=await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_SHEET}!A2:H`});
+    const res=await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_SHEET}!A2:I`});
     recurringList=(res.result.values||[]).map(parseRecurringRow).filter(s=>s.name.trim());
     saveRecurringLocal(); return true;
   } catch(e){console.error(e);return false;}
@@ -636,8 +1183,8 @@ async function loadRecurringFromSheet() {
 async function saveRecurringToSheet() {
   if(!spreadsheetId) return false;
   try {
-    await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId,range:`${RECURRING_SHEET}!A2:H`});
-    if(recurringList.length) await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A2:H`,valueInputOption:'RAW',resource:{values:recurringList.map(recurringToRow)}});
+    await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId,range:`${RECURRING_SHEET}!A2:I`});
+    if(recurringList.length) await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A2:I`,valueInputOption:'RAW',resource:{values:recurringList.map(recurringToRow)}});
     return true;
   } catch(e){console.error(e);return false;}
 }
@@ -647,16 +1194,16 @@ async function ensureRecurringTab() {
     const exists=meta.result.sheets.some(s=>s.properties.title===RECURRING_SHEET);
     if(!exists) {
       await gapi.client.sheets.spreadsheets.batchUpdate({spreadsheetId,resource:{requests:[{addSheet:{properties:{title:RECURRING_SHEET}}}]}});
-      await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A1:H1`,valueInputOption:'RAW',resource:{values:[['ID','Name','Category','Frequency','Amount','StartMonth','PaymentDay','Active']]}});
+      await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A1:I1`,valueInputOption:'RAW',resource:{values:[['ID','Name','Category','Frequency','Amount','StartMonth','PaymentDay','StartYear','Active']]}});
     } else {
-      const hdr=await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_SHEET}!A1:H1`});
+      const hdr=await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_SHEET}!A1:I1`});
       const headers=hdr.result.values?.[0]||[];
-      if(headers.length<3||headers[2]!=='Category') {
+      if(headers.length<8||headers[7]!=='StartYear') {
         const old=await gapi.client.sheets.spreadsheets.values.get({spreadsheetId,range:`${RECURRING_SHEET}!A2:H`});
-        const newRows=(old.result.values||[]).map(r=>r.length===7?[r[0],r[1],'Other',r[2],r[3],r[4],r[5],r[6]]:r);
-        await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId,range:`${RECURRING_SHEET}!A1:H`});
-        await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A1:H1`,valueInputOption:'RAW',resource:{values:[['ID','Name','Category','Frequency','Amount','StartMonth','PaymentDay','Active']]}});
-        if(newRows.length) await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A2:H`,valueInputOption:'RAW',resource:{values:newRows}});
+        const newRows=(old.result.values||[]).map(r=>r.length===7?[r[0],r[1],r[2],r[3],r[4],r[5],r[6],new Date().getFullYear(),r[7]]:r.length===8?[r[0],r[1],r[2],r[3],r[4],r[5],r[6],new Date().getFullYear(),r[7]]:r);
+        await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId,range:`${RECURRING_SHEET}!A1:I`});
+        await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A1:I1`,valueInputOption:'RAW',resource:{values:[['ID','Name','Category','Frequency','Amount','StartMonth','PaymentDay','StartYear','Active']]}});
+        if(newRows.length) await gapi.client.sheets.spreadsheets.values.update({spreadsheetId,range:`${RECURRING_SHEET}!A2:I`,valueInputOption:'RAW',resource:{values:newRows}});
       }
     }
   } catch(e){console.warn(e);}
