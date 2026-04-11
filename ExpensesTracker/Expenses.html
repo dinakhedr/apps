@@ -348,7 +348,8 @@ function goBack()  { window.location.href = 'Home.html'; }
 function buildCategoryChips() {
   const row = document.getElementById('catChips');
   row.innerHTML = '<button class="filter-chip active" data-cat="">All</button>';
-  CATEGORIES.forEach(c => {
+  const expenseCats = getExpenseCategories();  // Only expense categories
+  expenseCats.forEach(c => {
     const btn = document.createElement('button');
     btn.className = 'filter-chip';
     btn.dataset.cat = c.value;
