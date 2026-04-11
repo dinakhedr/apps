@@ -6,9 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>All Expenses</title>
+  <title>Daily Expenses</title>
   <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
   <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
   <link rel="shortcut icon" href="icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,32 +19,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
-    <style>
+  <style>
     /* ── Header ── */
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
     .header-left { display: flex; align-items: center; gap: 10px; }
     .header h1 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
 
-    /* ── Filter bar ── */
+    /* ── Filter bar (month/year only) ── */
     .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-
-    /* ── Search ── */
-    .search-wrap { position: relative; margin-bottom: 12px; }
-    .search-wrap input { padding-left: 36px; }
-    .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
-
-    /* ── Category filter chips ── */
-    .chip-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
-    .chip-row::-webkit-scrollbar { display: none; }
-    .filter-chip {
-      padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
-      border: 1.5px solid var(--border); background: var(--surface-2);
-      color: var(--text-2); cursor: pointer; white-space: nowrap;
-      font-family: 'DM Sans', sans-serif; transition: all 0.15s; flex-shrink: 0;
-    }
-    .filter-chip:hover  { border-color: var(--brand); color: var(--brand); background: #ededff; }
-    .filter-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
-
+    
     /* ── Stats band ── */
     .stats-band {
       background: var(--brand-grad); border-radius: var(--radius-lg);
@@ -54,105 +37,222 @@
     }
     .stats-band-left .lbl { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.06em; }
     .stats-band-left .val { font-family: 'Sora', sans-serif; font-size: 32px; font-weight: 800; color: #fff; line-height: 1.1; margin-top: 4px; }
-    .stats-band-right      { text-align: right; }
+    .stats-band-right { text-align: right; }
     .stats-band-right .cnt { font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 600; }
     .stats-band-right .avg { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 3px; }
+    .stats-comparison { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 6px; font-weight: 500; }
+    .stats-comparison.positive { color: #c8e6c9; }
+    .stats-comparison.negative { color: #ffcdd2; }
 
-    /* ── Pill-style tabs (Expenses page — override shared underline style) ── */
+    /* ── Pill-style tabs ── */
     .tabs { display: flex; gap: 6px; margin-bottom: 18px; }
     .tabs .tab-btn {
       flex: 1; padding: 11px 6px;
       background: rgba(255,255,255,0.18);
       border: 1px solid rgba(255,255,255,0.25) !important;
-      border-bottom: 1px solid rgba(255,255,255,0.25) !important;
       border-radius: 30px; font-size: 13px; font-weight: 700;
       color: rgba(255,255,255,0.85); cursor: pointer;
-      font-family: 'DM Sans', sans-serif; transition: all 0.2s; margin-bottom: 0;
+      font-family: 'DM Sans', sans-serif; transition: all 0.2s;
     }
     .tabs .tab-btn.active { background: #fff; color: var(--brand); border-color: transparent !important; box-shadow: 0 4px 14px rgba(0,0,0,0.10); }
 
-    /* ── Chart ── */
-    .chart-container { position: relative; height: 190px; margin: 8px 0; }
-    canvas { max-width: 100%; }
-    .chart-legend  { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; justify-content: center; }
-    .tap-hint { font-size: 10px; color: var(--text-3); text-align: center; margin-top: 8px; letter-spacing: 0.02em; }
-    .legend-item   { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
-    .legend-dot    { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-
-    /* ── Category summary rows ── */
+    /* ── Category summary rows (replaces chart) ── */
     .category-row {
       display: flex; align-items: center; justify-content: space-between;
       padding: 11px 0; border-bottom: 1px solid var(--border);
       cursor: pointer; border-radius: 8px; transition: background 0.12s;
     }
-    .category-row:hover  { background: var(--surface-2); padding-left: 6px; padding-right: 6px; }
+    .category-row:hover { background: var(--surface-2); padding-left: 6px; padding-right: 6px; }
     .category-row:active { background: #ededff; }
-    .category-row:last-child { border-bottom: none; }
     .cat-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
     .cat-icon-sm { width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-    .cat-name  { font-weight: 600; font-size: 14px; color: var(--text); }
+    .cat-name { font-weight: 600; font-size: 14px; color: var(--text); }
     .cat-count { font-size: 11px; color: var(--text-3); }
-    .cat-amt   { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--brand); flex-shrink: 0; }
-    .cat-bar-wrap { height: 3px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 4px; }
-    .cat-bar      { height: 100%; border-radius: 3px; }
-    .cat-budget-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
-    .cat-budget-over    { background: #fee2e2; color: #991b1b; }
-    .cat-budget-warning { background: #fef3c7; color: #92400e; }
-    .cat-budget-ok      { background: #d1fae5; color: #065f46; }
+    .cat-amt { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--brand); flex-shrink: 0; }
+    .cat-bar-wrap { height: 3px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 4px; width: 90px; }
+    .cat-bar { height: 100%; border-radius: 3px; }
 
-    /* ── Drill-down modal ── */
-    .detail-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
-    .detail-item:last-child { border-bottom: none; }
-    .detail-right { text-align: right; flex-shrink: 0; }
-    .detail-amt  { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); }
-    .detail-date { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-    .detail-note { font-size: 11px; color: var(--text-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    /* Done / action buttons in modals */
-    .btn-primary {
-      flex: 2; padding: 13px; background: var(--brand-grad); color: #fff;
-      border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700;
-      cursor: pointer; font-family: 'Sora', sans-serif;
-      box-shadow: 0 4px 14px rgba(91,94,244,0.28);
+    /* ── Daily Expenses Summary Section (inspired by Installment Summary) ── */
+    .summary-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      margin-top: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
     }
-    .btn-primary:hover { opacity: 0.90; }
-
-    /* ── Edit modal form ── */
-    .form-group-exp { display: flex; flex-direction: column; gap: 6px; }
-    .form-group-exp label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; }
-    .form-group-exp input, .form-group-exp select {
-      padding: 11px 13px; border: 2px solid var(--border); border-radius: var(--radius-sm);
-      font-size: 15px; font-family: 'DM Sans', sans-serif;
-      background: var(--surface-2); color: var(--text);
-      -webkit-appearance: none; appearance: none; width: 100%;
+    .summary-header {
+      background: var(--brand-grad);
+      color: #fff;
+      padding: 16px 20px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .form-group-exp input:focus, .form-group-exp select:focus { outline: none; border-color: var(--brand); background: #fff; }
-    .exp-amt { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); flex-shrink: 0; }
-
-    /* ── Day group (By Day tab) ── */
-    .day-group { margin-bottom: 0; }
-    .day-header { display: flex; justify-content: space-between; align-items: baseline; padding: 13px 0 9px; border-bottom: 2px solid var(--border); }
-    .day-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; color: var(--brand); }
-    .day-total { font-size: 12px; font-weight: 600; color: var(--text-2); }
-
-    /* ── Export modal ── */
-    .export-months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
-    .export-month-item {
-      display: flex; align-items: center; gap: 7px;
-      padding: 8px 10px; border-radius: var(--radius-sm);
-      border: 1.5px solid var(--border); cursor: pointer;
-      font-size: 12px; font-weight: 600; color: var(--text-2);
-      background: var(--surface-2); transition: all 0.15s; user-select: none;
+    .summary-header h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
     }
-    .export-month-item.selected { border-color: var(--brand); background: #ededff; color: var(--brand); }
-    .export-month-item input    { display: none; }
-    .export-section-label { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; margin: 12px 0 8px; }
-    .export-select-all-btn { background: none; border: none; color: var(--brand); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 0; }
-    .export-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .summary-year-header {
+      background: linear-gradient(135deg, #f5f5fa 0%, #ffffff 100%);
+      color: var(--text);
+      padding: 14px 20px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .summary-year-total {
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--brand-grad);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .summary-month-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .summary-month-row:hover { background: var(--surface-2); }
+    .summary-month-row:active { background: #ededff; }
+    .summary-month-left {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .summary-month-name {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .summary-month-count {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .summary-month-amount {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--brand);
+    }
+    .year-dropdown {
+      position: relative;
+      margin: 16px 20px 20px 20px;
+    }
+    .year-dropdown-btn {
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .year-dropdown-btn:hover { border-color: var(--brand); background: #fff; }
+    .year-dropdown-arrow { font-size: 12px; color: var(--text-2); transition: transform 0.2s; }
+    .year-dropdown.open .year-dropdown-arrow { transform: rotate(180deg); }
+    .year-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      z-index: 100;
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+    }
+    .year-dropdown.open .year-dropdown-menu { display: block; }
+    .year-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+    }
+    .year-dropdown-item.selected { background: #e8f5e9; }
+    .year-dropdown-item:hover { background: var(--surface-2); }
+    .year-dropdown-item input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--brand);
+    }
+    .year-dropdown-item label {
+      flex: 1;
+      cursor: pointer;
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .year-dropdown-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      background: #fff;
+      position: sticky;
+      bottom: 0;
+    }
+    .year-dropdown-footer-left { display: flex; gap: 12px; }
+    .year-dropdown-footer button {
+      background: none;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .year-select-all { color: var(--brand); }
+    .year-clear-all { color: var(--danger); }
+    .year-done-btn { background: var(--brand); color: white; padding: 6px 16px; border-radius: 20px; }
+
+    /* Modal for monthly breakdown (by category) */
+    .modal-cat-breakdown .cat-break-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .cat-break-left { display: flex; align-items: center; gap: 10px; }
+    .cat-break-name { font-weight: 600; font-size: 14px; }
+    .cat-break-amount { font-family: 'Sora', sans-serif; font-weight: 700; color: var(--brand); }
+    .empty-state { text-align: center; padding: 40px; color: var(--text-3); }
   </style>
 </head>
 <body>
 
-<!-- Loading Screen -->
 <div id="loadingScreen" class="screen">
   <div class="screen-box">
     <span style="font-size:52px;display:block;margin-bottom:14px">📊</span>
@@ -162,57 +262,31 @@
   </div>
 </div>
 
-<!-- Main App -->
 <div class="container" id="mainApp" style="display:none">
-
-  <!-- Header -->
   <div class="header">
-    <h1>📋 All Expenses</h1>
+    <h1>📋 Daily Expenses</h1>
     <div class="header-actions">
-  <button class="hdr-icon-btn" id="exportBtn" title="Export">⬇️</button>
-  <button class="hdr-icon-btn" id="refreshBtn" title="Sync">↻</button>
-  <button class="hdr-icon-btn" onclick="window.location.href='Settings.html'" title="Settings">⚙️</button>
-  <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
-</div>
+      <button class="hdr-icon-btn" id="exportBtn" title="Export">⬇️</button>
+      <button class="hdr-icon-btn" id="refreshBtn" title="Sync">↻</button>
+      <button class="hdr-icon-btn" onclick="window.location.href='Settings.html'" title="Settings">⚙️</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+    </div>
   </div>
 
-  <!-- Filters -->
   <div class="card">
     <div class="card-title"><span class="card-title-icon">📅</span> Filter Expenses</div>
     <div class="filter-grid">
-      <div>
-        <label>Month</label>
-        <select id="monthSelect">
-          <option value="0">January</option><option value="1">February</option>
-          <option value="2">March</option><option value="3">April</option>
-          <option value="4">May</option><option value="5">June</option>
-          <option value="6">July</option><option value="7">August</option>
-          <option value="8">September</option><option value="9">October</option>
-          <option value="10">November</option><option value="11">December</option>
-        </select>
-      </div>
-      <div>
-        <label>Year</label>
-        <select id="yearSelect"></select>
-      </div>
-    </div>
-    <!-- Search -->
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="expSearch" placeholder="Search by category or note…">
-    </div>
-    <!-- Category chips -->
-    <div class="chip-row" id="catChips">
-      <button class="filter-chip active" data-cat="">All</button>
+      <div><label>Month</label><select id="monthSelect"></select></div>
+      <div><label>Year</label><select id="yearSelect"></select></div>
     </div>
     <div class="sync-strip" id="syncStatus">✅ Connected to Google Drive</div>
   </div>
 
-  <!-- Stats band -->
   <div class="stats-band" id="statsBand" style="display:none">
     <div class="stats-band-left">
-      <div class="lbl" id="statsBandLabel">Total Spent</div>
+      <div class="lbl" id="statsBandLabel">Total Daily Spent</div>
       <div class="val" id="totalAmount">EGP 0</div>
+      <div class="stats-comparison" id="comparisonText"></div>
     </div>
     <div class="stats-band-right">
       <div class="cnt" id="expenseCount">0 expenses</div>
@@ -220,26 +294,18 @@
     </div>
   </div>
 
-  <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn active" data-tab="summary">📊 Summary</button>
+    <button class="tab-btn active" data-tab="summary">📊 By Category</button>
     <button class="tab-btn" data-tab="byday">📅 By Day</button>
   </div>
 
-  <!-- Summary Tab -->
   <div id="summaryTab" class="tab-content active">
-    <div class="card" id="chartCard" style="display:none">
-      <div class="card-title"><span class="card-title-icon">📈</span> Month Spending by Category</div>
-      <div class="chart-container"><canvas id="categoryChart"></canvas></div>
-      <div id="chartLegend" class="chart-legend"></div>
-    </div>
     <div class="card">
       <div class="card-title"><span class="card-title-icon">📋</span> Breakdown by Category</div>
       <div id="categoryList"></div>
     </div>
   </div>
 
-  <!-- By Day Tab -->
   <div id="bydayTab" class="tab-content">
     <div class="card">
       <div class="card-title"><span class="card-title-icon">📅</span> Daily Expenses</div>
@@ -247,225 +313,151 @@
     </div>
   </div>
 
-</div><!-- /mainApp -->
-
-<!-- Toast -->
-
-<div id="bottomNavMount"></div>
-
-<div class="toast" id="toast"></div>
-
-<!-- Category Drill-down Modal -->
-<div class="modal-backdrop" id="catDetailBackdrop">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="modal-title" id="catDetailTitle" style="margin-bottom:0"></div>
-      <div style="text-align:right">
-        <div style="font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--brand)" id="catDetailTotal"></div>
-        <div style="font-size:11px;color:var(--text-3)" id="catDetailCount"></div>
-      </div>
+  <!-- Daily Expenses Summary Section (like Installment Summary) -->
+  <div class="summary-card">
+    <div class="summary-header">
+      <h3>📊 Daily Expenses Summary</h3>
     </div>
-    <div id="catDetailList"></div>
-    <div class="modal-footer">
-      <button class="btn-primary" id="catDetailCloseBtn">Done</button>
-    </div>
-  </div>
-</div>
-
-<!-- Edit Expense Modal -->
-<div class="modal-backdrop" id="editModalBackdrop">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">✏️ Edit Expense</div>
-    <input type="hidden" id="editId">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="form-group-exp">
-        <label>Date</label>
-        <input type="date" id="editDate" required>
+    <div class="year-dropdown" id="yearDropdownSummary">
+      <div class="year-dropdown-btn" onclick="toggleYearDropdownSummary()">
+        <span id="selectedYearsTextSummary">Select years</span>
+        <span class="year-dropdown-arrow">▼</span>
       </div>
-      <div class="form-group-exp">
-        <label>Category</label>
-        <select id="editCategory" required></select>
-      </div>
-      <div class="form-group-exp">
-        <label>Amount (EGP)</label>
-        <div style="position:relative">
-          <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">🇪🇬</span>
-          <input type="number" id="editAmount" placeholder="0.00" step="0.01" min="0.01" inputmode="decimal" style="padding-left:44px" required>
+      <div class="year-dropdown-menu" id="yearDropdownMenuSummary">
+        <div id="yearCheckboxListSummary"></div>
+        <div class="year-dropdown-footer">
+          <div class="year-dropdown-footer-left">
+            <button class="year-select-all" onclick="selectAllYearsSummary(); event.stopPropagation();">Select All</button>
+            <button class="year-clear-all" onclick="clearAllYearsSummary(); event.stopPropagation();">Clear All</button>
+          </div>
+          <button class="year-done-btn" onclick="closeYearDropdownSummary(); event.stopPropagation();">Done</button>
         </div>
       </div>
-      <div class="form-group-exp">
-        <label>Notes</label>
-        <input type="text" id="editNotes" placeholder="optional">
-      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" id="editCancelBtn">Cancel</button>
-      <button class="btn-primary" id="editSaveBtn">Save Changes</button>
-    </div>
+    <div id="summaryContainer"></div>
   </div>
 </div>
 
-<!-- Export Modal -->
-<div class="modal-backdrop" id="exportModalBackdrop">
+<div id="bottomNavMount"></div>
+<div class="toast" id="toast"></div>
+
+<!-- Monthly breakdown modal (by category) -->
+<div class="modal-backdrop" id="monthBreakdownModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">⬇ Export to CSV</div>
-    <p style="font-size:13px;color:var(--text-2);margin-bottom:14px">Select one or more months to export. The CSV will include all expenses for the selected period.</p>
-
-    <div class="export-header-row">
-      <div class="export-section-label">Select Months</div>
-      <button class="export-select-all-btn" id="exportSelectAllBtn">Select All</button>
-    </div>
-    <div class="export-months-grid" id="exportMonthsGrid"></div>
-
-    <div style="margin-top:4px">
-      <label>Year</label>
-      <select id="exportYearSelect" style="margin-top:5px"></select>
-    </div>
+    <div class="modal-title" id="breakdownModalTitle">Category Breakdown</div>
+    <div id="breakdownList"></div>
     <div class="modal-footer">
-      <button class="btn-cancel" id="exportCancelBtn">Cancel</button>
-      <button class="btn-primary" id="exportConfirmBtn">⬇ Download CSV</button>
+      <button class="btn-primary" id="closeBreakdownBtn">Close</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── State ─────────────────────────────────────────────────
-let expenses        = [];
-let categoryChart   = null;
+// ======================== STATE ===========================
+let expenses = [];
 let currentUserEmail = null;
-let currentAccessToken = null;
-let spreadsheetId   = null;
-let activeCategory  = '';
-let searchQuery     = '';
-const MONTH_NAMES   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+let spreadsheetId = null;
+let activeCategory = '';
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-// ── Navigation ────────────────────────────────────────────
-function goBack()  { window.location.href = 'Home.html'; }
+// Summary years state
+const AVAILABLE_YEARS = [2026, 2027, 2028, 2029, 2030];
+let selectedYearsSummary = new Set([2026]);
 
-// ── Category chips ────────────────────────────────────────
-function buildCategoryChips() {
-  const row = document.getElementById('catChips');
-  row.innerHTML = '<button class="filter-chip active" data-cat="">All</button>';
-  const expenseCats = getExpenseCategories();  // Only expense categories
-  expenseCats.forEach(c => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-chip';
-    btn.dataset.cat = c.value;
-    btn.textContent = c.icon + ' ' + c.value;
-    row.appendChild(btn);
-  });
-  row.addEventListener('click', e => {
-    const chip = e.target.closest('.filter-chip');
-    if (!chip) return;
-    activeCategory = chip.dataset.cat;
-    row.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
-    chip.classList.add('active');
-    renderAll();
-  });
+// ======================== HELPERS =========================
+function parseLocalDate(str) {
+  if (!str) return new Date();
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
 }
+function formatMoney(amount) { return `EGP ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
 
-// ── Filtering ─────────────────────────────────────────────
 function getFilteredExpenses() {
-  const year  = parseInt(document.getElementById('yearSelect').value);
+  const year = parseInt(document.getElementById('yearSelect').value);
   const month = parseInt(document.getElementById('monthSelect').value);
   return expenses.filter(exp => {
     const d = parseLocalDate(exp.date);
-    if (d.getFullYear() !== year || d.getMonth() !== month) return false;
-    if (activeCategory && exp.category !== activeCategory)   return false;
-    if (searchQuery) {
-      const hay = (exp.category + ' ' + (exp.notes || '')).toLowerCase();
-      if (!hay.includes(searchQuery)) return false;
-    }
-    return true;
+    return d.getFullYear() === year && d.getMonth() === month;
   });
 }
 
-// ── Stats ─────────────────────────────────────────────────
+function getPreviousMonthTotal(year, month) {
+  let prevYear = year, prevMonth = month - 1;
+  if (prevMonth < 0) { prevMonth = 11; prevYear--; }
+  const prevExpenses = expenses.filter(exp => {
+    const d = parseLocalDate(exp.date);
+    return d.getFullYear() === prevYear && d.getMonth() === prevMonth;
+  });
+  return prevExpenses.reduce((s, e) => s + e.amount, 0);
+}
+
 function updateStats(list) {
   const band = document.getElementById('statsBand');
   if (!list.length) { band.style.display = 'none'; return; }
   band.style.display = 'flex';
   const total = list.reduce((s, e) => s + e.amount, 0);
-  const avg   = total / list.length;
+  const avg = total / list.length;
   const monthName = MONTH_NAMES[parseInt(document.getElementById('monthSelect').value)];
-  document.getElementById('statsBandLabel').textContent  = `Total Spent in ${monthName}`;
-  document.getElementById('totalAmount').textContent     = `EGP ${total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-  document.getElementById('expenseCount').textContent   = `${list.length} ${list.length === 1 ? 'expense' : 'expenses'}`;
-  document.getElementById('expenseAvg').textContent     = `Avg: EGP ${avg.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+  const year = parseInt(document.getElementById('yearSelect').value);
+  document.getElementById('statsBandLabel').textContent = `Total Daily Spent in ${monthName} ${year}`;
+  document.getElementById('totalAmount').textContent = formatMoney(total);
+  document.getElementById('expenseCount').textContent = `${list.length} ${list.length === 1 ? 'expense' : 'expenses'}`;
+  document.getElementById('expenseAvg').textContent = `Avg: ${formatMoney(avg)}`;
+  
+  // Comparison with previous month
+  const prevTotal = getPreviousMonthTotal(year, parseInt(document.getElementById('monthSelect').value));
+  if (prevTotal > 0) {
+    const diff = total - prevTotal;
+    const percent = (diff / prevTotal * 100).toFixed(1);
+    const diffAbs = formatMoney(Math.abs(diff));
+    const compEl = document.getElementById('comparisonText');
+    if (diff > 0) {
+      compEl.innerHTML = `⬆️ ${diffAbs} more than previous month (+${percent}%)`;
+      compEl.className = 'stats-comparison negative';
+    } else if (diff < 0) {
+      compEl.innerHTML = `⬇️ ${diffAbs} less than previous month (${percent}%)`;
+      compEl.className = 'stats-comparison positive';
+    } else {
+      compEl.innerHTML = `↔️ Same as previous month`;
+      compEl.className = 'stats-comparison';
+    }
+  } else {
+    document.getElementById('comparisonText').innerHTML = '';
+  }
 }
 
-// ── Pie chart ─────────────────────────────────────────────
 function getCategoryTotals(list) {
   const t = {};
   list.forEach(e => { t[e.category] = (t[e.category] || 0) + e.amount; });
   return t;
 }
 
-function updatePieChart(list) {
-  const card   = document.getElementById('chartCard');
-  const totals = getCategoryTotals(list);
-  const cats   = Object.keys(totals);
-  if (!cats.length) { card.style.display = 'none'; return; }
-  card.style.display = 'block';
-
-  const total  = cats.reduce((s, c) => s + totals[c], 0);
-  const colors = cats.map(c => getChartColor(c));
-  const ctx    = document.getElementById('categoryChart').getContext('2d');
-  if (categoryChart) categoryChart.destroy();
-  categoryChart = new Chart(ctx, {
-    type: 'pie',
-    data: { labels: cats, datasets: [{ data: cats.map(c => totals[c]), backgroundColor: colors, borderWidth: 0 }] },
-    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
-  });
-  document.getElementById('chartLegend').innerHTML = cats.map((c, i) => {
-    const pct = ((totals[c] / total) * 100).toFixed(1);
-    return `<div class="legend-item"><div class="legend-dot" style="background:${colors[i]}"></div><span>${c} (${pct}%)</span></div>`;
-  }).join('');
-}
-
-// ── Category summary ──────────────────────────────────────
 function renderCategorySummary(list) {
   const container = document.getElementById('categoryList');
-  const totals    = getCategoryTotals(list);
-  const cats      = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
+  const totals = getCategoryTotals(list);
+  const cats = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
   if (!cats.length) {
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>No expenses for this period</p></div>';
     return;
   }
-  const max    = Math.max(...cats.map(c => totals[c]));
+  const max = Math.max(...cats.map(c => totals[c]));
   const counts = {};
   list.forEach(e => { counts[e.category] = (counts[e.category] || 0) + 1; });
-
   container.innerHTML = cats.map(cat => {
-    const pct    = (totals[cat] / max * 100).toFixed(0);
-    const budget = getCategoryBudget(cat);
-    let budgetBadge = '';
-    if (budget && budget > 0) {
-      const spent = totals[cat];
-      const budgetFmt = budget.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
-      if (spent >= budget) {
-        budgetBadge = `<span class="cat-budget-badge cat-budget-over">🚨 Over EGP ${budgetFmt} limit</span>`;
-      } else if (spent >= budget * 0.8) {
-        budgetBadge = `<span class="cat-budget-badge cat-budget-warning">⚠️ EGP ${budgetFmt} limit</span>`;
-      } else {
-        budgetBadge = `<span class="cat-budget-badge cat-budget-ok">✅ EGP ${budgetFmt} limit</span>`;
-      }
-    }
+    const pct = (totals[cat] / max * 100).toFixed(0);
     return `
-      <div class="category-row" onclick="openCatDetail('${cat.replace(/'/g, "\\'")}')">
+      <div class="category-row" onclick="openCategoryDetail('${cat.replace(/'/g, "\\'")}')">
         <div class="cat-left">
           <div class="cat-icon-sm" style="background:${getCategoryColor(cat)}">${getCategoryIcon(cat)}</div>
           <div>
-            <div class="cat-name">${cat} ${budgetBadge}</div>
-            <div class="cat-bar-wrap" style="width:90px"><div class="cat-bar" style="width:${pct}%;background:${getChartColor(cat)}"></div></div>
+            <div class="cat-name">${cat}</div>
+            <div class="cat-bar-wrap"><div class="cat-bar" style="width:${pct}%;background:${getChartColor(cat)}"></div></div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <div style="text-align:right">
-            <div class="cat-amt">EGP ${totals[cat].toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+            <div class="cat-amt">${formatMoney(totals[cat])}</div>
             <div class="cat-count">${counts[cat]} ${counts[cat] === 1 ? 'expense' : 'expenses'}</div>
           </div>
           <span style="color:var(--text-3);font-size:14px">›</span>
@@ -474,106 +466,6 @@ function renderCategorySummary(list) {
   }).join('') + `<div class="tap-hint">Tap any category to see details</div>`;
 }
 
-// ── Category drill-down modal ─────────────────────────────
-function openCatDetail(category) {
-  const filtered = getFilteredExpenses();
-  const catExps  = filtered
-    .filter(e => e.category === category)
-    .sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
-
-  const total = catExps.reduce((s, e) => s + e.amount, 0);
-
-  document.getElementById('catDetailTitle').innerHTML =
-    `<span style="margin-right:6px">${getCategoryIcon(category)}</span>${category}`;
-  document.getElementById('catDetailTotal').textContent =
-    `EGP ${total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-  document.getElementById('catDetailCount').textContent =
-    `${catExps.length} ${catExps.length === 1 ? 'expense' : 'expenses'}`;
-
-  document.getElementById('catDetailList').innerHTML = catExps.length
-    ? catExps.map(e => `
-        <div class="detail-item">
-          <div class="cat-icon" style="background:${getCategoryColor(e.category)};width:40px;height:40px;border-radius:12px;font-size:19px;flex-shrink:0">${getCategoryIcon(e.category)}</div>
-          <div class="exp-details" style="flex:1;min-width:0">
-            <div class="exp-cat" style="font-size:14px;font-weight:600;color:var(--text)">${formatDate(e.date)}</div>
-            ${e.notes ? `<div class="detail-note">📝 ${e.notes}</div>` : ''}
-          </div>
-         <div class="detail-right" style="display:flex;flex-direction:row;align-items:center;gap:10px">
-  <div class="detail-amt">EGP ${e.amount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
-  <button class="action-icon" onclick="catDetailOpenMenu('${e.id}')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3)">⋮</button>
-</div>
-        </div>`).join('')
-    : '<div class="empty-state"><div class="empty-icon">📭</div><p>No expenses</p></div>';
-
-  document.getElementById('catDetailBackdrop').classList.add('open');
-}
-function closeCatDetail() {
-  document.getElementById('catDetailBackdrop').classList.remove('open');
-}
-
-function catDetailEdit(id) {
-  closeCatDetail();
-  setTimeout(() => openEditModal(id), 320);
-}
-
-async function catDetailDelete(id) {
-  if (!confirm('Delete this expense?')) return;
-  const numId = Number(id);
-  expenses = expenses.filter(e => Number(e.id) !== numId);
-  saveExpensesLocal();
-  renderAll();
-  closeCatDetail();
-  await deleteExpenseFromSheet(numId);
-  showToast('🗑️ Expense deleted');
-}
-function catDetailOpenMenu(id) {
-  let sheet = document.getElementById('catDetailMenuSheet');
-  if (!sheet) {
-    sheet = document.createElement('div');
-    sheet.id = 'catDetailMenuSheet';
-    sheet.className = 'sheet-backdrop';
-    sheet.innerHTML = `
-      <div class="sheet">
-        <div class="sheet-handle"></div>
-        <div class="sheet-title">Options</div>
-        <button class="sheet-action" id="catDetailMenuEdit">
-          <span class="sheet-action-icon">✏️</span> Edit
-        </button>
-        <button class="sheet-action danger" id="catDetailMenuDelete">
-          <span class="sheet-action-icon">🗑️</span> Delete
-        </button>
-      </div>`;
-    document.body.appendChild(sheet);
-  }
-  
-  const editBtn = document.getElementById('catDetailMenuEdit');
-  const deleteBtn = document.getElementById('catDetailMenuDelete');
-  
-  const newEditBtn = editBtn.cloneNode(true);
-  const newDeleteBtn = deleteBtn.cloneNode(true);
-  editBtn.parentNode.replaceChild(newEditBtn, editBtn);
-  deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
-  
-  newEditBtn.addEventListener('click', () => {
-    sheet.classList.remove('open');
-    closeCatDetail();
-    setTimeout(() => openEditModal(id), 150);
-  });
-  newDeleteBtn.addEventListener('click', () => {
-    sheet.classList.remove('open');
-    closeCatDetail();
-    setTimeout(() => catDetailDelete(id), 150);
-  });
-  
-  sheet.classList.add('open');
-  sheet.addEventListener('click', function onClick(e) {
-    if (e.target === sheet) {
-      sheet.classList.remove('open');
-      sheet.removeEventListener('click', onClick);
-    }
-  });
-}
-// ── By Day ────────────────────────────────────────────────
 function renderByDay(list) {
   const container = document.getElementById('bydayList');
   if (!list.length) {
@@ -584,393 +476,208 @@ function renderByDay(list) {
   list.forEach(e => { if (!grouped[e.date]) grouped[e.date] = []; grouped[e.date].push(e); });
   const sortedDates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
   container.innerHTML = sortedDates.map(dateKey => {
-    const dayExps  = grouped[dateKey];
+    const dayExps = grouped[dateKey];
     const dayTotal = dayExps.reduce((s, e) => s + e.amount, 0);
-    return `
-      <div class="day-group">
-        <div class="day-header">
-          <span class="day-title">📅 ${formatDayHeader(dateKey)}</span>
-          <span class="day-total">EGP ${dayTotal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
-        </div>
-        ${dayExps.map(e => `
-          <div class="expense-item">
-            <div class="cat-icon" style="background:${getCategoryColor(e.category)}">${getCategoryIcon(e.category)}</div>
-            <div class="exp-details">
-              <div class="exp-cat">${getCategoryMeta(e.category).value || e.category}</div>
-              ${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-  <div class="exp-amt">EGP ${e.amount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
-  <button class="action-icon" onclick="openDailyExpenseMenu('${e.id}')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3)">⋮</button>
-</div>
-          </div>`).join('')}
-      </div>`;
+    return `<div class="day-group">
+      <div class="day-header"><span class="day-title">📅 ${formatDayHeader(dateKey)}</span><span class="day-total">${formatMoney(dayTotal)}</span></div>
+      ${dayExps.map(e => `<div class="expense-item">
+        <div class="cat-icon" style="background:${getCategoryColor(e.category)}">${getCategoryIcon(e.category)}</div>
+        <div class="exp-details"><div class="exp-cat">${e.category}</div>${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}</div>
+        <div class="exp-amt">${formatMoney(e.amount)}</div>
+      </div>`).join('')}
+    </div>`;
   }).join('');
 }
-function openDailyExpenseMenu(id) {
-  // Create sheet if it doesn't exist
-  let sheet = document.getElementById('dailyExpenseMenuSheet');
-  if (!sheet) {
-    sheet = document.createElement('div');
-    sheet.id = 'dailyExpenseMenuSheet';
-    sheet.className = 'sheet-backdrop';
-    sheet.innerHTML = `
-      <div class="sheet">
-        <div class="sheet-handle"></div>
-        <div class="sheet-title">Options</div>
-        <button class="sheet-action" id="dailyExpenseMenuEdit">
-          <span class="sheet-action-icon">✏️</span> Edit
-        </button>
-        <button class="sheet-action danger" id="dailyExpenseMenuDelete">
-          <span class="sheet-action-icon">🗑️</span> Delete
-        </button>
-      </div>`;
-    document.body.appendChild(sheet);
-  }
-  
-  // Get buttons
-  const editBtn = document.getElementById('dailyExpenseMenuEdit');
-  const deleteBtn = document.getElementById('dailyExpenseMenuDelete');
-  
-  // Remove old listeners by cloning
-  const newEditBtn = editBtn.cloneNode(true);
-  const newDeleteBtn = deleteBtn.cloneNode(true);
-  editBtn.parentNode.replaceChild(newEditBtn, editBtn);
-  deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
-  
-  // Add new listeners
-  newEditBtn.addEventListener('click', () => {
-    sheet.classList.remove('open');
-    setTimeout(() => {
-      openEditModal(id);
-    }, 100);
-  });
-  
-  newDeleteBtn.addEventListener('click', () => {
-    sheet.classList.remove('open');
-    setTimeout(() => {
-      deleteExpense(id);
-    }, 100);
-  });
-  
-  // Open the sheet
-  sheet.classList.add('open');
-  
-  // Close when clicking backdrop
-  sheet.addEventListener('click', function onClick(e) {
-    if (e.target === sheet) {
-      sheet.classList.remove('open');
-      sheet.removeEventListener('click', onClick);
-    }
-  });
-}
-// ── Render all ────────────────────────────────────────────
+
 function renderAll() {
   const filtered = getFilteredExpenses();
   updateStats(filtered);
-  updatePieChart(filtered);
   renderCategorySummary(filtered);
   renderByDay(filtered);
+  renderDailySummary(); // update summary section
 }
 
-// ── Edit modal ────────────────────────────────────────────
-function buildEditCategorySelect() {
-  const expenseCats = getExpenseCategories();
-  const sorted = [...expenseCats].sort((a, b) => a.value.localeCompare(b.value));
-  const opts = sorted.map(c => `<option value="${c.originalValue || c.value}">${c.icon} ${c.value}</option>`).join('');
-  document.getElementById('editCategory').innerHTML = opts;
-}
-
-function openEditModal(id) {
-  const numId = Number(id);
-  const exp = expenses.find(e => Number(e.id) === numId);
-  if (!exp) return;
-  document.getElementById('editId').value       = exp.id;
-  document.getElementById('editDate').value     = exp.date;
-  document.getElementById('editCategory').value = exp.category;
-  document.getElementById('editAmount').value   = exp.amount;
-  document.getElementById('editNotes').value    = exp.notes || '';
-  document.getElementById('editModalBackdrop').classList.add('open');
-}
-function closeEditModal() {
-  document.getElementById('editModalBackdrop').classList.remove('open');
-}
-async function saveEdit() {
-  const id       = Number(document.getElementById('editId').value);
-  const date     = document.getElementById('editDate').value;
-  const category = document.getElementById('editCategory').value;
-  const amount   = parseFloat(document.getElementById('editAmount').value);
-  const notes    = document.getElementById('editNotes').value.trim();
-  if (!date || !category || !amount || amount <= 0) { showToast('Please fill all required fields', 'error'); return; }
-
-  const exp = expenses.find(e => Number(e.id) === id);
-  if (!exp) return;
-
-  const btn = document.getElementById('editSaveBtn');
-  btn.disabled = true; btn.textContent = 'Saving…';
-
-  Object.assign(exp, { date, category, amount, notes });
-  saveExpensesLocal();
-  renderAll();
-  closeEditModal();
-
-  await deleteExpenseFromSheet(id);
-  await addExpenseToSheet(exp);
-  showToast('✏️ Expense updated!');
-  btn.disabled = false; btn.textContent = 'Save Changes';
-}
-
-// ── Delete expense ────────────────────────────────────────
-async function deleteExpense(id) {
-  id = typeof id === 'string' ? parseInt(id) : id;
-  if (!confirm('Delete this expense?')) return;
-  const before = expenses.length;
-  expenses = expenses.filter(e => Number(e.id) !== Number(id));
-  if (expenses.length === before) {
-    expenses = expenses.filter(e => String(e.id) !== String(id));
-  }
-  saveExpensesLocal();
-  renderAll();
-  await deleteExpenseFromSheet(id);
-  showToast('🗑️ Expense deleted');
-}
-
-// ── Local save ────────────────────────────────────────────
-function saveExpensesLocal() {
-  if (currentUserEmail) localStorage.setItem(`expenses_${currentUserEmail}`, JSON.stringify(expenses));
-}
-
-// ── Sheet write helpers ───────────────────────────────────
-async function addExpenseToSheet(exp) {
-  if (!spreadsheetId) return false;
-  try {
-    await gapi.client.sheets.spreadsheets.values.append({
-      spreadsheetId, range: 'Daily Log!A2:F', valueInputOption: 'RAW',
-      resource: { values: [[ exp.timestamp || new Date().toISOString(), exp.date, exp.category, exp.amount, exp.notes || '', exp.id ]] }
-    });
-    return true;
-  } catch (err) { console.error(err); return false; }
-}
-
-async function deleteExpenseFromSheet(expId) {
-  if (!spreadsheetId) return false;
-  try {
-    const res  = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: 'Daily Log!A2:F' });
-    const rows = res.result.values || [];
-    let rowIndex = -1;
-    for (let i = 0; i < rows.length; i++) {
-      if (rows[i][5] && parseInt(rows[i][5]) === expId) { rowIndex = i + 2; break; }
+// ======================== DAILY SUMMARY SECTION ==========================
+function getYearSummary(year) {
+  const monthlyTotals = {};
+  const monthlyCounts = {};
+  for (let i = 0; i < 12; i++) { monthlyTotals[i] = 0; monthlyCounts[i] = 0; }
+  expenses.forEach(exp => {
+    const d = parseLocalDate(exp.date);
+    if (d.getFullYear() === year) {
+      monthlyTotals[d.getMonth()] += exp.amount;
+      monthlyCounts[d.getMonth()]++;
     }
-    if (rowIndex < 2) return false;
-    await gapi.client.sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      resource: { requests: [{ deleteDimension: { range: { sheetId: 0, dimension: 'ROWS', startIndex: rowIndex - 1, endIndex: rowIndex } } }] }
-    });
-    return true;
-  } catch (err) { console.error(err); return false; }
+  });
+  return { monthlyTotals, monthlyCounts };
 }
 
-// ── Export ────────────────────────────────────────────────
-function buildExportYearSelect() {
-  const sel  = document.getElementById('exportYearSelect');
-  const curr = new Date().getFullYear();
-  sel.innerHTML = '';
-  for (let y = curr - 5; y <= curr + 1; y++) {
-    const opt = document.createElement('option');
-    opt.value = y; opt.textContent = y;
-    if (y === curr) opt.selected = true;
-    sel.appendChild(opt);
+function getYearTotal(year) {
+  const summary = getYearSummary(year);
+  return Object.values(summary.monthlyTotals).reduce((sum, val) => sum + val, 0);
+}
+
+function buildYearCheckboxListSummary() {
+  const container = document.getElementById('yearCheckboxListSummary');
+  container.innerHTML = AVAILABLE_YEARS.map(year => {
+    const isSelected = selectedYearsSummary.has(year);
+    return `<div class="year-dropdown-item ${isSelected ? 'selected' : ''}" onclick="toggleYearCheckboxSummary(${year})">
+      <input type="checkbox" id="year_summary_${year}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleYearCheckboxSummary(${year})">
+      <label for="year_summary_${year}" onclick="event.stopPropagation(); toggleYearCheckboxSummary(${year})">${year}</label>
+    </div>`;
+  }).join('');
+}
+
+function updateSelectedYearsTextSummary() {
+  const textSpan = document.getElementById('selectedYearsTextSummary');
+  const selected = Array.from(selectedYearsSummary).sort((a,b)=>a-b);
+  if (selected.length === 0) textSpan.textContent = 'No years selected';
+  else if (selected.length === AVAILABLE_YEARS.length) textSpan.textContent = 'All years (2026-2030)';
+  else textSpan.textContent = selected.join(', ');
+}
+
+function toggleYearCheckboxSummary(year) {
+  if (selectedYearsSummary.has(year)) selectedYearsSummary.delete(year);
+  else selectedYearsSummary.add(year);
+  buildYearCheckboxListSummary();
+  updateSelectedYearsTextSummary();
+  renderDailySummary();
+}
+
+function selectAllYearsSummary() { AVAILABLE_YEARS.forEach(y => selectedYearsSummary.add(y)); buildYearCheckboxListSummary(); updateSelectedYearsTextSummary(); renderDailySummary(); }
+function clearAllYearsSummary() { selectedYearsSummary.clear(); buildYearCheckboxListSummary(); updateSelectedYearsTextSummary(); renderDailySummary(); }
+function toggleYearDropdownSummary() { document.getElementById('yearDropdownSummary').classList.toggle('open'); }
+function closeYearDropdownSummary() { document.getElementById('yearDropdownSummary').classList.remove('open'); }
+
+function renderDailySummary() {
+  const container = document.getElementById('summaryContainer');
+  let yearsToShow = AVAILABLE_YEARS.filter(y => selectedYearsSummary.has(y));
+  if (yearsToShow.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>No years selected</p><p style="font-size:12px">Select years from dropdown</p></div>`;
+    return;
   }
-}
-
-function buildExportMonthsGrid() {
-  const grid = document.getElementById('exportMonthsGrid');
-  grid.innerHTML = MONTH_NAMES.map((m, i) => `
-    <label class="export-month-item" data-month="${i}">
-      <input type="checkbox" value="${i}">
-      ${m.substring(0,3)}
-    </label>`).join('');
-  grid.querySelectorAll('.export-month-item').forEach(item => {
-    item.addEventListener('click', () => item.classList.toggle('selected'));
+  let html = '';
+  yearsToShow.forEach(year => {
+    const summary = getYearSummary(year);
+    const monthlyTotals = summary.monthlyTotals;
+    const monthlyCounts = summary.monthlyCounts;
+    const yearTotal = getYearTotal(year);
+    let hasData = false;
+    for (let i=0;i<12;i++) if (monthlyTotals[i]>0) { hasData=true; break; }
+    if (!hasData) return;
+    html += `<div class="summary-year-header"><span>📅 ${year}</span><span class="summary-year-total">Total: ${formatMoney(yearTotal)}</span></div>`;
+    for (let i=0;i<12;i++) {
+      const amount = monthlyTotals[i];
+      if (amount > 0) {
+        const monthName = MONTH_NAMES[i];
+        const count = monthlyCounts[i];
+        html += `<div class="summary-month-row" onclick="openMonthBreakdown(${year}, ${i})">
+          <div class="summary-month-left">
+            <span class="summary-month-name">${monthName}</span>
+            <span class="summary-month-count">${count} ${count===1?'expense':'expenses'}</span>
+          </div>
+          <div class="summary-month-amount">${formatMoney(amount)}</div>
+        </div>`;
+      }
+    }
   });
-  // Pre-select current month
-  const curr = new Date().getMonth();
-  const currItem = grid.querySelector(`[data-month="${curr}"]`);
-  if (currItem) currItem.classList.add('selected');
+  if (html === '') container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>No expenses for selected years</p></div>`;
+  else container.innerHTML = html;
 }
 
-function openExportModal() {
-  buildExportYearSelect();
-  buildExportMonthsGrid();
-  document.getElementById('exportModalBackdrop').classList.add('open');
-}
-function closeExportModal() {
-  document.getElementById('exportModalBackdrop').classList.remove('open');
-}
-
-function downloadCSV() {
-  const year = parseInt(document.getElementById('exportYearSelect').value);
-  const selectedMonths = [...document.querySelectorAll('#exportMonthsGrid .export-month-item.selected')]
-    .map(el => parseInt(el.dataset.month));
-
-  if (!selectedMonths.length) { showToast('Please select at least one month', 'error'); return; }
-
-  const rows = expenses.filter(e => {
-    const d = parseLocalDate(e.date);
-    return d.getFullYear() === year && selectedMonths.includes(d.getMonth());
-  }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
-
-  if (!rows.length) { showToast('No expenses found for selected period', 'error'); return; }
-
-  const headers = ['Timestamp', 'Date', 'Category', 'Amount (EGP)', 'Notes'];
-  const csvRows = [
-    headers.join(','),
-    ...rows.map(e => [
-      `"${e.timestamp || ''}"`,
-      `"${e.date}"`,
-      `"${e.category}"`,
-      e.amount.toFixed(2),
-      `"${(e.notes || '').replace(/"/g, '""')}"`
-    ].join(','))
-  ];
-
-  const blob     = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const url      = URL.createObjectURL(blob);
-  const a        = document.createElement('a');
-  const months   = selectedMonths.map(m => MONTH_NAMES[m].substring(0,3)).join('-');
-  a.href         = url;
-  a.download     = `expenses_${months}_${year}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  closeExportModal();
-  showToast(`✅ Exported ${rows.length} expenses`);
-}
-
-// ── Year/Month selects ────────────────────────────────────
-function populateYears() {
-  const sel  = document.getElementById('yearSelect');
-  const curr = new Date().getFullYear();
-  for (let y = curr - 5; y <= curr + 1; y++) {
-    const opt = document.createElement('option');
-    opt.value = y; opt.textContent = y;
-    if (y === curr) opt.selected = true;
-    sel.appendChild(opt);
+// Monthly breakdown modal (group by category)
+function openMonthBreakdown(year, month) {
+  const monthExpenses = expenses.filter(exp => {
+    const d = parseLocalDate(exp.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+  const totals = {};
+  monthExpenses.forEach(e => { totals[e.category] = (totals[e.category] || 0) + e.amount; });
+  const cats = Object.keys(totals).sort((a,b)=>totals[b]-totals[a]);
+  document.getElementById('breakdownModalTitle').innerHTML = `📅 ${MONTH_NAMES[month]} ${year} · By Category`;
+  const container = document.getElementById('breakdownList');
+  if (cats.length === 0) {
+    container.innerHTML = '<div class="empty-state">No expenses this month</div>';
+  } else {
+    container.innerHTML = cats.map(cat => `
+      <div class="cat-break-item">
+        <div class="cat-break-left">
+          <div class="cat-icon-sm" style="background:${getCategoryColor(cat)};width:32px;height:32px;font-size:16px">${getCategoryIcon(cat)}</div>
+          <span class="cat-break-name">${cat}</span>
+        </div>
+        <div class="cat-break-amount">${formatMoney(totals[cat])}</div>
+      </div>
+    `).join('');
   }
+  document.getElementById('monthBreakdownModal').classList.add('open');
 }
 
-// ── Tabs ──────────────────────────────────────────────────
-function setupTabs() {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.tab;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('summaryTab').classList.toggle('active', id === 'summary');
-      document.getElementById('bydayTab').classList.toggle('active',   id === 'byday');
-    });
-  });
+function closeMonthBreakdown() { document.getElementById('monthBreakdownModal').classList.remove('open'); }
+
+// Category detail modal (simple alert fallback, but reuses existing logic if needed)
+function openCategoryDetail(category) {
+  const filtered = getFilteredExpenses();
+  const catExps = filtered.filter(e => e.category === category);
+  const total = catExps.reduce((s,e)=>s+e.amount,0);
+  alert(`${category}\nTotal: ${formatMoney(total)}\n${catExps.length} expenses`);
 }
 
-// ── Google Drive helpers ──────────────────────────────────
-async function findExistingSpreadsheet() {
-  const res = await gapi.client.drive.files.list({
-    q: `name='${EXPENSES_SHEET}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
-    spaces: 'drive', fields: 'files(id)'
-  });
-  return res.result.files?.[0]?.id || null;
-}
-
-let _loadingFromSheet = false;
+// ======================== DATA LOADING ==========================
 async function loadExpensesFromSheet(showMsg = false) {
-  if (_loadingFromSheet) return false;
-  _loadingFromSheet = true;
-  if (!spreadsheetId) { _loadingFromSheet = false; return false; }
-  if (showMsg) { showToast('🔄 Syncing…'); document.getElementById('syncStatus').textContent = '🔄 Syncing…'; }
+  if (!spreadsheetId) return false;
   try {
-    const res  = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: 'Daily Log!A2:F' });
+    const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: 'Daily Log!A2:F' });
     const rows = res.result.values || [];
-    expenses   = rows
-      .filter(r => r[2] && r[3])  // skip rows missing category or amount
-      .map((r, i) => ({
-        // Never call genExpenseId()/Date.now() here — that creates a new ID every
-        // read and makes rows look like new expenses on next load.
-        id:        (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
-        date:      r[1] || r[0],
-        category:  r[2],
-        amount:    parseFloat(r[3]),
-        notes:     r[4] || '',
-        timestamp: r[0] || new Date().toISOString()
-      }));
-
-    // Sync ID counter to the largest existing ID so new ones don't collide
-    const maxId = expenses.reduce((m, e) => Math.max(m, Number(e.id) || 0), 0);
+    expenses = rows.filter(r => r[2] && r[3]).map((r, i) => ({
+      id: (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i+1),
+      date: r[1] || r[0],
+      category: r[2],
+      amount: parseFloat(r[3]),
+      notes: r[4] || '',
+      timestamp: r[0] || new Date().toISOString()
+    }));
+    const maxId = expenses.reduce((m,e)=>Math.max(m,Number(e.id)||0),0);
     const stored = parseInt(localStorage.getItem('expense_id_counter') || '0');
     if (maxId > stored) localStorage.setItem('expense_id_counter', maxId);
-
-    saveExpensesLocal();
+    if (currentUserEmail) localStorage.setItem(`expenses_${currentUserEmail}`, JSON.stringify(expenses));
     renderAll();
     if (showMsg) {
       showToast(`✅ ${expenses.length} expenses loaded`);
       document.getElementById('syncStatus').textContent = '✅ Last synced: ' + new Date().toLocaleTimeString();
     }
-    _loadingFromSheet = false;
     return true;
-  } catch (err) {
-    console.error(err);
-    _loadingFromSheet = false;
-    if (showMsg) { showToast('❌ Sync failed', 'error'); document.getElementById('syncStatus').textContent = '⚠️ Sync failed'; }
-    return false;
-  }
+  } catch(err) { console.error(err); if(showMsg) showToast('❌ Sync failed','error'); return false; }
 }
 
 async function manualSync() {
-  if (!spreadsheetId) { showToast('⚠️ No Google Sheet connected', 'error'); return; }
-  const ok = await loadExpensesFromSheet(true);
-  if (ok) document.getElementById('syncStatus').textContent = '✅ Last synced: ' + new Date().toLocaleTimeString();
+  if (!spreadsheetId) { showToast('⚠️ No Google Sheet connected','error'); return; }
+  await loadExpensesFromSheet(true);
 }
 
-// ── Load page ─────────────────────────────────────────────
-// initGapiClient() is provided by utils.js
+function populateYearsAndMonths() {
+  const yearSel = document.getElementById('yearSelect');
+  const currYear = new Date().getFullYear();
+  yearSel.innerHTML = '';
+  for (let y = currYear-5; y <= currYear+1; y++) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    if (y === currYear) opt.selected = true;
+    yearSel.appendChild(opt);
+  }
+  const monthSel = document.getElementById('monthSelect');
+  monthSel.innerHTML = MONTH_NAMES.map((m,i) => `<option value="${i}">${m}</option>`).join('');
+  monthSel.value = new Date().getMonth();
+}
 
 async function showMain() {
-  spreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`) || await findExistingSpreadsheet();
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('mainApp').style.display = 'block';
-  if (spreadsheetId) {
-    await ensureCategoriesTab(spreadsheetId);
-    buildCategoryChips();
-    buildEditCategorySelect();
-    await loadExpensesFromSheet(false);
-    document.getElementById('syncStatus').textContent = '✅ Last synced: ' + new Date().toLocaleTimeString();
-  } else {
-    document.getElementById('syncStatus').textContent = '⚠️ No sheet found — add expenses from Home page';
-    showToast('⚠️ No sheet found', 'error');
-  }
+  await ensureCategoriesTab(spreadsheetId);
+  await loadExpensesFromSheet(false);
+  document.getElementById('syncStatus').textContent = '✅ Last synced: ' + new Date().toLocaleTimeString();
 }
 
-// ── Show iOS tap-to-continue screen ──────────────────────
-function showIOSResumeScreen(onTap) {
-  const ls = document.getElementById('loadingScreen');
-  ls.style.display = 'flex';
-  document.getElementById('mainApp').style.display = 'none';
-  ls.querySelector('h2').textContent  = 'Welcome Back';
-  ls.querySelector('p').textContent   = 'Tap below to load your expenses';
-  ls.querySelector('.spinner').style.display = 'none';
-  const btn = document.createElement('button');
-  btn.textContent = 'Load Expenses';
-  btn.className   = 'primary-btn';
-  btn.style.cssText = 'margin-top:14px;width:100%';
-  ls.querySelector('.screen-box').appendChild(btn);
-  btn.addEventListener('click', () => {
-    btn.remove();
-    ls.querySelector('h2').textContent = 'Loading…';
-    ls.querySelector('p').textContent  = 'Connecting to Google Drive';
-    ls.querySelector('.spinner').style.display = 'inline-block';
-    onTap();
-  });
-}
-
-async function loadSheetData() {
+async function initPage() {
   await initPageAuth({
     onLoadLocal: (email) => {
       currentUserEmail = email;
@@ -978,82 +685,27 @@ async function loadSheetData() {
       if (localRaw) { expenses = JSON.parse(localRaw); renderAll(); }
     },
     onReady: async (sheetId, email, token) => {
-      currentUserEmail   = email;
-      currentAccessToken = token;
+      currentUserEmail = email;
+      spreadsheetId = sheetId;
       await showMain();
     }
   });
 }
 
-// ── Wire up ───────────────────────────────────────────────
-buildCategoryChips();
-buildEditCategorySelect();
-populateYears();
-document.getElementById('monthSelect').value = new Date().getMonth();
-setupTabs();
-
-document.getElementById('monthSelect').addEventListener('change', renderAll);
-document.getElementById('yearSelect').addEventListener('change',  renderAll);
-document.getElementById('expSearch').addEventListener('input', e => {
-  searchQuery = e.target.value.toLowerCase().trim();
-  renderAll();
-});
-document.getElementById('refreshBtn').addEventListener('click', manualSync);
-document.getElementById('exportBtn').addEventListener('click',  openExportModal);
-
-// Export modal
-document.getElementById('exportCancelBtn').addEventListener('click',  closeExportModal);
-document.getElementById('exportConfirmBtn').addEventListener('click',  downloadCSV);
-document.getElementById('exportModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeExportModal(); });
-document.getElementById('exportSelectAllBtn').addEventListener('click', () => {
-  const items  = document.querySelectorAll('#exportMonthsGrid .export-month-item');
-  const allSel = [...items].every(i => i.classList.contains('selected'));
-  items.forEach(i => i.classList.toggle('selected', !allSel));
-  document.getElementById('exportSelectAllBtn').textContent = allSel ? 'Select All' : 'Deselect All';
+// Event binding
+document.getElementById('monthSelect')?.addEventListener('change', renderAll);
+document.getElementById('yearSelect')?.addEventListener('change', renderAll);
+document.getElementById('refreshBtn')?.addEventListener('click', manualSync);
+document.getElementById('closeBreakdownBtn')?.addEventListener('click', closeMonthBreakdown);
+document.getElementById('monthBreakdownModal')?.addEventListener('click', e => { if(e.target === e.currentTarget) closeMonthBreakdown(); });
+document.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('yearDropdownSummary');
+  if (dropdown && !dropdown.contains(e.target)) dropdown.classList.remove('open');
 });
 
-// Category drill-down modal
-document.getElementById('catDetailCloseBtn').addEventListener('click', closeCatDetail);
-document.getElementById('catDetailBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeCatDetail(); });
-
-// Edit modal
-document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
-document.getElementById('editSaveBtn').addEventListener('click',   saveEdit);
-document.getElementById('editModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditModal(); });
-
+populateYearsAndMonths();
 renderBottomNav('expenses');
-loadSheetData();
-</script>
-
-<script>
-(function() {
-  try {
-    const c = document.createElement('canvas');
-    c.width = c.height = 180;
-    const ctx = c.getContext('2d');
-    const g = ctx.createLinearGradient(0, 0, 180, 180);
-    g.addColorStop(0, '#5b5ef4');
-    g.addColorStop(1, '#8b5cf6');
-    const r = 36;
-    ctx.beginPath();
-    ctx.moveTo(r, 0); ctx.lineTo(180-r, 0);
-    ctx.quadraticCurveTo(180, 0, 180, r);
-    ctx.lineTo(180, 180-r);
-    ctx.quadraticCurveTo(180, 180, 180-r, 180);
-    ctx.lineTo(r, 180);
-    ctx.quadraticCurveTo(0, 180, 0, 180-r);
-    ctx.lineTo(0, r);
-    ctx.quadraticCurveTo(0, 0, r, 0);
-    ctx.closePath();
-    ctx.fillStyle = g; ctx.fill();
-    ctx.font = '90px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('💰', 90, 95);
-    const link = document.querySelector('link[rel="apple-touch-icon"]') || document.createElement('link');
-    link.rel = 'apple-touch-icon';
-    link.href = c.toDataURL('image/png');
-    document.head.appendChild(link);
-  } catch(e) {}
-})();
+initPage();
 </script>
 </body>
 </html>
