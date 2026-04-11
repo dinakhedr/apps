@@ -1130,9 +1130,10 @@ function closeMoreSheet() { document.getElementById('moreSheet').classList.remov
 
 async function sheetToggleActive() {
   if (sheetTargetIdx === null) return;
-  const wasActive = recurringList[sheetTargetIdx].active;
+  const idx = sheetTargetIdx;          // capture before closeMoreSheet nulls it
+  const wasActive = recurringList[idx].active;
   closeMoreSheet();
-  recurringList[sheetTargetIdx].active = !wasActive;
+  recurringList[idx].active = !wasActive;
   render();
   const ok = await saveRecurringToSheet();
   showToast(ok ? (wasActive ? '⏸️ Paused' : '▶️ Resumed') : '❌ Failed', ok ? 'success' : 'error');
@@ -1141,9 +1142,9 @@ function sheetEdit() { if (sheetTargetIdx === null) return; const i = sheetTarge
 
 async function sheetDelete() {
   if (sheetTargetIdx === null) return;
-  const sub = recurringList[sheetTargetIdx];
+  const idx = sheetTargetIdx;
+  const sub = recurringList[idx];
 
-  // Double-check log records using the Recurring ID
   const logs = window._allPaidLogs || [];
   const hasLogs = logs.some(l => String(l.recurringId) === String(sub.id));
   if (hasLogs) {
@@ -1153,9 +1154,8 @@ async function sheetDelete() {
   }
 
   if (!confirm(`Delete "${sub.name}" permanently?\n\nThis cannot be undone.`)) return;
-  const i = sheetTargetIdx;
   closeMoreSheet();
-  recurringList.splice(i, 1);
+  recurringList.splice(idx, 1);
   render();
   const ok = await saveRecurringToSheet();
   showToast(ok ? `🗑️ ${sub.name} deleted` : '❌ Delete failed', ok ? 'success' : 'error');
