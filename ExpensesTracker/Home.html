@@ -978,7 +978,7 @@ async function createFolderAndSheet(isRecreate = false) {
     folderId = folderRes.result.id;
 
     // 2. Create spreadsheet (gets a default "Sheet1")
-    const sheetRes = await gapi.client.drive.files.create({ resource: { name: EXPENSES_SHEET, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [folderId] }, fields: 'id' });
+    const sheetRes = await gapi.client.drive.files.create({ resource: { name: FILE_NAME, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [folderId] }, fields: 'id' });
     spreadsheetId = sheetRes.result.id;
 
     // 3. Rename Sheet1 to "Daily Log" and add all other tabs in one batchUpdate
@@ -1017,8 +1017,17 @@ async function createFolderAndSheet(isRecreate = false) {
       }
     });
 
-    // 5. Seed default categories
-    await createCategoriesTab(spreadsheetId);
+    // 5. Categories tab already exists — write headers + seed default categories directly
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId, range: `${CATEGORIES_SHEET}!A1:I1`, valueInputOption: 'RAW',
+      resource: { values: [['Type','OriginalValue','Name','Icon','BG','Chart','Budget','Hidden','Kind']] }
+    });
+    const seedRows = DEFAULT_CATEGORIES.map(c => ({
+      type: 'default', originalValue: c.value, value: c.value,
+      icon: c.icon, bg: c.bg, chart: c.chart, budget: null, hidden: false, catKind: c.catKind
+    }));
+    await saveCategoriesToSheet(spreadsheetId, seedRows);
+    CATEGORIES = [...DEFAULT_CATEGORIES];
 
     localStorage.setItem(`drive_setup_${currentUserEmail}`,    'complete');
     localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
