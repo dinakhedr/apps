@@ -333,11 +333,11 @@
   </div>
 
   <div class="card">
+    <div class="card-title"><span class="card-title-icon">📅</span> Filter Expenses</div>
     <div class="filter-grid">
       <div><label>Month</label><select id="monthSelect"></select></div>
       <div><label>Year</label><select id="yearSelect"></select></div>
     </div>
-    <div class="sync-strip" id="syncStatus">✅ Connected to Google Drive</div>
   </div>
 
   <div class="stats-band" id="statsBand" style="display:none">
@@ -863,7 +863,6 @@ async function loadExpensesFromSheet(showMsg = false) {
     renderAll();
     if (showMsg) {
       showToast(`✅ ${expenses.length} expenses loaded`);
-      document.getElementById('syncStatus').textContent = '✅ Last synced: ' + new Date().toLocaleTimeString();
     }
     return true;
   } catch(err) { console.error(err); if(showMsg) showToast('❌ Sync failed','error'); return false; }
@@ -894,7 +893,6 @@ async function showMain() {
   document.getElementById('mainApp').style.display = 'block';
   await ensureCategoriesTab(spreadsheetId);
   await loadExpensesFromSheet(false);
-  document.getElementById('syncStatus').textContent = '✅ Last synced: ' + new Date().toLocaleTimeString();
 }
 
 async function initPage() {

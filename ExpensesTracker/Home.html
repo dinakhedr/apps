@@ -83,7 +83,6 @@
   /* Savings card for Home page */
   .savings-card {
     background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(5,150,105,0.15) 100%);
-    backdrop-filter: blur(10px);
     border-radius: var(--radius-lg);
     padding: 16px 20px;
     margin-bottom: 20px;
@@ -91,17 +90,28 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+    overflow: hidden;
+    transform: translateZ(0);
+  }
+  .savings-left {
+    flex: 1;
+    min-width: 0;
   }
   .savings-label {
     font-size: 12px;
     font-weight: 600;
     color: rgba(255,255,255,0.7);
+    margin-bottom: 2px;
   }
   .savings-value {
     font-family: 'Sora', sans-serif;
     font-size: 20px;
     font-weight: 800;
     color: #6ee7b7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .savings-badge {
     background: rgba(16,185,129,0.25);
@@ -110,6 +120,8 @@
     font-size: 11px;
     font-weight: 700;
     color: #6ee7b7;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   /* Activity item styles */
@@ -329,7 +341,7 @@
 
   <!-- Net & Comparison Row -->
   <div class="savings-card">
-    <div>
+    <div class="savings-left">
       <div class="savings-label">Net Cash Flow</div>
       <div class="savings-value" id="netCashFlowHome">EGP 0</div>
     </div>
