@@ -1295,6 +1295,8 @@ async function initPage() {
       currentUserEmail = email;
       spreadsheetId = sheetId;
       currentAccessToken = token;
+      await ensureCategoriesTab(sheetId);
+      buildIncomeCategorySelect();
       await ensureIncomeTab();
       await loadIncomesFromSheet();
       
