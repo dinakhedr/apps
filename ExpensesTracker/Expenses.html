@@ -463,22 +463,32 @@
   </div>
 </div>
 
-<!-- Export Modal -->
+<!-- Export Modal - Redesigned Month Selection -->
 <div class="modal-backdrop" id="exportModalBackdrop">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">⬇ Export to CSV</div>
     <p style="font-size:13px;color:var(--text-2);margin-bottom:14px">Select months to export as CSV.</p>
-    <div class="export-header-row">
-      <div class="export-section-label">Select Months</div>
-      <button class="export-select-all-btn" id="exportSelectAllBtn">Select All</button>
+    
+    <!-- Year selector first -->
+    <div style="margin-bottom: 16px;">
+      <label style="font-size:12px;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px;">Select Year</label>
+      <select id="exportYearSelect" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:12px;font-size:14px;background:var(--surface-2);font-family:'DM Sans',sans-serif;"></select>
     </div>
-    <div class="export-months-grid" id="exportMonthsGrid"></div>
-    <div style="margin-top:4px">
-      <label>Year</label>
-      <select id="exportYearSelect" style="margin-top:5px"></select>
+    
+    <!-- Month selection as toggle chips -->
+    <div style="margin-bottom: 8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-2);">Select Months</label>
+        <div style="display:flex;gap:8px;">
+          <button type="button" id="exportSelectAllBtn" style="background:none;border:none;color:var(--brand);font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px;">Select All</button>
+          <button type="button" id="exportClearAllBtn" style="background:none;border:none;color:var(--danger);font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px;">Clear</button>
+        </div>
+      </div>
+      <div id="exportMonthsGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
     </div>
-    <div class="modal-footer">
+    
+    <div class="modal-footer" style="margin-top:20px;">
       <button class="btn-cancel" id="exportCancelBtn">Cancel</button>
       <button class="btn-save" id="exportConfirmBtn">⬇ Download CSV</button>
     </div>
@@ -1044,49 +1054,55 @@ function buildExportYearSelect() {
 function buildExportMonthsGrid() {
   const grid = document.getElementById('exportMonthsGrid');
   grid.innerHTML = '';
+  const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', Dec'];
+  
   MONTH_NAMES.forEach((month, idx) => {
-    const item = document.createElement('label');
-    item.className = 'export-month-item';
-    item.setAttribute('data-month', idx);
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.value = idx;
-    cb.checked = false;
-    const span = document.createElement('span');
-    span.textContent = month.substring(0, 3);
-    item.appendChild(cb);
-    item.appendChild(span);
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'export-month-chip';
+    chip.setAttribute('data-month', idx);
+    chip.textContent = shortMonths[idx];
+    chip.style.cssText = `
+      padding: 10px 0;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1.5px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    `;
     
-    item.addEventListener('click', (e) => {
-      if (e.target !== cb) {
-        cb.checked = !cb.checked;
-      }
-      if (cb.checked) {
-        item.classList.add('selected');
-      } else {
-        item.classList.remove('selected');
-      }
+    chip.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
+      const isSelected = chip.classList.contains('selected');
+      if (isSelected) {
+        chip.classList.remove('selected');
+        chip.style.background = 'var(--surface-2)';
+        chip.style.borderColor = 'var(--border)';
+        chip.style.color = 'var(--text-2)';
+      } else {
+        chip.classList.add('selected');
+        chip.style.background = 'var(--brand)';
+        chip.style.borderColor = 'var(--brand)';
+        chip.style.color = '#fff';
+      }
     });
     
-    cb.addEventListener('change', (e) => {
-      if (cb.checked) {
-        item.classList.add('selected');
-      } else {
-        item.classList.remove('selected');
-      }
-      e.stopPropagation();
-    });
-    
-    grid.appendChild(item);
+    grid.appendChild(chip);
   });
   
+  // Pre-select current month
   const currMonth = new Date().getMonth();
-  const currItem = grid.querySelector(`.export-month-item[data-month="${currMonth}"]`);
-  if (currItem) {
-    const cb = currItem.querySelector('input');
-    cb.checked = true;
-    currItem.classList.add('selected');
+  const currChip = grid.querySelector(`.export-month-chip[data-month="${currMonth}"]`);
+  if (currChip) {
+    currChip.classList.add('selected');
+    currChip.style.background = 'var(--brand)';
+    currChip.style.borderColor = 'var(--brand)';
+    currChip.style.color = '#fff';
   }
 }
 
@@ -1100,33 +1116,45 @@ function closeExportModal() { document.getElementById('exportModalBackdrop').cla
 function downloadCSV() {
   const year = parseInt(document.getElementById('exportYearSelect').value);
   const selectedMonths = [];
-  document.querySelectorAll('#exportMonthsGrid .export-month-item').forEach(item => {
-    const cb = item.querySelector('input');
-    if (cb && cb.checked) {
-      selectedMonths.push(parseInt(item.getAttribute('data-month')));
-    }
+  document.querySelectorAll('#exportMonthsGrid .export-month-chip.selected').forEach(chip => {
+    selectedMonths.push(parseInt(chip.getAttribute('data-month')));
   });
   
-  if (!selectedMonths.length) { showToast('Please select at least one month', 'error'); return; }
+  if (!selectedMonths.length) { 
+    showToast('Please select at least one month', 'error'); 
+    return; 
+  }
+  
   const rows = expenses.filter(e => {
     const d = parseLocalDate(e.date);
     return d.getFullYear() === year && selectedMonths.includes(d.getMonth());
   }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
-  if (!rows.length) { showToast('No expenses found for selected period', 'error'); return; }
+  
+  if (!rows.length) { 
+    showToast('No expenses found for selected period', 'error'); 
+    return; 
+  }
+  
   const headers = ['Timestamp','Date','Category','Amount (EGP)','Notes'];
   const csvRows = [
     headers.join(','),
     ...rows.map(e => [
-      `"${e.timestamp || ''}"`, `"${e.date}"`, `"${e.category}"`,
-      e.amount.toFixed(2), `"${(e.notes||'').replace(/"/g,'""')}"`
+      `"${e.timestamp || ''}"`, 
+      `"${e.date}"`, 
+      `"${e.category}"`,
+      e.amount.toFixed(2), 
+      `"${(e.notes||'').replace(/"/g,'""')}"`
     ].join(','))
   ];
+  
   const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const shortMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const months = selectedMonths.map(m => shortMonths[m]).join('-');
-  a.href = url; a.download = `expenses_${months}_${year}.csv`; a.click();
+  a.href = url; 
+  a.download = `expenses_${months}_${year}.csv`; 
+  a.click();
   URL.revokeObjectURL(url);
   closeExportModal();
   showToast(`✅ Exported ${rows.length} expenses`);
@@ -1145,19 +1173,31 @@ document.getElementById('exportCancelBtn')?.addEventListener('click', closeExpor
 document.getElementById('exportConfirmBtn')?.addEventListener('click', downloadCSV);
 document.getElementById('exportModalBackdrop')?.addEventListener('click', e => { if(e.target === e.currentTarget) closeExportModal(); });
 document.getElementById('exportSelectAllBtn')?.addEventListener('click', () => {
-  const items = document.querySelectorAll('#exportMonthsGrid .export-month-item');
-  const checkboxes = document.querySelectorAll('#exportMonthsGrid .export-month-item input');
-  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-  items.forEach(item => {
-    const cb = item.querySelector('input');
-    if (cb) {
-      cb.checked = !allChecked;
-      if (cb.checked) item.classList.add('selected');
-      else item.classList.remove('selected');
+  const chips = document.querySelectorAll('#exportMonthsGrid .export-month-chip');
+  const allSelected = Array.from(chips).every(chip => chip.classList.contains('selected'));
+  chips.forEach(chip => {
+    if (allSelected) {
+      chip.classList.remove('selected');
+      chip.style.background = 'var(--surface-2)';
+      chip.style.borderColor = 'var(--border)';
+      chip.style.color = 'var(--text-2)';
+    } else {
+      chip.classList.add('selected');
+      chip.style.background = 'var(--brand)';
+      chip.style.borderColor = 'var(--brand)';
+      chip.style.color = '#fff';
     }
   });
-  const btn = document.getElementById('exportSelectAllBtn');
-  btn.textContent = allChecked ? 'Select All' : 'Deselect All';
+});
+
+document.getElementById('exportClearAllBtn')?.addEventListener('click', () => {
+  const chips = document.querySelectorAll('#exportMonthsGrid .export-month-chip');
+  chips.forEach(chip => {
+    chip.classList.remove('selected');
+    chip.style.background = 'var(--surface-2)';
+    chip.style.borderColor = 'var(--border)';
+    chip.style.color = 'var(--text-2)';
+  });
 });
 document.getElementById('editCancelBtn')?.addEventListener('click', closeEditModal);
 document.getElementById('editSaveBtn')?.addEventListener('click', saveEdit);
