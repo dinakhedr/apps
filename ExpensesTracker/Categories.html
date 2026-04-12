@@ -657,17 +657,20 @@ function toggleHide(i) {
 async function deleteCustom(i) {
   const categoryToDelete = allCats[i];
   
-  // Only check for expense categories (income can be deleted freely)
-  if (categoryToDelete.catKind === 'expense') {
-    showToast('Checking if category is used...', 'info');
-    
-    const isUsed = await isCategoryUsedInExpenses(categoryToDelete.value);
-    
-    if (isUsed) {
-      showToast(`❌ Cannot delete "${categoryToDelete.value}" - it has expenses. Hide it instead.`, 'error');
-      return;
-    }
+showToast('Checking if category is used...', 'info');
+if (categoryToDelete.catKind === 'expense') {
+  const isUsed = await isCategoryUsedInExpenses(categoryToDelete.value);
+  if (isUsed) {
+    showToast(`❌ Cannot delete "${categoryToDelete.value}" - it has expenses. Hide it instead.`, 'error');
+    return;
   }
+} else if (categoryToDelete.catKind === 'income') {
+  const isUsed = await isCategoryUsedInIncome(categoryToDelete.value);
+  if (isUsed) {
+    showToast(`❌ Cannot delete "${categoryToDelete.value}" - it has income entries. Hide it instead.`, 'error');
+    return;
+  }
+}
   
   if (!confirm(`Delete "${categoryToDelete.value}"? This action cannot be undone.`)) return;
   
@@ -698,7 +701,7 @@ async function persistToSheet() {
     return false;
   }
 }
-  
+// check if custom expense category has been used
 async function isCategoryUsedInExpenses(categoryName) {
   if (!spreadsheetId) return false;
   
@@ -715,6 +718,22 @@ async function isCategoryUsedInExpenses(categoryName) {
     return false;
   }
 }
+  // check if custom income category has been used
+
+  async function isCategoryUsedInIncome(categoryName) {
+  if (!spreadsheetId) return false;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${INCOME_LOG_SHEET}!C:C`
+    });
+    const rows = res.result.values || [];
+    return rows.slice(1).some(row => row[0] === categoryName);
+  } catch (e) {
+    console.error('Error checking income category usage:', e);
+    return false;
+  }
+}
 
 function closeCatModal() { 
   document.getElementById('catModalBackdrop').classList.remove('open'); 
@@ -724,16 +743,22 @@ function closeCatModal() {
 async function deleteCustomWithCheck(i) {
   const categoryToDelete = allCats[i];
   
-  if (categoryToDelete.catKind === 'expense') {
-    showToast('Checking if category is used...', 'info');
-    const isUsed = await isCategoryUsedInExpenses(categoryToDelete.value);
-    
-    if (isUsed) {
-      showToast(`❌ Cannot delete "${categoryToDelete.value}" - it has expenses. Hide it instead.`, 'error');
-      closeCatModal();
-      return;
-    }
+showToast('Checking if category is used...', 'info');
+if (categoryToDelete.catKind === 'expense') {
+  const isUsed = await isCategoryUsedInExpenses(categoryToDelete.value);
+  if (isUsed) {
+    showToast(`❌ Cannot delete "${categoryToDelete.value}" - it has expenses. Hide it instead.`, 'error');
+    closeCatModal();
+    return;
   }
+} else if (categoryToDelete.catKind === 'income') {
+  const isUsed = await isCategoryUsedInIncome(categoryToDelete.value);
+  if (isUsed) {
+    showToast(`❌ Cannot delete "${categoryToDelete.value}" - it has income entries. Hide it instead.`, 'error');
+    closeCatModal();
+    return;
+  }
+}
   
   if (!confirm(`Delete "${categoryToDelete.value}"?`)) return;
   
