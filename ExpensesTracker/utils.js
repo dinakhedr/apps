@@ -115,6 +115,15 @@ let CATEGORIES = [...DEFAULT_CATEGORIES];
 
 // ── Category sheet helpers ────────────────────────────────
 function parseCatRow(r) {
+  const name = r[1] || r[2] || '';
+  let catKind;
+  if (r[8] === 'income' || r[8] === 'expense') {
+    // Column I explicitly set — trust it
+    catKind = r[8];
+  } else {
+    // Column I missing/empty — infer from default lists to fix corrupted sheets
+    catKind = DEFAULT_INCOME_CATEGORIES.some(d => d.value === name) ? 'income' : 'expense';
+  }
   return {
     type:          r[0] || 'default',
     originalValue: r[1] || '',
@@ -124,7 +133,7 @@ function parseCatRow(r) {
     chart:         r[5] || '#aaa',
     budget:        r[6] ? parseFloat(r[6]) : null,
     hidden:        r[7] === 'true',
-    catKind:       r[8] === 'income' ? 'income' : 'expense',  // NEW: category type
+    catKind,
   };
 }
 
@@ -201,11 +210,11 @@ async function ensureCategoriesTab(spreadsheetId) {
       spreadsheetId, range: `${CATEGORIES_SHEET}!A2:I`
     });
     let rows = (fullRes.result.values || []).map(parseCatRow);
-    
+    let needsSave = false;
+
     // Check for missing default categories (both expense and income)
     const existingOriginals = new Set(rows.map(r => r.originalValue));
     const newDefaults = DEFAULT_CATEGORIES.filter(d => !existingOriginals.has(d.value));
-    
     if (newDefaults.length) {
       const newRows = newDefaults.map(c => ({
         type: 'default', 
@@ -219,6 +228,22 @@ async function ensureCategoriesTab(spreadsheetId) {
         catKind: c.catKind,
       }));
       rows = [...rows, ...newRows];
+      needsSave = true;
+    }
+
+    // Migration: for default categories, catKind is fixed by definition — look it up
+    // directly from DEFAULT_CATEGORIES using originalValue and correct if wrong.
+    // Custom categories are never touched — user chose their type explicitly.
+    rows.forEach(row => {
+      if (row.type !== 'default') return;
+      const def = DEFAULT_CATEGORIES.find(d => d.value === row.originalValue);
+      if (def && row.catKind !== def.catKind) {
+        row.catKind = def.catKind;
+        needsSave = true;
+      }
+    });
+
+    if (needsSave) {
       await saveCategoriesToSheet(spreadsheetId, rows);
     }
     
