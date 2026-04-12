@@ -238,16 +238,18 @@
     .year-done-btn { background: var(--brand); color: white; padding: 6px 16px; border-radius: 20px; }
 
     /* Modal for monthly breakdown (by category) */
-    .modal-cat-breakdown .cat-break-item {
+    .cat-break-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 12px 0;
       border-bottom: 1px solid var(--border);
     }
-    .cat-break-left { display: flex; align-items: center; gap: 10px; }
-    .cat-break-name { font-weight: 600; font-size: 14px; }
-    .cat-break-amount { font-family: 'Sora', sans-serif; font-weight: 700; color: var(--brand); }
+    .cat-break-item:last-child { border-bottom: none; }
+    .cat-break-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .cat-break-name { font-weight: 600; font-size: 14px; color: var(--text); }
+    .cat-break-count { font-size: 11px; color: var(--text-3); }
+    .cat-break-amount { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--brand); flex-shrink: 0; }
     .empty-state { text-align: center; padding: 40px; color: var(--text-3); }
 
     /* ── Tap hint ── */
@@ -407,13 +409,10 @@ let spreadsheetId = null;
 let activeCategory = '';
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-// Summary years state — build range from current year to 2030
+// Summary years state
+const AVAILABLE_YEARS = [2026, 2027, 2028, 2029, 2030];
 const _currYear = new Date().getFullYear();
-const AVAILABLE_YEARS = [];
-for (let y = _currYear; y <= 2030; y++) AVAILABLE_YEARS.push(y);
-// Also include past years (current-5) so historical data shows
-for (let y = _currYear - 5; y < _currYear; y++) AVAILABLE_YEARS.unshift(y);
-let selectedYearsSummary = new Set([_currYear]);
+let selectedYearsSummary = new Set([AVAILABLE_YEARS.includes(_currYear) ? _currYear : 2026]);
 
 // ======================== HELPERS =========================
 function parseLocalDate(str) {
@@ -581,7 +580,7 @@ function updateSelectedYearsTextSummary() {
   const textSpan = document.getElementById('selectedYearsTextSummary');
   const selected = Array.from(selectedYearsSummary).sort((a,b)=>a-b);
   if (selected.length === 0) textSpan.textContent = 'No years selected';
-  else if (selected.length === AVAILABLE_YEARS.length) textSpan.textContent = `All years (${AVAILABLE_YEARS[0]}-${AVAILABLE_YEARS[AVAILABLE_YEARS.length-1]})`;
+  else if (selected.length === AVAILABLE_YEARS.length) textSpan.textContent = 'All years (2026–2030)';
   else textSpan.textContent = selected.join(', ');
 }
 
@@ -641,9 +640,17 @@ function openMonthBreakdown(year, month) {
     return d.getFullYear() === year && d.getMonth() === month;
   });
   const totals = {};
-  monthExpenses.forEach(e => { totals[e.category] = (totals[e.category] || 0) + e.amount; });
-  const cats = Object.keys(totals).sort((a,b)=>totals[b]-totals[a]);
-  document.getElementById('breakdownModalTitle').innerHTML = `📅 ${MONTH_NAMES[month]} ${year} · By Category`;
+  const counts = {};
+  monthExpenses.forEach(e => {
+    totals[e.category] = (totals[e.category] || 0) + e.amount;
+    counts[e.category] = (counts[e.category] || 0) + 1;
+  });
+  const cats = Object.keys(totals).sort((a,b) => totals[b] - totals[a]);
+  const monthTotal = monthExpenses.reduce((s,e) => s + e.amount, 0);
+
+  document.getElementById('breakdownModalTitle').innerHTML =
+    `📅 ${MONTH_NAMES[month]} ${year}<div style="font-size:13px;font-weight:600;color:var(--brand);margin-top:2px">${formatMoney(monthTotal)} · ${monthExpenses.length} expenses</div>`;
+
   const container = document.getElementById('breakdownList');
   if (cats.length === 0) {
     container.innerHTML = '<div class="empty-state">No expenses this month</div>';
@@ -651,8 +658,11 @@ function openMonthBreakdown(year, month) {
     container.innerHTML = cats.map(cat => `
       <div class="cat-break-item">
         <div class="cat-break-left">
-          <div class="cat-icon-sm" style="background:${getCategoryColor(cat)};width:32px;height:32px;font-size:16px">${getCategoryIcon(cat)}</div>
-          <span class="cat-break-name">${cat}</span>
+          <div class="cat-icon-sm" style="background:${getCategoryColor(cat)};width:36px;height:36px;border-radius:11px;font-size:18px">${getCategoryIcon(cat)}</div>
+          <div>
+            <div class="cat-break-name">${cat}</div>
+            <div class="cat-break-count">${counts[cat]} ${counts[cat]===1?'expense':'expenses'}</div>
+          </div>
         </div>
         <div class="cat-break-amount">${formatMoney(totals[cat])}</div>
       </div>
