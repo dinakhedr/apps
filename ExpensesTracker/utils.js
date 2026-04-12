@@ -23,6 +23,7 @@ const BANK_PROVIDERS = [
   { key: 'AAIB',     name: 'Arab African International Bank',         logo: 'Logos/AAIB.png'     },
   { key: 'AlexBank',     name: 'Bank of Alexandria',         logo: 'Logos/AlexBank.png'     },
   { key: 'BM',     name: 'Banque Misr',         logo: 'Logos/BM.png'     },
+  { key: 'Borrow',     name: 'Borrow',         logo: 'Logos/Borrow.png'     },
   { key: 'CairoBank',     name: 'Banque du Caire',         logo: 'Logos/CairoBank.png'     },
   { key: 'CIB',    name: 'CIB',        logo: 'Logos/CIB.png'    },
   { key: 'Gamaya',     name: 'Gamaya',         logo: 'Logos/Gamaya.png'     },
