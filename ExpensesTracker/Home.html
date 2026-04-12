@@ -865,7 +865,7 @@ async function saveEdit() {
 // ── Budget modal ──────────────────────────────────────────
 function openBudgetModal() {
   const list = document.getElementById('budgetModalList');
-  list.innerHTML = CATEGORIES.map(c => {
+  list.innerHTML = getExpenseCategories().map(c => {
     const existing = c.budget || budgets[c.value] || '';
     return `
       <div class="budget-modal-row">
