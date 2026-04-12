@@ -30,7 +30,7 @@
     .sub-card {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       padding: 10px 0;
       border-bottom: 1px solid var(--border);
       position: relative;
@@ -47,16 +47,16 @@
     .sub-card.overdue::before  { background: var(--danger); }
     .sub-card.paid-row::before { background: var(--success); }
     .sub-icon {
-      width: 40px; height: 40px; border-radius: 12px;
+      width: 38px; height: 38px; border-radius: 11px;
       background: var(--surface-2); display: flex; align-items: center;
-      justify-content: center; font-size: 19px; flex-shrink: 0;
+      justify-content: center; font-size: 18px; flex-shrink: 0;
     }
     .sub-card.overdue  .sub-icon { background: #fef2f2; }
     .sub-card.paid-row .sub-icon { background: #f0fdf4; }
     .sub-info { flex: 1; min-width: 0; }
-    .sub-name { font-weight: 700; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sub-name { font-weight: 700; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .sub-card.paid-row .sub-name { color: var(--text-3); }
-    .sub-meta { font-size: 11px; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+    .sub-meta { font-size: 10px; margin-top: 3px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
     .sub-dot   { color: var(--border); }
     .sub-status { font-weight: 600; }
     .sub-status.overdue  { color: var(--danger); }
@@ -64,32 +64,32 @@
     .sub-status.paid     { color: var(--success); }
     /* Frequency badge */
     .sub-freq.monthly, .sub-freq.quarterly, .sub-freq.annual {
-      display: inline-block; padding: 2px 8px; border-radius: 20px;
-      font-size: 10px; font-weight: 700; color: #fff;
+      display: inline-block; padding: 2px 6px; border-radius: 20px;
+      font-size: 9px; font-weight: 700; color: #fff;
     }
     .sub-freq.monthly   { background-color: #c224d4; }
     .sub-freq.quarterly { background-color: #f59e0b; }
     .sub-freq.annual    { background-color: #3b82f6; }
-    .sub-right {display: flex;align-items: center;gap: 4px;flex-shrink: 0;}
-    .sub-amount {font-weight: 700;font-size: 13px;color: var(--brand);min-width: 60px;text-align: right;}
+    .sub-right {display: flex;align-items: center;gap: 3px;flex-shrink: 0;}
+    .sub-amount {font-weight: 700;font-size: 12px;color: var(--brand);min-width: 0;text-align: right;white-space: nowrap;}
     .sub-card.paid-row .sub-amount { color: var(--text-3); }
 
     /* Pay button */
     .pay-btn {
-      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-      font-size: 15px; cursor: pointer; display: flex; align-items: center;
+      width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+      font-size: 14px; cursor: pointer; display: flex; align-items: center;
       justify-content: center; transition: all 0.15s; border: 1.5px solid;
     }
-    .pay-btn.can-pay  { border-color: #f59e0b; background: #fffbeb; color: #d97706; font-size: 16px; }
+    .pay-btn.can-pay  { border-color: #f59e0b; background: #fffbeb; color: #d97706; font-size: 15px; }
     .pay-btn.can-pay:active { transform: scale(0.92); background: #fef3c7; }
-    .pay-btn.paid     { border-color: var(--success); background: #d1fae5; color: var(--success); cursor: default; font-size: 16px; }
-    .pay-btn.future   { border-color: #fde68a; background: #fffdf0; color: #d97706; cursor: not-allowed; opacity: 0.45; font-size: 15px; }
+    .pay-btn.paid     { border-color: var(--success); background: #d1fae5; color: var(--success); cursor: default; font-size: 15px; }
+    .pay-btn.future   { border-color: #fde68a; background: #fffdf0; color: #d97706; cursor: not-allowed; opacity: 0.45; font-size: 14px; }
 
     /* More (⋮) button */
     .more-btn {
-      width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
       border: none; background: none; color: var(--text-3);
-      font-size: 18px; cursor: pointer; line-height: 1;
+      font-size: 17px; cursor: pointer; line-height: 1;
       display: flex; align-items: center; justify-content: center; transition: background 0.12s;
     }
     .more-btn:active { background: var(--surface-2); }
@@ -159,10 +159,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 20px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
       transition: background 0.12s;
+      gap: 8px;
     }
     .summary-month-row.past-month {
       background: #e8f5e9;
@@ -176,23 +177,28 @@
     .summary-month-left {
       display: flex;
       align-items: baseline;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
     }
     .summary-month-name {
       font-weight: 600;
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text);
+      white-space: nowrap;
     }
     .summary-month-count {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-3);
+      white-space: nowrap;
     }
     .summary-month-amount {
       font-family: 'Sora', sans-serif;
       font-weight: 700;
-      font-size: 16px;
+      font-size: 14px;
       color: var(--brand);
+      flex-shrink: 0;
+      white-space: nowrap;
     }
     .summary-empty {
       text-align: center;

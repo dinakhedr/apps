@@ -25,6 +25,15 @@
   --shadow:       0 8px 32px rgba(91,94,244,0.10);
   --shadow-sm:    0 2px 10px rgba(0,0,0,0.06);
   --nav-h:        72px;
+  /* Responsive spacing */
+  --page-pad:     18px;
+}
+/* Tighter on very small screens */
+@media (max-width: 390px) {
+  :root {
+    --page-pad: 14px;
+    --nav-h:    68px;
+  }
 }
 
 /* ── Body ── */
@@ -43,7 +52,7 @@ body {
 }
 
 /* ── Layout ── */
-.container { max-width: 520px; margin: 0 auto; padding: 0 18px; }
+.container { max-width: 520px; margin: 0 auto; padding: 0 var(--page-pad); }
 
 /* ── Header ── */
 .header {
@@ -196,22 +205,27 @@ textarea { resize: vertical; min-height: 72px; }
 
 /* ── Expense / list items ── */
 .expense-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 0; border-bottom: 1px solid var(--border); animation: fadeUp 0.25s ease both;
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 0; border-bottom: 1px solid var(--border); animation: fadeUp 0.25s ease both;
 }
 .expense-item:last-child { border-bottom: none; }
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.cat-icon    { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.cat-icon    { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
 .exp-details { flex: 1; min-width: 0; }
-.exp-cat     { font-weight: 600; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.exp-meta    { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-.exp-note    { font-size: 11px; color: var(--text-2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.exp-right   { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-.exp-amount  { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); }
+.exp-cat     { font-weight: 600; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.exp-meta    { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+.exp-note    { font-size: 10px; color: var(--text-2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.exp-right   { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; max-width: 44%; }
+.exp-amount  { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .exp-actions { display: flex; gap: 4px; }
+@media (max-width: 390px) {
+  .cat-icon { width: 36px; height: 36px; border-radius: 10px; font-size: 17px; }
+  .exp-cat  { font-size: 12px; }
+  .exp-amount { font-size: 12px; }
+}
 .action-btn {
   background: none; border: none; width: 30px; height: 30px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; transition: background 0.15s;
@@ -354,7 +368,7 @@ textarea { resize: vertical; min-height: 72px; }
   display: flex; justify-content: space-between; align-items: center; color: #fff;
 }
 .stats-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.06em; }
-.stats-total { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1; margin-top: 3px; }
+.stats-total { font-family: 'Sora', sans-serif; font-size: clamp(20px, 5vw, 26px); font-weight: 800; color: #fff; line-height: 1.1; margin-top: 3px; }
 .stats-sub   { font-size: 11px; color: rgba(255,255,255,0.70); margin-top: 2px; }
 
 /* ── Bottom navigation ── */
@@ -363,21 +377,99 @@ nav, .bottom-nav, .nav-tabs { list-style: none; }
 .nav-tabs::before,  .nav-tabs::after { display: none !important; content: none !important; }
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-  display: flex; align-items: center; justify-content: center; padding: 10px 18px 12px;
+  display: flex; align-items: center; justify-content: center; padding: 8px 10px 10px;
   background: rgba(60,50,140,0.82); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255,255,255,0.12); box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
 }
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .bottom-nav { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
 }
-.nav-tabs { display: flex; gap: 8px; width: 100%; max-width: 420px; }
+.nav-tabs { display: flex; gap: 4px; width: 100%; max-width: 440px; }
 .nav-tab {
   flex: 1; display: flex; flex-direction: column; align-items: center;
-  gap: 3px; padding: 8px 4px; border-radius: 14px;
-  border: none; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
-  font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
-  cursor: pointer; transition: all 0.15s;
+  gap: 2px; padding: 6px 2px; border-radius: 12px;
+  border: none; background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.75);
+  font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; min-width: 0;
 }
 .nav-tab:active { background: rgba(255,255,255,0.22); }
 .nav-tab.active { background: rgba(255,255,255,0.55); color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.30); font-weight: 700; }
-.nav-tab-icon   { font-size: 18px; line-height: 1; }
+.nav-tab-icon   { font-size: 17px; line-height: 1; }
+/* Truncate long labels on very small screens */
+@media (max-width: 390px) {
+  .nav-tab { font-size: 9px; padding: 5px 1px; gap: 1px; }
+  .nav-tab-icon { font-size: 16px; }
+}
+@media (max-width: 360px) {
+  .nav-tab { font-size: 8.5px; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE FIXES — Small screens (iPhone 11 / 390px wide)
+   ══════════════════════════════════════════════════════════ */
+
+/* Modal bottom sheet: give more vertical room + safe-area padding */
+.modal {
+  padding-bottom: calc(36px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Sheet: same */
+.sheet {
+  padding-bottom: calc(36px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Toast: keep above nav on small screens */
+.toast {
+  bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Card padding tighter on small screens */
+@media (max-width: 390px) {
+  .card { padding: 18px 16px; }
+  .modal { padding: 20px 16px calc(32px + env(safe-area-inset-bottom, 0px)); }
+  .sheet { padding: 12px 14px calc(32px + env(safe-area-inset-bottom, 0px)); }
+  .modal-title { font-size: 16px; }
+  .form-group { margin-bottom: 12px; }
+  .form-row { gap: 10px; margin-bottom: 12px; }
+  input, select, textarea { padding: 11px 12px; font-size: 14px; }
+  .submit-btn, .primary-btn { padding: 13px; font-size: 14px; }
+  .card-title { font-size: 14px; margin-bottom: 14px; }
+  /* Stats band on Expenses page */
+  .stats-band { padding: 14px 14px; }
+  /* Summary headers */
+  .summary-header { padding: 14px 16px; }
+  .summary-header h3 { font-size: 14px; }
+  .summary-year-header { padding: 12px 16px; font-size: 14px; }
+  /* Year dropdown inside summary cards */
+  .year-dropdown { margin: 12px 16px 16px; }
+  /* Log rows in Recurring */
+  .log-section { padding: 12px; }
+  .log-row { gap: 8px; padding: 9px 0; }
+  .log-icon { width: 30px; height: 30px; font-size: 15px; }
+  .log-name { font-size: 12px; }
+  .log-date { font-size: 10px; }
+  .log-amount { font-size: 12px; }
+  /* header adjustments */
+  .header { margin-bottom: 18px; }
+  .header h1 { font-size: 19px; }
+  .hdr-icon-btn { width: 32px; height: 32px; font-size: 15px; }
+}
+
+/* Prevent any flex row from forcing horizontal scroll */
+.container, .card, .modal, .sheet {
+  overflow-x: hidden;
+}
+
+/* Filter grids — make selects legible on small screens */
+@media (max-width: 390px) {
+  .filter-grid select,
+  .filter-row select,
+  .form-grid select {
+    font-size: 13px;
+    padding: 10px 10px;
+  }
+  /* filter-grid 2-col stays but fields get a bit smaller */
+  .filter-grid { gap: 8px; }
+  .form-grid   { gap: 10px; }
+  .form-row    { gap: 10px; }
+}

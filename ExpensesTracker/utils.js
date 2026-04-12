@@ -426,13 +426,12 @@ function todayStr() { return new Date().toISOString().split('T')[0]; }
 
 // ── Bottom navigation renderer ────────────────────────────
 const NAV_TABS = [
-  { id: 'home',         label: 'Home',         icon: '🏠', href: 'Home.html'         },
-  { id: 'expenses',     label: 'Expenses',     icon: '📋', href: 'Expenses.html'     },
-  { id: 'recurring',    label: 'Recurring',    icon: '🔄', href: 'Recurring.html'    },
-  { id: 'installments', label: 'Installments', icon: '📆', href: 'Installments.html' },
-  { id: 'income',   label: 'Income',   icon: '💰', href: 'Income.html'   },
-  { id: 'dashboard',   label: 'Dashoard',   icon: '📊', href: 'Dashboard.html'   },
-  
+  { id: 'home',         label: 'Home',     icon: '🏠', href: 'Home.html'         },
+  { id: 'expenses',     label: 'Expenses', icon: '📋', href: 'Expenses.html'     },
+  { id: 'recurring',   label: 'Recurring',icon: '🔄', href: 'Recurring.html'    },
+  { id: 'installments',label: 'Installm.',icon: '📆', href: 'Installments.html' },
+  { id: 'income',      label: 'Income',   icon: '💰', href: 'Income.html'       },
+  { id: 'dashboard',   label: 'Dashboard',icon: '📊', href: 'Dashboard.html'    },
 ];
 
 function renderBottomNav(activePage, mountId = 'bottomNavMount') {
