@@ -181,7 +181,14 @@
   }
   .activity-amount.expense { color: var(--danger); }
   .activity-amount.income { color: var(--success); }
-
+.activity-menu-btn {
+  background: none; border: none; font-size: 18px;
+  color: var(--text-3); cursor: pointer; padding: 4px 6px;
+  border-radius: 8px; line-height: 1; flex-shrink: 0;
+  transition: background 0.12s;
+}
+.activity-menu-btn:active { background: var(--surface-2); }
+    
   /* ── Budget overview ── */
   .budget-row {
     display: flex; justify-content: space-between; align-items: center;
@@ -714,19 +721,49 @@ function renderRecentActivity() {
     const amountClass = a.type === 'expense' ? 'expense' : 'income';
     const title = a.type === 'expense' ? a.category : (a.category || 'Income');
     
-    return `
-      <div class="activity-item">
-        <div class="activity-icon" style="background:${bg}">${icon}</div>
-        <div class="activity-details">
-          <div class="activity-title">${escapeHtml(title)}</div>
-          <div class="activity-date">${formatDate(a.date)}</div>
-          ${a.notes ? `<div class="activity-note">📝 ${escapeHtml(a.notes.substring(0, 40))}</div>` : ''}
-        </div>
-        <div class="activity-amount ${amountClass}">${a.sign}${formatMoney(Math.abs(a.amount))}</div>
-      </div>`;
+const menuBtn = a.type === 'expense'
+  ? `<button class="activity-menu-btn" onclick="openActivityMenu(${a.id})">⋮</button>`
+  : '';
+return `
+  <div class="activity-item">
+    <div class="activity-icon" style="background:${bg}">${icon}</div>
+    <div class="activity-details">
+      <div class="activity-title">${escapeHtml(title)}</div>
+      <div class="activity-date">${formatDate(a.date)}</div>
+      ${a.notes ? `<div class="activity-note">📝 ${escapeHtml(a.notes.substring(0, 40))}</div>` : ''}
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+      <div class="activity-amount ${amountClass}">${a.sign}${formatMoney(Math.abs(a.amount))}</div>
+      ${a.type === 'expense' ? `<button class="activity-menu-btn" onclick="openActivityMenu('${a.id}')">⋮</button>` : ''}
+    </div>
+  </div>`;
   }).join('');
 }
-
+function openActivityMenu(id) {
+  let sheet = document.getElementById('activityMenuSheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'activityMenuSheet';
+    sheet.className = 'sheet-backdrop';
+    sheet.innerHTML = `<div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="activityMenuTitle">Options</div>
+      <button class="sheet-action" id="activityMenuEdit"><span class="sheet-action-icon">✏️</span>Edit</button>
+      <button class="sheet-action danger" id="activityMenuDelete"><span class="sheet-action-icon">🗑️</span>Delete</button>
+    </div>`;
+    document.body.appendChild(sheet);
+    sheet.addEventListener('click', e => { if (e.target === sheet) sheet.classList.remove('open'); });
+  }
+  const exp = expenses.find(e => String(e.id) === String(id));
+  if (exp) document.getElementById('activityMenuTitle').textContent = exp.category + ' — ' + formatMoney(exp.amount);
+  const editBtn = document.getElementById('activityMenuEdit').cloneNode(true);
+  const delBtn  = document.getElementById('activityMenuDelete').cloneNode(true);
+  document.getElementById('activityMenuEdit').replaceWith(editBtn);
+  document.getElementById('activityMenuDelete').replaceWith(delBtn);
+  editBtn.addEventListener('click', () => { sheet.classList.remove('open'); setTimeout(() => openEditModal(id), 150); });
+  delBtn.addEventListener('click',  () => { sheet.classList.remove('open'); setTimeout(() => deleteExpense(id), 150); });
+  sheet.classList.add('open');
+}
 // ── Budget overview ───────────────────────────────────────
 function updateBudgetOverview() {
   const card = document.getElementById('budgetCard');
