@@ -973,28 +973,52 @@ async function createFolderAndSheet(isRecreate = false) {
   try {
     if (!gapi.client?.drive) throw new Error('Google API not ready. Please refresh.');
 
-    const folderRes  = await gapi.client.drive.files.create({ resource: { name: FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }, fields: 'id' });
-    folderId         = folderRes.result.id;
+    // 1. Create folder
+    const folderRes = await gapi.client.drive.files.create({ resource: { name: FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }, fields: 'id' });
+    folderId = folderRes.result.id;
 
-    const sheetRes   = await gapi.client.drive.files.create({ resource: { name: EXPENSES_SHEET, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [folderId] }, fields: 'id' });
-    spreadsheetId    = sheetRes.result.id;
+    // 2. Create spreadsheet (gets a default "Sheet1")
+    const sheetRes = await gapi.client.drive.files.create({ resource: { name: EXPENSES_SHEET, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [folderId] }, fields: 'id' });
+    spreadsheetId = sheetRes.result.id;
 
-    // A new spreadsheet only has "Sheet1" — rename it to "Daily Log" before writing headers
-    const newMeta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId, fields: 'sheets.properties' });
-    const defaultSheetId = newMeta.result.sheets[0].properties.sheetId;
+    // 3. Rename Sheet1 to "Daily Log" and add all other tabs in one batchUpdate
+    const initMeta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId, fields: 'sheets.properties' });
+    const defaultSheetId = initMeta.result.sheets[0].properties.sheetId;
+
     await gapi.client.sheets.spreadsheets.batchUpdate({
       spreadsheetId,
-      resource: { requests: [{ updateSheetProperties: { properties: { sheetId: defaultSheetId, title: 'Daily Log' }, fields: 'title' } }] }
+      resource: {
+        requests: [
+          { updateSheetProperties: { properties: { sheetId: defaultSheetId, title: 'Daily Log' }, fields: 'title' } },
+          { addSheet: { properties: { title: 'Categories'       } } },
+          { addSheet: { properties: { title: 'Recurring'        } } },
+          { addSheet: { properties: { title: 'Recurring Log'    } } },
+          { addSheet: { properties: { title: 'Installments'     } } },
+          { addSheet: { properties: { title: 'Installments Log' } } },
+          { addSheet: { properties: { title: 'Income Log'       } } },
+        ]
+      }
     });
 
-    await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId, range: 'Daily Log!A1:F1',
-      valueInputOption: 'RAW',
-      resource: { values: [['Timestamp', 'Date', 'Category', 'Amount', 'Notes', 'ID']] }
+    // 4. Write all headers in one batch call
+    await gapi.client.sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId,
+      resource: {
+        valueInputOption: 'RAW',
+        data: [
+          { range: 'Daily Log!A1:F1',        values: [['Timestamp','Date','Category','Amount','Notes','ID']] },
+          { range: 'Categories!A1:I1',        values: [['Type','OriginalValue','Name','Icon','BG','Chart','Budget','Hidden','Kind']] },
+          { range: 'Recurring!A1:I1',         values: [['ID','Name','Category','Frequency','Amount','StartMonth','PaymentDay','StartYear','Active']] },
+          { range: 'Recurring Log!A1:G1',     values: [['Timestamp','Date','Name','Category','Amount','Notes','RecurringID']] },
+          { range: 'Installments!A1:H1',      values: [['ID','ItemName','BankKey','TotalAmount','MonthsCount','StartYear','StartMonth','MonthlyAmount']] },
+          { range: 'Installments Log!A1:E1',  values: [['Timestamp','InstallmentID','DatePaid','AmountPaid','Notes']] },
+          { range: 'Income Log!A1:F1',        values: [['Timestamp','Date','Category','Amount','Notes','ID']] },
+        ]
+      }
     });
 
+    // 5. Seed default categories
     await createCategoriesTab(spreadsheetId);
-    await ensureIncomeTab();
 
     localStorage.setItem(`drive_setup_${currentUserEmail}`,    'complete');
     localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
@@ -1009,11 +1033,12 @@ async function createFolderAndSheet(isRecreate = false) {
 
     showScreen('mainApp');
     setSyncStrip('✅ Synced to Google Drive', false);
-    showToast('✅ Folder & sheet created!');
+    showToast('✅ Sheet created!');
 
   } catch (err) {
-    errDiv.textContent    = err.message || 'Failed to create. Please try again.';
-    errDiv.style.display  = 'block';
+    console.error('createFolderAndSheet error:', err);
+    errDiv.textContent   = err.message || 'Failed to create. Please try again.';
+    errDiv.style.display = 'block';
     showToast('❌ ' + (err.message || 'Setup failed'), 'error');
     btn.disabled = false;
     btn.textContent = isRecreate ? 'Recreate Folder & Continue' : 'Get Started';
