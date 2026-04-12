@@ -279,6 +279,35 @@
     .cat-budget-over    { background: #fee2e2; color: #991b1b; }
     .cat-budget-warning { background: #fef3c7; color: #92400e; }
     .cat-budget-ok      { background: #d1fae5; color: #065f46; }
+
+    /* ── Edit modal form ── */
+    .form-group-exp { display: flex; flex-direction: column; gap: 6px; }
+    .form-group-exp label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; }
+    .form-group-exp input, .form-group-exp select {
+      padding: 11px 13px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 15px; font-family: 'DM Sans', sans-serif;
+      background: var(--surface-2); color: var(--text);
+      -webkit-appearance: none; appearance: none; width: 100%;
+    }
+    .form-group-exp input:focus, .form-group-exp select:focus { outline: none; border-color: var(--brand); background: #fff; }
+
+    /* ── Export modal ── */
+    .export-months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+    .export-month-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 8px 10px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border); cursor: pointer;
+      font-size: 12px; font-weight: 600; color: var(--text-2);
+      background: var(--surface-2); transition: all 0.15s; user-select: none;
+    }
+    .export-month-item.selected { border-color: var(--brand); background: #ededff; color: var(--brand); }
+    .export-month-item input    { display: none; }
+    .export-section-label { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; margin: 12px 0 8px; }
+    .export-select-all-btn { background: none; border: none; color: var(--brand); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 0; }
+    .export-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+
+    /* ── More sheet danger button ── */
+    .sheet-action.danger { color: var(--danger); }
   </style>
 </head>
 <body>
@@ -304,7 +333,6 @@
   </div>
 
   <div class="card">
-    <div class="card-title"><span class="card-title-icon">📅</span> Filter Expenses</div>
     <div class="filter-grid">
       <div><label>Month</label><select id="monthSelect"></select></div>
       <div><label>Year</label><select id="yearSelect"></select></div>
@@ -401,6 +429,62 @@
   </div>
 </div>
 
+<!-- Edit Expense Modal -->
+<div class="modal-backdrop" id="editModalBackdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Edit Expense</div>
+    <input type="hidden" id="editId">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group-exp">
+        <label>Date</label>
+        <input type="date" id="editDate" required>
+      </div>
+      <div class="form-group-exp">
+        <label>Category</label>
+        <select id="editCategory" required></select>
+      </div>
+      <div class="form-group-exp">
+        <label>Amount (EGP)</label>
+        <div style="position:relative">
+          <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">🇪🇬</span>
+          <input type="number" id="editAmount" placeholder="0.00" step="0.01" min="0.01" inputmode="decimal" style="padding-left:44px" required>
+        </div>
+      </div>
+      <div class="form-group-exp">
+        <label>Notes</label>
+        <input type="text" id="editNotes" placeholder="optional">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="editCancelBtn">Cancel</button>
+      <button class="btn-save" id="editSaveBtn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-backdrop" id="exportModalBackdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⬇ Export to CSV</div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:14px">Select months to export as CSV.</p>
+    <div class="export-header-row">
+      <div class="export-section-label">Select Months</div>
+      <button class="export-select-all-btn" id="exportSelectAllBtn">Select All</button>
+    </div>
+    <div class="export-months-grid" id="exportMonthsGrid"></div>
+    <div style="margin-top:4px">
+      <label>Year</label>
+      <select id="exportYearSelect" style="margin-top:5px"></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="exportCancelBtn">Cancel</button>
+      <button class="btn-save" id="exportConfirmBtn">⬇ Download CSV</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ======================== STATE ===========================
 let expenses = [];
@@ -443,8 +527,15 @@ function getPreviousMonthTotal(year, month) {
 
 function updateStats(list) {
   const band = document.getElementById('statsBand');
-  if (!list.length) { band.style.display = 'none'; return; }
   band.style.display = 'flex';
+  if (!list.length) {
+    document.getElementById('statsBandLabel').textContent = 'Total Daily Spent';
+    document.getElementById('totalAmount').textContent = 'EGP 0.00';
+    document.getElementById('expenseCount').textContent = '0 expenses';
+    document.getElementById('expenseAvg').textContent = '';
+    document.getElementById('comparisonText').innerHTML = '';
+    return;
+  }
   const total = list.reduce((s, e) => s + e.amount, 0);
   const avg = total / list.length;
   const monthName = MONTH_NAMES[parseInt(document.getElementById('monthSelect').value)];
@@ -511,7 +602,7 @@ function renderCategorySummary(list) {
           <span style="color:var(--text-3);font-size:14px">›</span>
         </div>
       </div>`;
-  }).join('') + `<div class="tap-hint">Tap any category to see details</div>`;
+  }).join('');
 }
 
 function renderByDay(list) {
@@ -531,10 +622,39 @@ function renderByDay(list) {
       ${dayExps.map(e => `<div class="expense-item">
         <div class="cat-icon" style="background:${getCategoryColor(e.category)}">${getCategoryIcon(e.category)}</div>
         <div class="exp-details"><div class="exp-cat">${e.category}</div>${e.notes ? `<div class="exp-note">📝 ${e.notes.substring(0,40)}</div>` : ''}</div>
-        <div class="exp-amt">${formatMoney(e.amount)}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <div class="exp-amt">${formatMoney(e.amount)}</div>
+          <button style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3);line-height:1" onclick="openExpenseMenu('${e.id}')">⋮</button>
+        </div>
       </div>`).join('')}
     </div>`;
   }).join('');
+}
+
+function openExpenseMenu(id) {
+  let sheet = document.getElementById('expenseMenuSheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'expenseMenuSheet';
+    sheet.className = 'sheet-backdrop';
+    sheet.innerHTML = `<div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="expenseMenuTitle">Options</div>
+      <button class="sheet-action" id="expenseMenuEdit"><span class="sheet-action-icon">✏️</span>Edit</button>
+      <button class="sheet-action danger" id="expenseMenuDelete"><span class="sheet-action-icon">🗑️</span>Delete</button>
+    </div>`;
+    document.body.appendChild(sheet);
+    sheet.addEventListener('click', e => { if (e.target === sheet) sheet.classList.remove('open'); });
+  }
+  const exp = expenses.find(e => String(e.id) === String(id));
+  if (exp) document.getElementById('expenseMenuTitle').textContent = exp.category + ' — ' + formatMoney(exp.amount);
+  const editBtn = document.getElementById('expenseMenuEdit').cloneNode(true);
+  const delBtn  = document.getElementById('expenseMenuDelete').cloneNode(true);
+  document.getElementById('expenseMenuEdit').replaceWith(editBtn);
+  document.getElementById('expenseMenuDelete').replaceWith(delBtn);
+  editBtn.addEventListener('click', () => { sheet.classList.remove('open'); setTimeout(() => openEditModal(id), 150); });
+  delBtn.addEventListener('click',  () => { sheet.classList.remove('open'); setTimeout(() => deleteExpense(id), 150); });
+  sheet.classList.add('open');
 }
 
 function renderAll() {
@@ -692,11 +812,12 @@ function openCategoryDetail(category) {
         <div class="detail-item">
           <div class="cat-icon" style="background:${getCategoryColor(e.category)};width:40px;height:40px;border-radius:12px;font-size:19px;flex-shrink:0">${getCategoryIcon(e.category)}</div>
           <div class="exp-details" style="flex:1;min-width:0">
-            <div class="exp-cat" style="font-size:14px;font-weight:600;color:var(--text)">${e.date}</div>
+            <div class="exp-cat" style="font-size:14px;font-weight:600;color:var(--text)">${formatDate(e.date)}</div>
             ${e.notes ? `<div class="detail-note">📝 ${e.notes}</div>` : ''}
           </div>
-          <div class="detail-right">
+          <div class="detail-right" style="display:flex;align-items:center;gap:8px">
             <div class="detail-amt">${formatMoney(e.amount)}</div>
+            <button style="background:none;border:none;font-size:18px;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-3);line-height:1" onclick="openCatDetailMenu('${e.id}')">⋮</button>
           </div>
         </div>`).join('')
     : '<div class="empty-state"><div class="empty-icon">📭</div><p>No expenses</p></div>';
@@ -791,6 +912,197 @@ async function initPage() {
   });
 }
 
+// ── Edit modal ────────────────────────────────────────────
+function buildEditCategorySelect() {
+  const sorted = [...CATEGORIES].sort((a, b) => a.value.localeCompare(b.value));
+  const opts = sorted.map(c => `<option value="${c.originalValue || c.value}">${c.icon} ${c.value}</option>`).join('');
+  document.getElementById('editCategory').innerHTML = opts;
+}
+
+function openEditModal(id) {
+  const numId = Number(id);
+  const exp = expenses.find(e => Number(e.id) === numId);
+  if (!exp) return;
+  buildEditCategorySelect();
+  document.getElementById('editId').value       = exp.id;
+  document.getElementById('editDate').value     = exp.date;
+  document.getElementById('editCategory').value = exp.category;
+  document.getElementById('editAmount').value   = exp.amount;
+  document.getElementById('editNotes').value    = exp.notes || '';
+  document.getElementById('editModalBackdrop').classList.add('open');
+}
+function closeEditModal() { document.getElementById('editModalBackdrop').classList.remove('open'); }
+
+async function saveEdit() {
+  const id       = Number(document.getElementById('editId').value);
+  const date     = document.getElementById('editDate').value;
+  const category = document.getElementById('editCategory').value;
+  const amount   = parseFloat(document.getElementById('editAmount').value);
+  const notes    = document.getElementById('editNotes').value.trim();
+  if (!date || !category || !amount || amount <= 0) { showToast('Please fill all required fields', 'error'); return; }
+  const exp = expenses.find(e => Number(e.id) === id);
+  if (!exp) return;
+  const btn = document.getElementById('editSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  Object.assign(exp, { date, category, amount, notes });
+  saveExpensesLocal();
+  renderAll();
+  closeEditModal();
+  await deleteExpenseFromSheet(id);
+  await addExpenseToSheet(exp);
+  showToast('✏️ Expense updated!');
+  btn.disabled = false; btn.textContent = 'Save Changes';
+}
+
+// ── Delete ────────────────────────────────────────────────
+async function deleteExpense(id) {
+  id = typeof id === 'string' ? parseInt(id) : id;
+  if (!confirm('Delete this expense?')) return;
+  expenses = expenses.filter(e => Number(e.id) !== Number(id));
+  saveExpensesLocal();
+  renderAll();
+  await deleteExpenseFromSheet(id);
+  showToast('🗑️ Expense deleted');
+}
+
+// ── Cat detail menu ───────────────────────────────────────
+function openCatDetailMenu(id) {
+  let sheet = document.getElementById('catDetailMenuSheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'catDetailMenuSheet';
+    sheet.className = 'sheet-backdrop';
+    sheet.innerHTML = `<div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Options</div>
+      <button class="sheet-action" id="catMenuEdit"><span class="sheet-action-icon">✏️</span>Edit</button>
+      <button class="sheet-action danger" id="catMenuDelete"><span class="sheet-action-icon">🗑️</span>Delete</button>
+    </div>`;
+    document.body.appendChild(sheet);
+    sheet.addEventListener('click', e => { if (e.target === sheet) sheet.classList.remove('open'); });
+  }
+  const editBtn = document.getElementById('catMenuEdit').cloneNode(true);
+  const delBtn  = document.getElementById('catMenuDelete').cloneNode(true);
+  document.getElementById('catMenuEdit').replaceWith(editBtn);
+  document.getElementById('catMenuDelete').replaceWith(delBtn);
+  editBtn.addEventListener('click', () => {
+    sheet.classList.remove('open');
+    closeCatDetail();
+    setTimeout(() => openEditModal(id), 200);
+  });
+  delBtn.addEventListener('click', () => {
+    sheet.classList.remove('open');
+    closeCatDetail();
+    setTimeout(async () => {
+      if (!confirm('Delete this expense?')) return;
+      const numId = Number(id);
+      expenses = expenses.filter(e => Number(e.id) !== numId);
+      saveExpensesLocal();
+      renderAll();
+      await deleteExpenseFromSheet(numId);
+      showToast('🗑️ Expense deleted');
+    }, 200);
+  });
+  sheet.classList.add('open');
+}
+
+// ── Local save ────────────────────────────────────────────
+function saveExpensesLocal() {
+  if (currentUserEmail) localStorage.setItem(`expenses_${currentUserEmail}`, JSON.stringify(expenses));
+}
+
+// ── Sheet write helpers ───────────────────────────────────
+async function addExpenseToSheet(exp) {
+  if (!spreadsheetId) return false;
+  try {
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId, range: 'Daily Log!A2:F', valueInputOption: 'RAW',
+      resource: { values: [[ exp.timestamp || new Date().toISOString(), exp.date, exp.category, exp.amount, exp.notes || '', exp.id ]] }
+    });
+    return true;
+  } catch (err) { console.error(err); return false; }
+}
+
+async function deleteExpenseFromSheet(expId) {
+  if (!spreadsheetId) return false;
+  try {
+    const res  = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: 'Daily Log!A2:F' });
+    const rows = res.result.values || [];
+    let rowIndex = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][5] && parseInt(rows[i][5]) === expId) { rowIndex = i + 2; break; }
+    }
+    if (rowIndex < 2) return false;
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      resource: { requests: [{ deleteDimension: { range: { sheetId: 0, dimension: 'ROWS', startIndex: rowIndex - 1, endIndex: rowIndex } } }] }
+    });
+    return true;
+  } catch (err) { console.error(err); return false; }
+}
+
+// ── Export ────────────────────────────────────────────────
+function buildExportYearSelect() {
+  const sel = document.getElementById('exportYearSelect');
+  const curr = new Date().getFullYear();
+  sel.innerHTML = '';
+  for (let y = curr - 5; y <= curr + 1; y++) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    if (y === curr) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+function buildExportMonthsGrid() {
+  const grid = document.getElementById('exportMonthsGrid');
+  grid.innerHTML = MONTH_NAMES.map((m, i) => `
+    <label class="export-month-item" data-month="${i}">
+      <input type="checkbox" value="${i}">${m.substring(0,3)}
+    </label>`).join('');
+  grid.querySelectorAll('.export-month-item').forEach(item => {
+    item.addEventListener('click', () => item.classList.toggle('selected'));
+  });
+  const curr = new Date().getMonth();
+  const currItem = grid.querySelector(`[data-month="${curr}"]`);
+  if (currItem) currItem.classList.add('selected');
+}
+
+function openExportModal() {
+  buildExportYearSelect();
+  buildExportMonthsGrid();
+  document.getElementById('exportModalBackdrop').classList.add('open');
+}
+function closeExportModal() { document.getElementById('exportModalBackdrop').classList.remove('open'); }
+
+function downloadCSV() {
+  const year = parseInt(document.getElementById('exportYearSelect').value);
+  const selectedMonths = [...document.querySelectorAll('#exportMonthsGrid .export-month-item.selected')]
+    .map(el => parseInt(el.dataset.month));
+  if (!selectedMonths.length) { showToast('Please select at least one month', 'error'); return; }
+  const rows = expenses.filter(e => {
+    const d = parseLocalDate(e.date);
+    return d.getFullYear() === year && selectedMonths.includes(d.getMonth());
+  }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+  if (!rows.length) { showToast('No expenses found for selected period', 'error'); return; }
+  const headers = ['Timestamp','Date','Category','Amount (EGP)','Notes'];
+  const csvRows = [
+    headers.join(','),
+    ...rows.map(e => [
+      `"${e.timestamp || ''}"`, `"${e.date}"`, `"${e.category}"`,
+      e.amount.toFixed(2), `"${(e.notes||'').replace(/"/g,'""')}"`
+    ].join(','))
+  ];
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const months = selectedMonths.map(m => MONTH_NAMES[m].substring(0,3)).join('-');
+  a.href = url; a.download = `expenses_${months}_${year}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  closeExportModal();
+  showToast(`✅ Exported ${rows.length} expenses`);
+}
+
 // Event binding
 document.getElementById('monthSelect')?.addEventListener('change', renderAll);
 document.getElementById('yearSelect')?.addEventListener('change', renderAll);
@@ -799,6 +1111,18 @@ document.getElementById('closeBreakdownBtn')?.addEventListener('click', closeMon
 document.getElementById('monthBreakdownModal')?.addEventListener('click', e => { if(e.target === e.currentTarget) closeMonthBreakdown(); });
 document.getElementById('catDetailCloseBtn')?.addEventListener('click', closeCatDetail);
 document.getElementById('catDetailBackdrop')?.addEventListener('click', e => { if(e.target === e.currentTarget) closeCatDetail(); });
+document.getElementById('exportBtn')?.addEventListener('click', openExportModal);
+document.getElementById('exportCancelBtn')?.addEventListener('click', closeExportModal);
+document.getElementById('exportConfirmBtn')?.addEventListener('click', downloadCSV);
+document.getElementById('exportModalBackdrop')?.addEventListener('click', e => { if(e.target === e.currentTarget) closeExportModal(); });
+document.getElementById('exportSelectAllBtn')?.addEventListener('click', () => {
+  const items = document.querySelectorAll('#exportMonthsGrid .export-month-item');
+  const allSel = [...items].every(i => i.classList.contains('selected'));
+  items.forEach(i => i.classList.toggle('selected', !allSel));
+});
+document.getElementById('editCancelBtn')?.addEventListener('click', closeEditModal);
+document.getElementById('editSaveBtn')?.addEventListener('click', saveEdit);
+document.getElementById('editModalBackdrop')?.addEventListener('click', e => { if(e.target === e.currentTarget) closeEditModal(); });
 document.addEventListener('click', function(e) {
   const dropdown = document.getElementById('yearDropdownSummary');
   if (dropdown && !dropdown.contains(e.target)) dropdown.classList.remove('open');
