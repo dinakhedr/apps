@@ -979,6 +979,14 @@ async function createFolderAndSheet(isRecreate = false) {
     const sheetRes   = await gapi.client.drive.files.create({ resource: { name: EXPENSES_SHEET, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [folderId] }, fields: 'id' });
     spreadsheetId    = sheetRes.result.id;
 
+    // A new spreadsheet only has "Sheet1" — rename it to "Daily Log" before writing headers
+    const newMeta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId, fields: 'sheets.properties' });
+    const defaultSheetId = newMeta.result.sheets[0].properties.sheetId;
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      resource: { requests: [{ updateSheetProperties: { properties: { sheetId: defaultSheetId, title: 'Daily Log' }, fields: 'title' } }] }
+    });
+
     await gapi.client.sheets.spreadsheets.values.update({
       spreadsheetId, range: 'Daily Log!A1:F1',
       valueInputOption: 'RAW',
