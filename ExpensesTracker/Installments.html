@@ -517,16 +517,6 @@ const AVAILABLE_YEARS = [2025,2026, 2027, 2028, 2029, 2030];
 let selectedYears = new Set([2025,2026]);
 
 // ======================== HELPERS =========================
-
-function generateShortId(existingIds = []) {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
-  let id;
-  do {
-    id = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  } while (existingIds.includes(id));
-  return id;
-}
-
 function computeMonthlyAmount(total, months) { return months > 0 ? total / months : 0; }
 
 function getPaidSumForInstallment(instId) {
@@ -1104,12 +1094,17 @@ async function addLogToSheet(log) {
 }
 async function deleteAllLogsForInstallment(instId) {
   if(!spreadsheetId) return;
+  // Look up the real sheetId for Installments Log — don't hardcode 0
+  const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId, fields: 'sheets.properties' });
+  const logSheet = meta.result.sheets.find(s => s.properties.title === INSTALLMENTS_LOG_SHEET);
+  if (!logSheet) return;
+  const logSheetId = logSheet.properties.sheetId;
   const res = await gapi.client.sheets.spreadsheets.values.get({spreadsheetId, range:`${INSTALLMENTS_LOG_SHEET}!A2:E`});
   const rows = res.result.values||[];
   let toDelete = [];
   for(let i=0;i<rows.length;i++) if(rows[i][1]===instId) toDelete.push(i+2);
   for(let idx of toDelete.reverse()) {
-    await gapi.client.sheets.spreadsheets.batchUpdate({spreadsheetId, resource:{requests:[{deleteDimension:{range:{sheetId:0, dimension:'ROWS', startIndex:idx-1, endIndex:idx}}}]}});
+    await gapi.client.sheets.spreadsheets.batchUpdate({spreadsheetId, resource:{requests:[{deleteDimension:{range:{sheetId:logSheetId, dimension:'ROWS', startIndex:idx-1, endIndex:idx}}}]}});
   }
 }
 
