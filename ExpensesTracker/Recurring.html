@@ -62,6 +62,9 @@
     .sub-status.overdue  { color: var(--danger); }
     .sub-status.upcoming { color: var(--text-3); }
     .sub-status.paid     { color: var(--success); }
+    .sub-status.due      { color: var(--success); }
+    .sub-card.due::before { background: var(--success); }
+    .sub-card.due .sub-icon { background: #f0fdf4; }
     /* Frequency badge */
     .sub-freq.monthly, .sub-freq.quarterly, .sub-freq.annual {
       display: inline-block; padding: 2px 6px; border-radius: 20px;
@@ -644,7 +647,8 @@ function getStatusInfo(sub) {
     const lbl  = next ? `${MONTHS[next.getMonth()]} ${next.getDate()}` : '—';
     return { state:'future',  label:lbl,  payable:false };
   }
-  if (sub.paymentDay <= today) return { state:'overdue', label:`⚠️ Due ${MONTHS[now.getMonth()]} ${sub.paymentDay}`, payable:true };
+if (sub.paymentDay === today) return { state:'due',    label:`Due ${MONTHS[now.getMonth()]} ${sub.paymentDay}`, payable:true };
+  if (sub.paymentDay < today)  return { state:'overdue', label:`⚠️ Overdue ${MONTHS[now.getMonth()]} ${sub.paymentDay}`, payable:true };
   return { state:'upcoming', label:`${MONTHS[now.getMonth()]} ${sub.paymentDay}`, payable:false };
 }
 
@@ -946,8 +950,7 @@ function render() {
       const globalIdx = recurringList.findIndex(s=>s.id===sub.id);
       const si = getStatusInfo(sub);
       const icon = getRecurringCategoryIcon(sub.category);
-      const cardClass = si.state==='overdue' ? 'sub-card overdue' : si.state==='paid' ? 'sub-card paid-row' : 'sub-card';
-      const payClass  = si.state==='paid' ? 'pay-btn paid' : si.payable ? 'pay-btn can-pay' : 'pay-btn future';
+const cardClass = si.state==='overdue' ? 'sub-card overdue' : si.state==='paid' ? 'sub-card paid-row' : si.state==='due' ? 'sub-card due' : 'sub-card';      const payClass  = si.state==='paid' ? 'pay-btn paid' : si.payable ? 'pay-btn can-pay' : 'pay-btn future';
       const payIcon   = si.state === 'paid' ? '✅' : si.payable ? '💰' : '🔒';
       const payClick  = si.payable && si.state!=='paid' ? `markAsPaid(${globalIdx})` : '';
       const payTitle  = si.state==='paid' ? 'Paid this month' : si.payable ? 'Mark as paid' : 'Not due yet';
@@ -959,8 +962,7 @@ function render() {
             <div class="sub-meta">
               <span class="sub-freq ${sub.frequency.toLowerCase()}">${sub.frequency}</span>
               <span class="sub-dot">·</span>
-              <span class="sub-status ${si.state==='overdue'?'overdue':si.state==='paid'?'paid':'upcoming'}">${si.label}</span>
-            </div>
+<span class="sub-status ${si.state==='overdue'?'overdue':si.state==='paid'?'paid':si.state==='due'?'due':'upcoming'}">${si.label}</span>            </div>
           </div>
           <div class="sub-right">
             <div class="sub-amount">${formatMoney(sub.amount)}</div>
