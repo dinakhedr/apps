@@ -479,11 +479,12 @@ function logout(redirectTo = 'Home.html') {
   const email = localStorage.getItem('google_token')
     ? getUserEmailFromToken(localStorage.getItem('google_token'))
     : null;
-  if (email) {
+if (email) {
     keys.push(
       `drive_setup_${email}`,
       `spreadsheet_id_${email}`,
       `expenses_${email}`,
+      `incomes_${email}`,
       `budgets_${email}`,
       `recurring_${email}`,
     );
