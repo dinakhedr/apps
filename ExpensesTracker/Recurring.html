@@ -63,8 +63,7 @@
     .sub-status.upcoming { color: var(--text-3); }
     .sub-status.paid     { color: var(--success); }
     .sub-status.due      { color: var(--success); }
-    .sub-card.due::before { background: var(--success); }
-    .sub-card.due .sub-icon { background: #f0fdf4; }
+
     /* Frequency badge */
     .sub-freq.monthly, .sub-freq.quarterly, .sub-freq.annual {
       display: inline-block; padding: 2px 6px; border-radius: 20px;
@@ -931,7 +930,7 @@ function render() {
   const allActive  = recurringList.filter(s=>s.active);
   const inactive   = recurringList.filter(s=>!s.active);
   const thisMonthActive = allActive.filter(s => isDueThisMonth(s) || isPaid(s.id));
-  const order = { overdue:0, upcoming:1, future:2, paid:3 };
+const order = { overdue:0, due:1, upcoming:2, future:3, paid:4 };
   const sortedActive = [...thisMonthActive].sort((a,b) => {
     const sa=getStatusInfo(a), sb=getStatusInfo(b);
     if (order[sa.state]!==order[sb.state]) return order[sa.state]-order[sb.state];
@@ -950,7 +949,7 @@ function render() {
       const globalIdx = recurringList.findIndex(s=>s.id===sub.id);
       const si = getStatusInfo(sub);
       const icon = getRecurringCategoryIcon(sub.category);
-const cardClass = si.state==='overdue' ? 'sub-card overdue' : si.state==='paid' ? 'sub-card paid-row' : si.state==='due' ? 'sub-card due' : 'sub-card';      const payClass  = si.state==='paid' ? 'pay-btn paid' : si.payable ? 'pay-btn can-pay' : 'pay-btn future';
+const cardClass = si.state==='overdue' ? 'sub-card overdue' : si.state==='paid' ? 'sub-card paid-row' : 'sub-card';
       const payIcon   = si.state === 'paid' ? '✅' : si.payable ? '💰' : '🔒';
       const payClick  = si.payable && si.state!=='paid' ? `markAsPaid(${globalIdx})` : '';
       const payTitle  = si.state==='paid' ? 'Paid this month' : si.payable ? 'Mark as paid' : 'Not due yet';
