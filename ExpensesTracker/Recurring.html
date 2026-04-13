@@ -611,9 +611,6 @@ function getPaidSet()   { const r=localStorage.getItem(paidKey()); return r?new 
 function savePaidSet(s) { localStorage.setItem(paidKey(), JSON.stringify([...s])); }
 function isPaid(id)     { return getPaidSet().has(String(id)); }
 
-// ── Helpers ────────────────────────────────────────────────
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-
 // ── Tab switch ─────────────────────────────────────────────
 function switchTab(tab) {
   activeTab = tab;
