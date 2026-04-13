@@ -521,8 +521,6 @@ function parseLocalDate(str) {
   const [y, m, d] = str.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
-function formatMoney(amount) { return `EGP ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
-
 function getFilteredExpenses() {
   const year = parseInt(document.getElementById('yearSelect').value);
   const month = parseInt(document.getElementById('monthSelect').value);
