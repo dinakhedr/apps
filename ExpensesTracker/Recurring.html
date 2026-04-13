@@ -429,6 +429,7 @@
       <div class="stats-label">This month</div>
       <div class="stats-total" id="monthTotal">EGP 0</div>
       <div class="stats-sub" id="activeCount"></div>
+      <div id="paidSoFar" style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:3px;font-weight:500;"></div>
     </div>
     <div style="text-align:right">
       <div class="stats-label">Next due</div>
@@ -1032,6 +1033,20 @@ const order = { overdue:0, due:1, upcoming:2, future:3, paid:4 };
     statsRow.style.display='flex';
     document.getElementById('monthTotal').textContent = formatMoney(monthly);
     document.getElementById('activeCount').textContent = `${allActive.length} active · ${overdueN} overdue`;
+    // Paid so far this month from recurring log
+    const now = new Date();
+    const paidThisMonth = (window._allPaidLogs || []).filter(e => {
+      if (!e.date) return false;
+      const d = new Date(e.date + 'T00:00:00');
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    const paidTotal = paidThisMonth.reduce((s, e) => s + (e.amount || 0), 0);
+    const paidEl = document.getElementById('paidSoFar');
+    if (paidTotal > 0) {
+      paidEl.textContent = `✅ Paid so far: ${formatMoney(paidTotal)}`;
+    } else {
+      paidEl.textContent = '';
+    }
     let earliest=null;
     for (const sub of allActive) {
       if (isPaid(sub.id)) continue;
