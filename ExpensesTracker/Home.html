@@ -454,7 +454,39 @@
     </div>
   </div>
 </div>
-
+<!-- ── Edit Income Modal ── -->
+<div class="modal-backdrop" id="incomeModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Edit Income</div>
+    <input type="hidden" id="editIncomeId">
+    <div class="modal-grid">
+      <div class="form-group">
+        <label class="required">Date</label>
+        <input type="date" id="editIncomeDate" required>
+      </div>
+      <div class="form-group">
+        <label class="required">Category</label>
+        <select id="editIncomeCategory" required></select>
+      </div>
+      <div class="form-group">
+        <label class="required">Amount (EGP)</label>
+        <div class="amount-wrap">
+          <span class="currency-flag">🇪🇬</span>
+          <input type="number" id="editIncomeAmount" placeholder="0.00" step="0.01" min="0.01" inputmode="decimal" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <input type="text" id="editIncomeNotes" placeholder="optional">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="editIncomeCancelBtn">Cancel</button>
+      <button class="btn-save" id="editIncomeSaveBtn">Save Changes</button>
+    </div>
+  </div>
+</div>
 <!-- ── Budget Settings Modal ── -->
 <div class="modal-backdrop" id="budgetModalBackdrop">
   <div class="modal">
@@ -889,12 +921,7 @@ async function deleteIncome(id) {
   id = typeof id === 'string' ? parseInt(id) : id;
   if (!confirm('Delete this income entry?')) return;
   
-  const before = incomes.length;
   incomes = incomes.filter(i => Number(i.id) !== Number(id));
-  if (incomes.length === before) {
-    incomes = incomes.filter(i => String(i.id) !== String(id));
-  }
-  
   saveIncomesLocal();
   renderAll();
   await deleteIncomeFromSheet(id);
@@ -906,15 +933,57 @@ function openEditIncomeModal(id) {
   const inc = incomes.find(i => Number(i.id) === id);
   if (!inc) return;
   
-  // Reuse the income modal or create a similar one
-  document.getElementById('incomeDate').value = inc.date;
-  document.getElementById('incomeCategory').value = inc.category;
-  document.getElementById('incomeAmount').value = inc.amount;
-  document.getElementById('incomeNotes').value = inc.notes || '';
-  editingIncomeId = id;
+  // Build income category select
+  const incomeCats = getIncomeCategories();
+  const select = document.getElementById('editIncomeCategory');
+  select.innerHTML = '<option value="" disabled>Select…</option>' + 
+    incomeCats.map(c => `<option value="${c.value}">${c.icon} ${c.value}</option>`).join('');
   
-  // Show income modal
+  editingIncomeId = id;
+  document.getElementById('editIncomeId').value = id;
+  document.getElementById('editIncomeDate').value = inc.date;
+  document.getElementById('editIncomeCategory').value = inc.category;
+  document.getElementById('editIncomeAmount').value = inc.amount;
+  document.getElementById('editIncomeNotes').value = inc.notes || '';
+  
   document.getElementById('incomeModal').classList.add('open');
+}
+
+function closeIncomeModal() {
+  document.getElementById('incomeModal').classList.remove('open');
+  editingIncomeId = null;
+}
+
+async function saveEditIncome() {
+  const id = parseInt(document.getElementById('editIncomeId').value);
+  const date = document.getElementById('editIncomeDate').value;
+  const category = document.getElementById('editIncomeCategory').value;
+  const amount = parseFloat(document.getElementById('editIncomeAmount').value);
+  const notes = document.getElementById('editIncomeNotes').value.trim();
+  
+  if (!date || !category || !amount || amount <= 0) {
+    showToast('Please fill all required fields', 'error');
+    return;
+  }
+  
+  const inc = incomes.find(i => i.id === id);
+  if (!inc) return;
+  
+  const saveBtn = document.getElementById('editIncomeSaveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
+  
+  Object.assign(inc, { date, category, amount, notes });
+  saveIncomesLocal();
+  renderAll();
+  closeIncomeModal();
+  
+  await deleteIncomeFromSheet(id);
+  await addIncomeToSheet(inc);
+  showToast('✏️ Income updated & synced!');
+  
+  saveBtn.disabled = false;
+  saveBtn.textContent = 'Save Changes';
 }
 
 function saveIncomesLocal() {
@@ -1311,7 +1380,21 @@ async function addExpenseToSheet(exp) {
     console.error(err); return false;
   }
 }
-
+async function addIncomeToSheet(inc) {
+  if (!spreadsheetId) return false;
+  try {
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: `${INCOME_LOG_SHEET}!A2:F`,
+      valueInputOption: 'RAW',
+      resource: { values: [[inc.timestamp || new Date().toISOString(), inc.date, inc.category, inc.amount, inc.notes || '', inc.id]] }
+    });
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
 // ── Delete from sheet ─────────────────────────────────────
 async function deleteExpenseFromSheet(expId) {
   if (!spreadsheetId) return false;
@@ -1515,6 +1598,10 @@ window.onload = function () {
   document.getElementById('budgetSaveBtn').addEventListener('click',   saveBudgets);
   document.getElementById('budgetModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeBudgetModal(); });
 
+  document.getElementById('editIncomeCancelBtn')?.addEventListener('click', closeIncomeModal);
+  document.getElementById('editIncomeSaveBtn')?.addEventListener('click', saveEditIncome);
+  document.getElementById('incomeModal')?.addEventListener('click', (e) => {if (e.target === e.currentTarget) closeIncomeModal();});
+  
   document.getElementById('submitBtn').addEventListener('click', function () {
     const date     = document.getElementById('date').value;
     const category = document.getElementById('category').value;
