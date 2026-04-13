@@ -690,9 +690,6 @@ let editingIncomeId = null;
 let selectedIncomeId = null;
 let monthDetailSelectedId = null;
 
-// Use the constant from utils.js
-const INCOME_SHEET = INCOME_LOG_SHEET;
-
 // Available years for dropdown (2020-2030)
 const AVAILABLE_YEARS = [2026, 2027, 2028, 2029, 2030];
 let selectedYears = new Set();
@@ -1034,15 +1031,15 @@ function parseIncomeRow(row, idx) {
 async function ensureIncomeTab() {
   try {
     const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
-    const exists = meta.result.sheets.some(s => s.properties.title === INCOME_SHEET);
+    const exists = meta.result.sheets.some(s => s.properties.title === INCOME_LOG_SHEET);
     if (!exists) {
       await gapi.client.sheets.spreadsheets.batchUpdate({
         spreadsheetId,
-        resource: { requests: [{ addSheet: { properties: { title: INCOME_SHEET } } }] }
+        resource: { requests: [{ addSheet: { properties: { title: INCOME_LOG_SHEET } } }] }
       });
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${INCOME_SHEET}!A1:F1`,
+        range: `${INCOME_LOG_SHEET}!A1:F1`,
         valueInputOption: 'RAW',
         resource: { values: [['Timestamp', 'Date', 'Category', 'Amount', 'Notes', 'ID']] }
       });
@@ -1057,7 +1054,7 @@ async function loadIncomesFromSheet() {
   try {
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${INCOME_SHEET}!A2:F`
+      range: `${INCOME_LOG_SHEET}!A2:F`
     });
     const rows = res.result.values || [];
     incomes = rows.map((row, idx) => parseIncomeRow(row, idx));
@@ -1080,12 +1077,12 @@ async function persistIncomesToSheet() {
   if (!spreadsheetId) return false;
   await gapi.client.sheets.spreadsheets.values.clear({
     spreadsheetId,
-    range: `${INCOME_SHEET}!A2:F`
+    range: `${INCOME_LOG_SHEET}!A2:F`
   });
   if (incomes.length) {
     await gapi.client.sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `${INCOME_SHEET}!A2:F`,
+      range: `${INCOME_LOG_SHEET}!A2:F`,
       valueInputOption: 'RAW',
       resource: { values: incomes.map(incomeToRow) }
     });
@@ -1101,7 +1098,7 @@ async function addIncomeToSheet(inc) {
   try {
     await gapi.client.sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: `${INCOME_SHEET}!A2:F`,
+      range: `${INCOME_LOG_SHEET}!A2:F`,
       valueInputOption: 'RAW',
       resource: { values: [[inc.timestamp, inc.date, inc.category, inc.amount, inc.notes || '', inc.id]] }
     });
@@ -1123,7 +1120,7 @@ async function deleteIncomeFromSheet(incId) {
     
     let sheetId = null;
     for (const sheet of spreadsheet.result.sheets) {
-      if (sheet.properties.title === INCOME_SHEET) {
+      if (sheet.properties.title === INCOME_LOG_SHEET) {
         sheetId = sheet.properties.sheetId;
         break;
       }
@@ -1137,7 +1134,7 @@ async function deleteIncomeFromSheet(incId) {
     // Get all rows to find the matching ID
     const res = await gapi.client.sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${INCOME_SHEET}!A2:F`
+      range: `${INCOME_LOG_SHEET}!A2:F`
     });
     const rows = res.result.values || [];
     let rowIndex = -1;
