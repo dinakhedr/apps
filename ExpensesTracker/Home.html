@@ -5,7 +5,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
   <link rel="icon" type="image/png" sizes="180x180" href="icon.png">
-  <link rel="shortcut icon" href="icon.png">
+  <link rel="shortcut icon" href="icon.fpng">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -949,7 +949,7 @@ function openEditIncomeModal(id) {
   document.getElementById('incomeModal').classList.add('open');
 }
 
-function closeIncomeModal() {
+function closeEditIncomeModal() {
   document.getElementById('incomeModal').classList.remove('open');
   editingIncomeId = null;
 }
@@ -976,7 +976,7 @@ async function saveEditIncome() {
   Object.assign(inc, { date, category, amount, notes });
   saveIncomesLocal();
   renderAll();
-  closeIncomeModal();
+  closeEditIncomeModal();
   
   await deleteIncomeFromSheet(id);
   await addIncomeToSheet(inc);
@@ -1598,9 +1598,9 @@ window.onload = function () {
   document.getElementById('budgetSaveBtn').addEventListener('click',   saveBudgets);
   document.getElementById('budgetModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeBudgetModal(); });
 
-  document.getElementById('editIncomeCancelBtn')?.addEventListener('click', closeIncomeModal);
+  document.getElementById('editIncomeCancelBtn')?.addEventListener('click', closeEditIncomeModal);
   document.getElementById('editIncomeSaveBtn')?.addEventListener('click', saveEditIncome);
-  document.getElementById('incomeModal')?.addEventListener('click', (e) => {if (e.target === e.currentTarget) closeIncomeModal();});
+  document.getElementById('incomeModal')?.addEventListener('click', (e) => {if (e.target === e.currentTarget) closeEditIncomeModal();});
   
   document.getElementById('submitBtn').addEventListener('click', function () {
     const date     = document.getElementById('date').value;
