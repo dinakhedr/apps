@@ -479,6 +479,7 @@ let spreadsheetId = null;
 let folderId = null;
 let budgets = {};           // { category: limitEGP }
 let homeSearchQuery = '';
+  let editingIncomeId = null;
 
 // ── Populate selects ─────────────────────────────────────
 function buildCategorySelects() {
@@ -721,25 +722,23 @@ function renderRecentActivity() {
     const amountClass = a.type === 'expense' ? 'expense' : 'income';
     const title = a.type === 'expense' ? a.category : (a.category || 'Income');
     
-const menuBtn = a.type === 'expense'
-  ? `<button class="activity-menu-btn" onclick="openActivityMenu(${a.id})">⋮</button>`
-  : '';
-return `
-  <div class="activity-item">
-    <div class="activity-icon" style="background:${bg}">${icon}</div>
-    <div class="activity-details">
-      <div class="activity-title">${escapeHtml(title)}</div>
-      <div class="activity-date">${formatDate(a.date)}</div>
-      ${a.notes ? `<div class="activity-note">📝 ${escapeHtml(a.notes.substring(0, 40))}</div>` : ''}
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <div class="activity-amount ${amountClass}">${a.sign}${formatMoney(Math.abs(a.amount))}</div>
-      ${a.type === 'expense' ? `<button class="activity-menu-btn" onclick="openActivityMenu('${a.id}')">⋮</button>` : ''}
-    </div>
-  </div>`;
+    // Show menu button for both expenses AND income
+    return `
+      <div class="activity-item">
+        <div class="activity-icon" style="background:${bg}">${icon}</div>
+        <div class="activity-details">
+          <div class="activity-title">${escapeHtml(title)}</div>
+          <div class="activity-date">${formatDate(a.date)}</div>
+          ${a.notes ? `<div class="activity-note">📝 ${escapeHtml(a.notes.substring(0, 40))}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <div class="activity-amount ${amountClass}">${a.sign}${formatMoney(Math.abs(a.amount))}</div>
+          <button class="activity-menu-btn" onclick="openActivityMenu('${a.id}', '${a.type}')">⋮</button>
+        </div>
+      </div>`;
   }).join('');
 }
-function openActivityMenu(id) {
+function openActivityMenu(id, type = 'expense') {
   let sheet = document.getElementById('activityMenuSheet');
   if (!sheet) {
     sheet = document.createElement('div');
@@ -754,14 +753,41 @@ function openActivityMenu(id) {
     document.body.appendChild(sheet);
     sheet.addEventListener('click', e => { if (e.target === sheet) sheet.classList.remove('open'); });
   }
-  const exp = expenses.find(e => String(e.id) === String(id));
-  if (exp) document.getElementById('activityMenuTitle').textContent = exp.category + ' — ' + formatMoney(exp.amount);
+  
+  let item;
+  if (type === 'expense') {
+    item = expenses.find(e => String(e.id) === String(id));
+  } else {
+    item = incomes.find(i => String(i.id) === String(id));
+  }
+  
+  if (item) {
+    document.getElementById('activityMenuTitle').textContent = (type === 'expense' ? item.category : (item.category || 'Income')) + ' — ' + formatMoney(item.amount);
+  }
+  
   const editBtn = document.getElementById('activityMenuEdit').cloneNode(true);
   const delBtn  = document.getElementById('activityMenuDelete').cloneNode(true);
   document.getElementById('activityMenuEdit').replaceWith(editBtn);
   document.getElementById('activityMenuDelete').replaceWith(delBtn);
-  editBtn.addEventListener('click', () => { sheet.classList.remove('open'); setTimeout(() => openEditModal(id), 150); });
-  delBtn.addEventListener('click',  () => { sheet.classList.remove('open'); setTimeout(() => deleteExpense(id), 150); });
+  
+  editBtn.addEventListener('click', () => { 
+    sheet.classList.remove('open'); 
+    if (type === 'expense') {
+      setTimeout(() => openEditModal(id), 150);
+    } else {
+      setTimeout(() => openEditIncomeModal(id), 150);
+    }
+  });
+  
+  delBtn.addEventListener('click', () => { 
+    sheet.classList.remove('open'); 
+    if (type === 'expense') {
+      setTimeout(() => deleteExpense(id), 150);
+    } else {
+      setTimeout(() => deleteIncome(id), 150);
+    }
+  });
+  
   sheet.classList.add('open');
 }
 // ── Budget overview ───────────────────────────────────────
@@ -858,6 +884,96 @@ async function deleteExpense(id) {
   showToast('🗑️ Expense deleted');
 }
 
+// ── Delete income ────────────────────────────────────────
+async function deleteIncome(id) {
+  id = typeof id === 'string' ? parseInt(id) : id;
+  if (!confirm('Delete this income entry?')) return;
+  
+  const before = incomes.length;
+  incomes = incomes.filter(i => Number(i.id) !== Number(id));
+  if (incomes.length === before) {
+    incomes = incomes.filter(i => String(i.id) !== String(id));
+  }
+  
+  saveIncomesLocal();
+  renderAll();
+  await deleteIncomeFromSheet(id);
+  showToast('🗑️ Income deleted');
+}
+
+function openEditIncomeModal(id) {
+  id = Number(id);
+  const inc = incomes.find(i => Number(i.id) === id);
+  if (!inc) return;
+  
+  // Reuse the income modal or create a similar one
+  document.getElementById('incomeDate').value = inc.date;
+  document.getElementById('incomeCategory').value = inc.category;
+  document.getElementById('incomeAmount').value = inc.amount;
+  document.getElementById('incomeNotes').value = inc.notes || '';
+  editingIncomeId = id;
+  
+  // Show income modal
+  document.getElementById('incomeModal').classList.add('open');
+}
+
+function saveIncomesLocal() {
+  if (currentUserEmail) localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
+}
+
+async function deleteIncomeFromSheet(incId) {
+  if (!spreadsheetId) return false;
+  try {
+    const spreadsheet = await gapi.client.sheets.spreadsheets.get({
+      spreadsheetId,
+      fields: 'sheets.properties'
+    });
+    
+    let sheetId = null;
+    for (const sheet of spreadsheet.result.sheets) {
+      if (sheet.properties.title === INCOME_LOG_SHEET) {
+        sheetId = sheet.properties.sheetId;
+        break;
+      }
+    }
+    
+    if (sheetId === null) return false;
+    
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${INCOME_LOG_SHEET}!A2:F`
+    });
+    const rows = res.result.values || [];
+    let rowIndex = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][5] && parseInt(rows[i][5]) === incId) {
+        rowIndex = i + 2;
+        break;
+      }
+    }
+    if (rowIndex < 2) return false;
+    
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      resource: {
+        requests: [{
+          deleteDimension: {
+            range: {
+              sheetId: sheetId,
+              dimension: 'ROWS',
+              startIndex: rowIndex - 1,
+              endIndex: rowIndex
+            }
+          }
+        }]
+      }
+    });
+    return true;
+  } catch (err) {
+    console.error('deleteIncomeFromSheet error:', err);
+    return false;
+  }
+}
 // ── Edit modal ────────────────────────────────────────────
 function openEditModal(id) {
   id = Number(id);
