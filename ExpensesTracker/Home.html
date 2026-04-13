@@ -805,7 +805,7 @@ function openActivityMenu(id, type = 'expense') {
   editBtn.addEventListener('click', () => { 
     sheet.classList.remove('open'); 
     if (type === 'expense') {
-      setTimeout(() => openEditModal(id), 150);
+      setTimeout(() => openEditExpenseModal(id), 150);
     } else {
       setTimeout(() => openEditIncomeModal(id), 150);
     }
@@ -814,9 +814,9 @@ function openActivityMenu(id, type = 'expense') {
   delBtn.addEventListener('click', () => { 
     sheet.classList.remove('open'); 
     if (type === 'expense') {
-      setTimeout(() => deleteExpense(id), 150);
+      setTimeout(() => deleteExpenseEntry(id), 150);
     } else {
-      setTimeout(() => deleteIncome(id), 150);
+      setTimeout(() => deleteIncomeEntry(id), 150);
     }
   });
   
@@ -901,13 +901,13 @@ async function addExpense(date, category, amount, notes) {
 }
 
 // ── Delete expense ────────────────────────────────────────
-async function deleteExpense(id) {
+async function deleteExpenseEntry(id) {
   id = typeof id === 'string' ? parseInt(id) : id;
   if (!confirm('Delete this expense?')) return;
   const before = expenses.length;
   expenses = expenses.filter(e => Number(e.id) !== Number(id));
   if (expenses.length === before) {
-    console.warn('deleteExpense: id not matched as number, trying string', id, typeof id);
+    console.warn('deleteExpenseEntry: id not matched as number, trying string', id, typeof id);
     expenses = expenses.filter(e => String(e.id) !== String(id));
   }
   saveLocal();
@@ -917,7 +917,7 @@ async function deleteExpense(id) {
 }
 
 // ── Delete income ────────────────────────────────────────
-async function deleteIncome(id) {
+async function deleteIncomeEntry(id) {
   id = typeof id === 'string' ? parseInt(id) : id;
   if (!confirm('Delete this income entry?')) return;
   
@@ -1044,7 +1044,7 @@ async function deleteIncomeFromSheet(incId) {
   }
 }
 // ── Edit modal ────────────────────────────────────────────
-function openEditModal(id) {
+function openEditExpenseModal(id) {
   id = Number(id);
   const exp = expenses.find(e => Number(e.id) === id);
   if (!exp) return;
@@ -1055,10 +1055,10 @@ function openEditModal(id) {
   document.getElementById('editNotes').value    = exp.notes;
   document.getElementById('editModalBackdrop').classList.add('open');
 }
-function closeEditModal() {
+function closeEditExpenseModal() {
   document.getElementById('editModalBackdrop').classList.remove('open');
 }
-async function saveEdit() {
+async function saveEditExpense() {
   const id       = parseInt(document.getElementById('editId').value);
   const date     = document.getElementById('editDate').value;
   const category = document.getElementById('editCategory').value;
@@ -1076,7 +1076,7 @@ async function saveEdit() {
   Object.assign(exp, { date, category, amount, notes });
   saveLocal();
   renderAll();
-  closeEditModal();
+  closeEditExpenseModal();
 
   await deleteExpenseFromSheet(id);
   await addExpenseToSheet(exp);
@@ -1590,9 +1590,9 @@ window.onload = function () {
   document.getElementById('manualSyncBtn').addEventListener('click',         manualSync);
   document.getElementById('openBudgetBtn').addEventListener('click',         openBudgetModal);
 
-  document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
-  document.getElementById('editSaveBtn').addEventListener('click',   saveEdit);
-  document.getElementById('editModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditModal(); });
+  document.getElementById('editCancelBtn').addEventListener('click', closeEditExpenseModal);
+  document.getElementById('editSaveBtn').addEventListener('click',   saveEditExpense);
+  document.getElementById('editModalBackdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditExpenseModal(); });
 
   document.getElementById('budgetCancelBtn').addEventListener('click', closeBudgetModal);
   document.getElementById('budgetSaveBtn').addEventListener('click',   saveBudgets);
