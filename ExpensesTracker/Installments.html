@@ -1162,7 +1162,7 @@ function openEditModal(id) {
   document.getElementById('startMonth').value = inst.startMonth;
   document.getElementById('startYear').value = inst.startYear;
   updateMonthlyPreview();
-  document.getElementById('modalFooter').innerHTML = `<button class="btn-danger" onclick="deleteInstallment('${id}');closeModal()">Delete</button><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveInstallment()">Update</button>`;
+  document.getElementById('modalFooter').innerHTML = `<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveInstallment()">Update</button>`;
   document.getElementById('instModal').classList.add('open');
 }
 async function deleteInstallment(id) {
