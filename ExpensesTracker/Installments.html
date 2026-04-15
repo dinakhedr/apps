@@ -790,7 +790,7 @@ function closeMonthDetailModal() {
 // ======================== RENDER ==========================
 
 // TAB constants: 'current' | 'upcoming' | 'all'
-function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = false, tab = 'current', upcomingMonthName = '') {
+function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = false, tab = 'current', upcomingMonthName = '', upcomingMonth = 0, upcomingYear = 0) {
   const bank = BANK_PROVIDERS.find(b=>b.key===inst.bankKey) || BANK_PROVIDERS[0];
   const remaining = getRemaining(inst);
   const paidMonths = getPaidMonthsCount(inst.id);
@@ -820,8 +820,11 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
       metaText = `⏳ ${remainingMonths} month${remainingMonths !== 1 ? 's' : ''} left`;
     }
   } else if (tab === 'upcoming') {
-    // Upcoming: due month + months left
-    metaText = `📅 ${upcomingMonthName} · ${remainingMonths} month${remainingMonths !== 1 ? 's' : ''} left`;
+    // Schedule-based remaining: months from next month to end, ignoring logs
+    const endD = getLastPaymentDate(inst);
+    const scheduleRemaining = (endD.getFullYear() - upcomingYear) * 12 + (endD.getMonth() - upcomingMonth) + 1;
+    const scheduledLeft = Math.max(0, scheduleRemaining);
+    metaText = `📅 ${upcomingMonthName} · ${scheduledLeft} month${scheduledLeft !== 1 ? 's' : ''} left`;
   } else {
     // All Plans: full timeline  start → end
     const startD = getStartDate(inst);
@@ -978,9 +981,9 @@ function renderAll() {
   if (!upcomingEntries.length) {
     upcomingContainer.innerHTML = `<div class="empty-state">No installments due in ${nextMonthName}</div>`;
   } else {
-    upcomingContainer.innerHTML = upcomingEntries.map(({ inst }) => {
-      return renderInstRow(inst, false, false, false, 'upcoming', nextMonthName);
-    }).join('');
+upcomingContainer.innerHTML = upcomingEntries.map(({ inst }) => {
+  return renderInstRow(inst, false, false, false, 'upcoming', nextMonthName, nextMonth, nextMonthYear);
+}).join('');
   }
 
   // ── All Plans tab ──
