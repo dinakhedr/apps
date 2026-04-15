@@ -52,6 +52,7 @@
     .inst-meta { font-size: 10px; color: var(--text-2); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px; }
     .inst-progress { margin-top: 7px; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
     .inst-progress-bar { height: 100%; background: var(--brand); border-radius: 4px; width: 0%; }
+    .inst-progress-bar.month-progress { background: #8b5cf6; }
     .inst-amounts { text-align: right; flex-shrink: 0; min-width: 90px; max-width: 110px; }
     .inst-amount { font-weight: 700; font-size: 12px; color: var(--brand); white-space: nowrap; }
     .inst-total-amount { font-weight: 700; font-size: 13px; color: var(--text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -418,7 +419,7 @@
   <div class="card">
     <div class="tab-bar">
       <button class="tab-btn active" data-tab="current">📅 This Month</button>
-      <button class="tab-btn" data-tab="upcoming">⏳ Upcoming</button>
+      <button class="tab-btn" data-tab="upcoming" id="upcomingTabBtn">⏳ Upcoming</button>
       <button class="tab-btn" data-tab="all">📋 All Plans</button>
     </div>
     <div class="tab-content active" id="tabCurrent"><div id="currentList"></div></div>
@@ -787,13 +788,49 @@ function closeMonthDetailModal() {
 }
 
 // ======================== RENDER ==========================
-function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = false, isCurrentMonthTab = false) {
+
+// TAB constants: 'current' | 'upcoming' | 'all'
+function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = false, tab = 'current', upcomingMonthName = '') {
   const bank = BANK_PROVIDERS.find(b=>b.key===inst.bankKey) || BANK_PROVIDERS[0];
   const remaining = getRemaining(inst);
-  const progress = Math.min(100, ((inst.totalAmount - remaining) / inst.totalAmount) * 100);
+  const paidMonths = getPaidMonthsCount(inst.id);
   const remainingMonths = getRemainingMonths(inst);
   const status = getStatus(inst);
   const totalAmountFormatted = formatMoney(inst.totalAmount);
+
+  // ── Progress bar: amount-based for This Month, month-based for Upcoming & All ──
+  let progress, progressClass;
+  if (tab === 'current') {
+    progress = Math.min(100, ((inst.totalAmount - remaining) / inst.totalAmount) * 100);
+    progressClass = '';
+  } else {
+    progress = Math.min(100, (paidMonths / inst.monthsCount) * 100);
+    progressClass = 'month-progress';
+  }
+
+  // ── Meta text: 3 branches ──
+  let metaText;
+  if (tab === 'current') {
+    // This Month: payment status
+    if (status === 'completed') {
+      metaText = '✅ Completed';
+    } else if (isPaidThisMonth) {
+      metaText = '✅ Paid this month';
+    } else {
+      metaText = `⏳ ${remainingMonths} month${remainingMonths !== 1 ? 's' : ''} left`;
+    }
+  } else if (tab === 'upcoming') {
+    // Upcoming: due month + months left
+    metaText = `📅 ${upcomingMonthName} · ${remainingMonths} month${remainingMonths !== 1 ? 's' : ''} left`;
+  } else {
+    // All Plans: full timeline  start → end
+    const startD = getStartDate(inst);
+    const endD   = getLastPaymentDate(inst);
+    const fmt = (d) => `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
+    metaText = `${fmt(startD)} → ${fmt(endD)}`;
+  }
+
+  const metaHtml = `<div class="inst-meta"><span>${metaText}</span></div>`;
 
   let actionColInner = '';
   if (showMenu) {
@@ -806,20 +843,6 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
     actionColInner = `<span class="badge-completed">✅ Done</span>`;
   }
 
-  const nameLine = status === 'completed'
-    ? `${escapeHtml(inst.itemName)}`
-    : `${escapeHtml(inst.itemName)}`;
-
-  // For current month tab: "Left X out of Y" (without "months" word)
-  const metaHtml = isCurrentMonthTab ? `
-    <div class="inst-meta" style="flex-direction:column;align-items:flex-start;gap:2px">
-      <span>${remainingMonths} out of ${inst.monthsCount}</span>
-    </div>` : `
-    <div class="inst-meta" style="flex-direction:column;align-items:flex-start;gap:2px">
-      <span></span>
-      <span>${remainingMonths} out of ${inst.monthsCount}</span>
-    </div>`;
-
   // For All Plans tab: show total amount above monthly amount
   const amountsHtml = showMenu ? `
     <div class="inst-total-amount">${totalAmountFormatted}</div>
@@ -830,9 +853,9 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
     <div class="inst-row">
       <div class="bank-logo"><img src="${bank.logo}" alt="${bank.name}" onerror="this.style.display='none';this.parentElement.innerText='🏦'"></div>
       <div class="inst-info">
-        <div class="inst-name">${nameLine}${status === 'completed' ? ' <span class="badge-completed">✅ Done</span>' : ''}</div>
+        <div class="inst-name">${escapeHtml(inst.itemName)}${status === 'completed' ? ' <span class="badge-completed">✅ Done</span>' : ''}</div>
         ${metaHtml}
-        <div class="inst-progress"><div class="inst-progress-bar" style="width:${progress}%"></div></div>
+        <div class="inst-progress"><div class="inst-progress-bar ${progressClass}" style="width:${progress}%"></div></div>
       </div>
       <div class="inst-amounts">
         ${amountsHtml}
@@ -894,12 +917,16 @@ function renderAll() {
   const currentYear  = now.getFullYear();
   const currentMonth = now.getMonth();
 
+  const nextMonth     = currentMonth === 11 ? 0 : currentMonth + 1;
+  const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+  const nextMonthName = MONTHS_FULL[nextMonth];
+
+  // ── Update Upcoming tab button label dynamically ──
+  document.getElementById('upcomingTabBtn').textContent = `⏳ ${nextMonthName}`;
+
   const currentItems = installments.filter(i =>
     isDueThisMonth(i) && getStatus(i) === 'active'
   );
-
-  const nextMonth     = currentMonth === 11 ? 0 : currentMonth + 1;
-  const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
 
   const upcomingEntries = [];
   installments.forEach(inst => {
@@ -936,30 +963,33 @@ function renderAll() {
   document.getElementById('monthDueAmount').textContent = formatMoney(monthDueTotal);
   document.getElementById('statsRow').style.display      = installments.length ? 'flex' : 'none';
 
+  // ── This Month tab ──
   const currentContainer = document.getElementById('currentList');
   if (!currentItems.length) {
     currentContainer.innerHTML = '<div class="empty-state">No installments due this month</div>';
   } else {
     currentContainer.innerHTML = currentItems
-      .map(inst => renderInstRow(inst, true, hasPaidThisMonth(inst.id), false, true))
+      .map(inst => renderInstRow(inst, true, hasPaidThisMonth(inst.id), false, 'current'))
       .join('');
   }
 
+  // ── Upcoming tab ──
   const upcomingContainer = document.getElementById('upcomingList');
   if (!upcomingEntries.length) {
-    upcomingContainer.innerHTML = '<div class="empty-state">No upcoming installments</div>';
+    upcomingContainer.innerHTML = `<div class="empty-state">No installments due in ${nextMonthName}</div>`;
   } else {
     upcomingContainer.innerHTML = upcomingEntries.map(({ inst }) => {
-      return renderInstRow(inst, false, false, false, false);
+      return renderInstRow(inst, false, false, false, 'upcoming', nextMonthName);
     }).join('');
   }
 
+  // ── All Plans tab ──
   const allContainer = document.getElementById('allList');
   if (!allItems.length) {
     allContainer.innerHTML = '<div class="empty-state">No installment plans added</div>';
   } else {
     allContainer.innerHTML = allItems.map(inst => {
-      return renderInstRow(inst, false, false, true, false);
+      return renderInstRow(inst, false, false, true, 'all');
     }).join('');
   }
   
