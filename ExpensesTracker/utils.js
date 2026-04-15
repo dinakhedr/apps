@@ -462,7 +462,12 @@ const NAV_TABS = [
 function renderBottomNav(activePage, mountId = 'bottomNavMount') {
   const mount = document.getElementById(mountId);
   if (!mount) return;
-  const tabs = NAV_TABS.map(t => {
+  const prefs = JSON.parse(localStorage.getItem('nav_prefs') || '{"recurring":true,"installments":true}');
+const tabs = NAV_TABS.filter(t => {
+  if (t.id === 'recurring'    && prefs.recurring    === false) return false;
+  if (t.id === 'installments' && prefs.installments === false) return false;
+  return true;
+}).map(t => {
     const isActive = t.id === activePage;
     const click = isActive ? '' : `onclick="window.location.href='${t.href}'"`;
     return `<button class="nav-tab${isActive ? ' active' : ''}" ${click}>
