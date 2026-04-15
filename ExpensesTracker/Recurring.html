@@ -17,7 +17,7 @@
   <script src="utils.js"></script>
   <script src="auth.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://apis.google.com/js/api.js" async></script>
   <style>
     /* ── Header ── */
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
@@ -1372,13 +1372,16 @@ async function syncAll() {
 // ── Auth ───────────────────────────────────────────────────
 
 async function initAndLoad() {
+  // Hide overlay immediately — local data is already rendered by onLoadLocal
+  document.getElementById('loadingOverlay').style.display = 'none';
+
+  // Run sheet checks and sync in the background
   await ensureRecurringTab();
   await ensureRecurringLogTab();
   await loadRecurringFromSheet();
   const entries = await loadRecurringLog();
   renderLog(entries);
   render();
-  document.getElementById('loadingOverlay').style.display='none';
 }
 
 async function loadPage() {
