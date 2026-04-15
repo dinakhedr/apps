@@ -14,192 +14,346 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <!-- utils.js MUST be loaded in <head> so its functions are available to all inline scripts below -->
   <script src="utils.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
   <style>
+    /* ── Header ── */
     .settings-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 24px;
     }
     .settings-header h1 {
-      font-family: 'Sora', sans-serif;
-      font-size: 24px;
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: -0.5px;
+      font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800;
+      color: #fff; letter-spacing: -0.5px;
     }
 
-    .settings-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 20px;
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin: 20px 0 10px 2px;
     }
 
-    .setting-card {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      padding: 20px 12px;
-      text-align: center;
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border);
+    /* ── Info card ── */
+    .info-card {
+      background: rgba(255,255,255,0.12); backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg); overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.2); margin-bottom: 4px;
     }
-    .setting-card:hover  { transform: translateY(-2px); box-shadow: var(--shadow); }
-    .setting-card:active { transform: scale(0.96); background: var(--surface-2); }
-
-    .setting-icon  { font-size: 36px; margin-bottom: 10px; display: inline-block; }
-    .setting-title { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .setting-desc  { font-size: 11px; color: var(--text-3); line-height: 1.4; }
-
-    .settings-divider {
-      display: flex; align-items: center; gap: 12px; margin: 20px 0 16px;
+    .info-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 18px; gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
-    .settings-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.25); }
-    .settings-divider-text {
-      font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.7);
-      text-transform: uppercase; letter-spacing: 0.06em;
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.65); flex-shrink: 0; }
+    .info-value {
+      font-size: 12px; font-weight: 500; color: #fff;
+      text-align: right; min-width: 0; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
     }
+    .info-link-btn {
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3);
+      color: #fff; padding: 5px 12px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; cursor: pointer;
+      transition: background 0.15s; font-family: 'DM Sans', sans-serif;
+      white-space: nowrap; flex-shrink: 0; text-decoration: none; display: inline-block;
+    }
+    .info-link-btn:active { background: rgba(255,255,255,0.32); }
 
+    /* ── Action cards grid ── */
+    .action-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; margin-bottom: 4px;
+    }
+    .action-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 18px 8px 14px; text-align: center; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .action-card:hover  { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .action-card:active { transform: scale(0.95); background: var(--surface-2); }
+    .action-card.loading { pointer-events: none; opacity: 0.7; }
+    .action-card-icon  { font-size: 30px; line-height: 1; }
+    .action-card-label {
+      font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 700; color: var(--text);
+    }
+    .action-card-spinner {
+      display: none; width: 20px; height: 20px;
+      border: 2px solid rgba(91,94,244,0.2); border-top-color: var(--brand);
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+    }
+    .action-card.loading .action-card-icon    { display: none; }
+    .action-card.loading .action-card-spinner { display: inline-block; }
+
+    /* ── Nav toggle card ── */
+    .nav-toggle-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      overflow: hidden; box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border); margin-bottom: 4px;
+    }
+    .nav-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 15px 18px; border-bottom: 1px solid var(--border); gap: 12px;
+    }
+    .nav-toggle-row:last-child { border-bottom: none; }
+    .nav-toggle-left { display: flex; align-items: center; gap: 12px; }
+    .nav-toggle-emoji { font-size: 22px; }
+    .nav-toggle-name  { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); }
+
+    /* Toggle switch */
+    .toggle-switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute; inset: 0; background: #d1d5db; border-radius: 26px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-track::after {
+      content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%;
+      background: #fff; top: 3px; left: 3px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      transition: transform 0.22s cubic-bezier(.34,1.56,.64,1);
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--brand); }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(20px); }
+
+    /* ── Danger zone ── */
     .danger-zone {
-      background: rgba(239, 68, 68, 0.8);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      margin-bottom: 20px;
-      backdrop-filter: blur(4px);
+      background: rgba(239,68,68,0.82); border-radius: var(--radius-lg);
+      overflow: hidden; margin-bottom: 20px; backdrop-filter: blur(4px);
     }
     .danger-zone-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid rgba(239,68,68,0.25);
+      padding: 13px 18px; border-bottom: 1px solid rgba(255,255,255,0.15);
       display: flex; align-items: center; gap: 8px;
     }
-    .danger-zone-header span:first-child { font-size: 20px; }
     .danger-zone-header h3 {
-      font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700;
-      color: #ffffff; margin: 0;
+      font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 700; color: #fff; margin: 0;
     }
     .danger-item {
-      padding: 14px 16px;
       display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid rgba(239,68,68,0.15); gap: 10px;
+      padding: 13px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); gap: 10px;
     }
     .danger-item:last-child { border-bottom: none; }
-    .danger-item-left { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-    .danger-item-title { font-size: 13px; font-weight: 600; color: #ffffff; }
-    .danger-item-desc  { font-size: 10px; color: rgba(255,255,255,0.7); line-height: 1.3; }
+    .danger-item-title { font-size: 13px; font-weight: 600; color: #fff; }
     .danger-btn {
       background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
-      color: #ffffff; padding: 7px 12px; border-radius: 30px;
-      font-size: 11px; font-weight: 600; cursor: pointer;
+      color: #fff; padding: 7px 14px; border-radius: 30px;
+      font-size: 11px; font-weight: 700; cursor: pointer;
       transition: all 0.15s; font-family: 'DM Sans', sans-serif;
       white-space: nowrap; flex-shrink: 0;
     }
     .danger-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.35); }
 
-    .info-card {
-      background: rgba(255,255,255,0.1); backdrop-filter: blur(8px);
-      border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 20px;
-      border: 1px solid rgba(255,255,255,0.2);
+    /* ── Version ── */
+    .version-footer { text-align: center; padding: 20px 0 8px; }
+    .version-text   { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+    /* ── Export modal ── */
+    .export-section-label {
+      font-size: 11px; font-weight: 700; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 8px; display: block;
     }
-    .info-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
-    .info-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); }
-    .info-value { font-size: 13px; font-weight: 500; color: #fff; font-family: 'DM Sans', monospace; }
-
-    .version-footer { text-align: center; padding: 24px 0 12px; }
-    .version-text   { font-size: 11px; color: rgba(255,255,255,0.5); }
-
-    .toast.info { background: var(--brand); }
+    .scope-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-bottom: 20px;
+    }
+    .scope-chip {
+      padding: 11px 8px; border-radius: 14px; border: 1.5px solid var(--border);
+      background: var(--surface-2); color: var(--text-2); cursor: pointer;
+      font-size: 12px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+      text-align: center; transition: all 0.15s; line-height: 1.4;
+    }
+    .scope-chip.selected { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .scope-chip.full-width { grid-column: span 2; }
+    .export-month-chip {
+      padding: 9px 0; border-radius: 30px; font-size: 12px; font-weight: 600;
+      border: 1.5px solid var(--border); background: var(--surface-2); color: var(--text-2);
+      cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+    }
+    .export-month-chip.selected { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .date-filter-section { transition: opacity 0.2s; }
+    .date-filter-section.dimmed { opacity: 0.35; pointer-events: none; }
+    .btn-cancel {
+      flex: 1; padding: 13px; background: var(--surface-2); border: none;
+      border-radius: var(--radius-sm); font-size: 14px; font-weight: 700;
+      color: var(--text-2); cursor: pointer; font-family: 'Sora', sans-serif;
+    }
+    .btn-cancel:active { background: var(--border); }
+    .btn-save {
+      flex: 2; padding: 13px; background: var(--brand); border: none;
+      border-radius: var(--radius-sm); font-size: 14px; font-weight: 700;
+      color: #fff; cursor: pointer; font-family: 'Sora', sans-serif;
+    }
+    .btn-save:active { opacity: 0.85; }
+    .btn-save:disabled { opacity: 0.5; pointer-events: none; }
   </style>
 </head>
 <body>
 
 <div class="container">
 
-  <!-- Header -->
+  <!-- ── Header ── -->
   <div class="settings-header">
     <h1>⚙️ Settings</h1>
     <div class="header-actions">
-      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Sign out">⏻</button>
     </div>
   </div>
 
-  <!-- Settings Grid -->
-  <div class="settings-grid">
-    <div class="setting-card" onclick="window.location.href='Categories.html'">
-      <div class="setting-icon">📂</div>
-      <div class="setting-title">Categories</div>
-      <div class="setting-desc">Manage expense &amp; income categories</div>
-    </div>
-    <div class="setting-card" onclick="window.location.href='Income.html'">
-      <div class="setting-icon">💰</div>
-      <div class="setting-title">Income</div>
-      <div class="setting-desc">Track and manage income sources</div>
-    </div>
-  </div>
-
-  <!-- User info -->
+  <!-- ── Account ── -->
+  <div class="section-label">Account</div>
   <div class="info-card">
     <div class="info-row">
-      <span class="info-label">📧 Connected Account</span>
+      <span class="info-label">📧 Account</span>
       <span class="info-value" id="userEmailDisplay">—</span>
     </div>
     <div class="info-row">
       <span class="info-label">📁 Google Drive</span>
-      <span class="info-value" id="driveStatus">Checking...</span>
+      <span class="info-value" id="driveStatus">Checking…</span>
+    </div>
+    <div class="info-row" id="openSheetRow" style="display:none">
+      <span class="info-label">📊 Google Sheet</span>
+      <a class="info-link-btn" id="openSheetLink" href="#" target="_blank" rel="noopener">↗ Open Sheet</a>
     </div>
   </div>
 
-  <!-- Divider -->
-  <div class="settings-divider">
-    <div class="settings-divider-line"></div>
-    <div class="settings-divider-text">Data Management</div>
-    <div class="settings-divider-line"></div>
+  <!-- ── Actions ── -->
+  <div class="section-label">Actions</div>
+  <div class="action-grid">
+
+    <div class="action-card" onclick="window.location.href='Categories.html'">
+      <div class="action-card-icon">📂</div>
+      <div class="action-card-label">Categories</div>
+    </div>
+
+    <div class="action-card" id="exportCard" onclick="openExportModal()">
+      <div class="action-card-icon">⬇️</div>
+      <div class="action-card-spinner"></div>
+      <div class="action-card-label">Export</div>
+    </div>
+
+    <div class="action-card" id="syncCard" onclick="runSync()">
+      <div class="action-card-icon">🔄</div>
+      <div class="action-card-spinner"></div>
+      <div class="action-card-label">Sync</div>
+    </div>
+
   </div>
 
-  <!-- Danger Zone -->
+  <!-- ── Navigation Tabs ── -->
+  <div class="section-label">Navigation Tabs</div>
+  <div class="nav-toggle-card">
+    <div class="nav-toggle-row">
+      <div class="nav-toggle-left">
+        <span class="nav-toggle-emoji">🔄</span>
+        <span class="nav-toggle-name">Recurring</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggleRecurring" onchange="saveNavPrefs()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <div class="nav-toggle-row">
+      <div class="nav-toggle-left">
+        <span class="nav-toggle-emoji">📆</span>
+        <span class="nav-toggle-name">Installments</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggleInstallments" onchange="saveNavPrefs()">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ── Caution ── -->
+  <div class="section-label">Caution</div>
   <div class="danger-zone">
     <div class="danger-zone-header">
       <span>⚠️</span>
-      <h3>Caution Zone</h3>
+      <h3>Danger Zone</h3>
     </div>
     <div class="danger-item">
-      <div class="danger-item-left">
-        <div class="danger-item-title">Clear Local Data</div>
-        <div class="danger-item-desc">Remove all locally stored data (keeps Google Drive data safe)</div>
-      </div>
-      <button class="danger-btn" onclick="clearLocalData()">Clear Cache</button>
+      <div class="danger-item-title">Clear Local Cache</div>
+      <button class="danger-btn" onclick="clearLocalData()">Clear</button>
     </div>
     <div class="danger-item">
-      <div class="danger-item-left">
-        <div class="danger-item-title">Sign Out</div>
-        <div class="danger-item-desc">Disconnect from Google Drive and clear session</div>
-      </div>
+      <div class="danger-item-title">Sign Out</div>
       <button class="danger-btn" onclick="logout()">Sign Out</button>
     </div>
   </div>
 
-  <!-- Version -->
+  <!-- ── Version ── -->
   <div class="version-footer">
-    <div class="version-text">Expense Tracker v2.0 · Securely stored in your Google Drive</div>
+    <div class="version-text">Expense Tracker v2.0 · Stored in your Google Drive</div>
   </div>
 
 </div>
 
-<!-- Bottom Navigation Mount -->
+<!-- Bottom Nav -->
 <div id="bottomNavMount"></div>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- ══════════ EXPORT MODAL ══════════ -->
+<div class="modal-backdrop" id="exportModalBackdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⬇️ Export Data</div>
+
+    <!-- Scope chips -->
+    <span class="export-section-label">Select data to export</span>
+    <div class="scope-grid">
+      <div class="scope-chip" data-scope="expenses"     onclick="toggleScope(this)">📋 Daily Expenses</div>
+      <div class="scope-chip" data-scope="income"       onclick="toggleScope(this)">💰 Income Log</div>
+      <div class="scope-chip" data-scope="recurring"    onclick="toggleScope(this)">🔄 Recurring</div>
+      <div class="scope-chip" data-scope="installments" onclick="toggleScope(this)">📆 Installments</div>
+      <div class="scope-chip full-width" data-scope="all" onclick="toggleScopeAll(this)">✨ Complete Export — all sheets</div>
+    </div>
+
+    <!-- Date filter (dims when only recurring/installments selected) -->
+    <div class="date-filter-section" id="dateFilterSection">
+      <span class="export-section-label">Year</span>
+      <select id="exportYearSelect" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:14px;background:var(--surface-2);font-family:'DM Sans',sans-serif;color:var(--text);margin-bottom:16px;"></select>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span class="export-section-label" style="margin:0;">Months</span>
+        <div style="display:flex;gap:14px;">
+          <button type="button" onclick="selectAllMonths()" style="background:none;border:none;color:var(--brand);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">All</button>
+          <button type="button" onclick="clearAllMonths()"  style="background:none;border:none;color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Clear</button>
+        </div>
+      </div>
+      <div id="exportMonthsGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+      <p style="font-size:11px;color:var(--text-3);margin-top:10px;line-height:1.5;">
+        💡 Date filter applies to Daily Expenses &amp; Income only. Recurring and Installments always export full data.
+      </p>
+    </div>
+
+    <div class="modal-footer" style="margin-top:20px;">
+      <button class="btn-cancel" onclick="closeExportModal()">Cancel</button>
+      <button class="btn-save"   id="exportConfirmBtn" onclick="runExport()">⬇️ Download XLSX</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── State ──────────────────────────────────────────────────
-let currentUserEmail = null;
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let currentUserEmail     = null;
 let currentSpreadsheetId = null;
 
-// ── Toast (local override so Settings works without auth.js) ─
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
   if (!t) return;
@@ -208,14 +362,16 @@ function showToast(msg, type = 'success') {
   t.className = `toast ${type}`;
   void t.offsetHeight;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── Load user info from localStorage ──────────────────────
+// ══════════════════════════════════════════════
+// USER INFO
+// ══════════════════════════════════════════════
 function loadUserInfo() {
   const token = localStorage.getItem('google_token');
   if (token) {
-    currentUserEmail = getUserEmailFromToken(token);  // from utils.js
+    currentUserEmail = getUserEmailFromToken(token);
     if (currentUserEmail) {
       document.getElementById('userEmailDisplay').textContent = currentUserEmail;
       currentSpreadsheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
@@ -223,6 +379,11 @@ function loadUserInfo() {
       if (currentSpreadsheetId) {
         driveEl.textContent = '✅ Connected';
         driveEl.style.color = '#6ee7b7';
+        // Show "Open Sheet" row
+        const row  = document.getElementById('openSheetRow');
+        const link = document.getElementById('openSheetLink');
+        row.style.display = 'flex';
+        link.href = `https://docs.google.com/spreadsheets/d/${currentSpreadsheetId}/edit`;
       } else {
         driveEl.textContent = '⚠️ No sheet found';
         driveEl.style.color = '#fca5a5';
@@ -236,50 +397,325 @@ function loadUserInfo() {
   driveEl.style.color = '#fca5a5';
 }
 
-// ── Clear local data ───────────────────────────────────────
-// FIX: now also clears incomes_* keys
-function clearLocalData() {
-  if (!confirm('⚠️ Clear all local data?\n\nThis removes locally cached data only. Your Google Drive data stays safe.\n\nThis cannot be undone.')) return;
+// ══════════════════════════════════════════════
+// NAV TAB PREFERENCES
+// ══════════════════════════════════════════════
+function loadNavPrefs() {
+  const prefs = JSON.parse(localStorage.getItem('nav_prefs') || '{"recurring":true,"installments":true}');
+  document.getElementById('toggleRecurring').checked    = prefs.recurring    !== false;
+  document.getElementById('toggleInstallments').checked = prefs.installments !== false;
+}
+
+function saveNavPrefs() {
+  const prefs = {
+    recurring:    document.getElementById('toggleRecurring').checked,
+    installments: document.getElementById('toggleInstallments').checked,
+  };
+  localStorage.setItem('nav_prefs', JSON.stringify(prefs));
+  renderBottomNav('settings');   // reflect immediately
+  showToast('✅ Nav updated');
+}
+
+// ══════════════════════════════════════════════
+// SYNC
+// ══════════════════════════════════════════════
+async function runSync() {
+  if (!currentSpreadsheetId) { showToast('⚠️ No sheet connected', 'error'); return; }
+
+  const card = document.getElementById('syncCard');
+  card.classList.add('loading');
+
   try {
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (
-        key.startsWith('expenses_')  ||
-        key.startsWith('incomes_')   ||   // ← was missing before
-        key.startsWith('budgets_')   ||
-        key.startsWith('recurring_') ||
-        key.startsWith('paid_')      ||
-        key === 'expense_id_counter' ||
-        key === 'income_id_counter'
-      )) {
-        keysToRemove.push(key);
-      }
+    await initGapiClient();
+    const savedToken = getSavedAccessToken();
+    if (!savedToken) {
+      showToast('⚠️ Open any app page first to authenticate', 'error');
+      card.classList.remove('loading');
+      return;
     }
-    keysToRemove.forEach(k => localStorage.removeItem(k));
-    showToast(`🗑️ Cleared ${keysToRemove.length} local items`);
-    setTimeout(() => window.location.reload(), 900);
+    gapi.client.setToken({ access_token: savedToken });
+
+    // Quick token validation
+    try {
+      await gapi.client.drive.files.list({ q: 'trashed=false', pageSize: 1, fields: 'files(id)' });
+    } catch {
+      clearAccessToken();
+      showToast('⚠️ Session expired — open any page to re-auth', 'error');
+      card.classList.remove('loading');
+      return;
+    }
+
+    const sid = currentSpreadsheetId;
+    let synced = 0;
+
+    // Daily Expenses
+    try {
+      const r = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: sid, range: 'Daily Log!A2:F' });
+      const expenses = (r.result.values || []).filter(r => r[2] && r[3]).map((r, i) => ({
+        id: (r[5] && !isNaN(parseInt(r[5]))) ? parseInt(r[5]) : -(i + 1),
+        date: r[1] || r[0], category: r[2],
+        amount: parseFloat(r[3]), notes: r[4] || '', timestamp: r[0] || ''
+      }));
+      localStorage.setItem(`expenses_${currentUserEmail}`, JSON.stringify(expenses));
+      synced++;
+    } catch (e) { console.warn('Expenses sync failed', e); }
+
+    // Income
+    try {
+      const r = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: sid, range: 'Income Log!A2:F' });
+      const incomes = (r.result.values || []).map((row, i) => ({
+        id: (row[5] && !isNaN(parseInt(row[5]))) ? parseInt(row[5]) : -(i + 1),
+        date: row[1] || row[0], category: row[2] || '',
+        amount: parseFloat(row[3]) || 0, notes: row[4] || '', timestamp: row[0] || ''
+      }));
+      localStorage.setItem(`incomes_${currentUserEmail}`, JSON.stringify(incomes));
+      synced++;
+    } catch (e) { console.warn('Income sync failed', e); }
+
+    // Recurring
+    try {
+      const r = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: sid, range: 'Recurring!A2:I' });
+      localStorage.setItem(`recurring_${currentUserEmail}`, JSON.stringify(r.result.values || []));
+      synced++;
+    } catch (e) { console.warn('Recurring sync failed', e); }
+
+    showToast(`✅ Sync complete — ${synced} sheets updated`);
   } catch (e) {
-    console.error('Clear error:', e);
-    showToast('❌ Failed to clear local data', 'error');
+    console.error('Sync error', e);
+    showToast('❌ Sync failed', 'error');
+  } finally {
+    card.classList.remove('loading');
   }
 }
 
-// ── Logout override ────────────────────────────────────────
-// FIX: now also removes incomes_* key
+// ══════════════════════════════════════════════
+// EXPORT MODAL
+// ══════════════════════════════════════════════
+function openExportModal() {
+  buildExportYearSelect();
+  buildExportMonthsGrid();
+  updateDateFilterVisibility();
+  document.getElementById('exportModalBackdrop').classList.add('open');
+}
+function closeExportModal() {
+  document.getElementById('exportModalBackdrop').classList.remove('open');
+}
+document.getElementById('exportModalBackdrop').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeExportModal();
+});
+
+function buildExportYearSelect() {
+  const sel  = document.getElementById('exportYearSelect');
+  const curr = new Date().getFullYear();
+  sel.innerHTML = '';
+  for (let y = curr - 4; y <= curr + 1; y++) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    if (y === curr) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+function buildExportMonthsGrid() {
+  const grid      = document.getElementById('exportMonthsGrid');
+  const currMonth = new Date().getMonth();
+  grid.innerHTML  = '';
+  SHORT_MONTHS.forEach((m, i) => {
+    const btn = document.createElement('button');
+    btn.type      = 'button';
+    btn.className = 'export-month-chip' + (i === currMonth ? ' selected' : '');
+    btn.textContent  = m;
+    btn.dataset.month = i;
+    btn.addEventListener('click', () => btn.classList.toggle('selected'));
+    grid.appendChild(btn);
+  });
+}
+
+function selectAllMonths() {
+  document.querySelectorAll('.export-month-chip').forEach(c => c.classList.add('selected'));
+}
+function clearAllMonths() {
+  document.querySelectorAll('.export-month-chip').forEach(c => c.classList.remove('selected'));
+}
+
+function toggleScope(chip) {
+  document.querySelector('[data-scope="all"]').classList.remove('selected');
+  chip.classList.toggle('selected');
+  updateDateFilterVisibility();
+}
+
+function toggleScopeAll(chip) {
+  const nowOn = !chip.classList.contains('selected');
+  document.querySelectorAll('.scope-chip:not([data-scope="all"])').forEach(c => c.classList.remove('selected'));
+  chip.classList.toggle('selected', nowOn);
+  updateDateFilterVisibility();
+}
+
+function getSelectedScopes() {
+  if (document.querySelector('[data-scope="all"]').classList.contains('selected')) {
+    return ['expenses', 'income', 'recurring', 'installments'];
+  }
+  return Array.from(document.querySelectorAll('.scope-chip.selected'))
+    .map(c => c.dataset.scope).filter(Boolean);
+}
+
+function updateDateFilterVisibility() {
+  const scopes   = getSelectedScopes();
+  const needDate = scopes.includes('expenses') || scopes.includes('income');
+  document.getElementById('dateFilterSection').classList.toggle('dimmed', !needDate);
+}
+
+async function runExport() {
+  const scopes = getSelectedScopes();
+  if (!scopes.length) { showToast('Select at least one data type', 'error'); return; }
+  if (!currentSpreadsheetId) { showToast('⚠️ No sheet connected', 'error'); return; }
+
+  const btn = document.getElementById('exportConfirmBtn');
+  btn.disabled    = true;
+  btn.textContent = '⏳ Preparing…';
+
+  try {
+    await initGapiClient();
+    const savedToken = getSavedAccessToken();
+    if (!savedToken) {
+      showToast('⚠️ Open any page first to authenticate', 'error');
+      return;
+    }
+    gapi.client.setToken({ access_token: savedToken });
+
+    const year           = parseInt(document.getElementById('exportYearSelect').value);
+    const selectedMonths = Array.from(document.querySelectorAll('.export-month-chip.selected'))
+      .map(c => parseInt(c.dataset.month));
+
+    const sid = currentSpreadsheetId;
+    const wb  = XLSX.utils.book_new();
+
+    function parseLocalDate(str) {
+      if (!str) return new Date();
+      const [y, m, d] = str.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    // Daily Expenses
+    if (scopes.includes('expenses')) {
+      try {
+        const r = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: sid, range: 'Daily Log!A2:F' });
+        let rows = (r.result.values || []).filter(r => r[2] && r[3]);
+        if (selectedMonths.length) {
+          rows = rows.filter(r => {
+            const d = parseLocalDate(r[1] || r[0]);
+            return d.getFullYear() === year && selectedMonths.includes(d.getMonth());
+          });
+        }
+        XLSX.utils.book_append_sheet(wb,
+          XLSX.utils.aoa_to_sheet([['Timestamp','Date','Category','Amount (EGP)','Notes','ID'], ...rows]),
+          'Daily Log');
+      } catch (e) { console.warn('Daily Log export failed', e); }
+    }
+
+    // Income Log
+    if (scopes.includes('income')) {
+      try {
+        const r = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: sid, range: 'Income Log!A2:F' });
+        let rows = r.result.values || [];
+        if (selectedMonths.length) {
+          rows = rows.filter(r => {
+            const d = parseLocalDate(r[1] || r[0]);
+            return d.getFullYear() === year && selectedMonths.includes(d.getMonth());
+          });
+        }
+        XLSX.utils.book_append_sheet(wb,
+          XLSX.utils.aoa_to_sheet([['Timestamp','Date','Category','Amount (EGP)','Notes','ID'], ...rows]),
+          'Income Log');
+      } catch (e) { console.warn('Income Log export failed', e); }
+    }
+
+    // Recurring + Recurring Log
+    if (scopes.includes('recurring')) {
+      try {
+        const r = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: sid, range: 'Recurring!A1:I' });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(r.result.values || []), 'Recurring');
+      } catch (e) { console.warn('Recurring export failed', e); }
+      try {
+        const r = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: sid, range: 'Recurring Log!A1:G' });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(r.result.values || []), 'Recurring Log');
+      } catch (e) { console.warn('Recurring Log export failed', e); }
+    }
+
+    // Installments + Installments Log
+    if (scopes.includes('installments')) {
+      try {
+        const r = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: sid, range: 'Installments!A1:Z' });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(r.result.values || []), 'Installments');
+      } catch (e) { console.warn('Installments export failed', e); }
+      try {
+        const r = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId: sid, range: 'Installments Log!A1:Z' });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(r.result.values || []), 'Installments Log');
+      } catch (e) { console.warn('Installments Log export failed', e); }
+    }
+
+    if (!wb.SheetNames.length) {
+      showToast('⚠️ No data found to export', 'error');
+      return;
+    }
+
+    // Build filename
+    const scopeTag  = scopes.length === 4 ? 'complete' : scopes.join('-');
+    const hasDate   = scopes.includes('expenses') || scopes.includes('income');
+    const monthTag  = hasDate && selectedMonths.length
+      ? `_${selectedMonths.map(m => SHORT_MONTHS[m]).join('-')}_${year}`
+      : '';
+    XLSX.writeFile(wb, `expenses_${scopeTag}${monthTag}.xlsx`);
+
+    showToast(`✅ Exported ${wb.SheetNames.length} tab(s)`);
+    closeExportModal();
+
+  } catch (e) {
+    console.error('Export error', e);
+    showToast('❌ Export failed', 'error');
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = '⬇️ Download XLSX';
+  }
+}
+
+// ══════════════════════════════════════════════
+// CLEAR LOCAL DATA
+// ══════════════════════════════════════════════
+function clearLocalData() {
+  if (!confirm('⚠️ Clear all local data?\n\nThis removes the local cache only. Your Google Drive data stays safe.')) return;
+  try {
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (
+        k.startsWith('expenses_')  || k.startsWith('incomes_')   ||
+        k.startsWith('budgets_')   || k.startsWith('recurring_') ||
+        k.startsWith('paid_')      ||
+        k === 'expense_id_counter' || k === 'income_id_counter'
+      )) toRemove.push(k);
+    }
+    toRemove.forEach(k => localStorage.removeItem(k));
+    showToast(`🗑️ Cleared ${toRemove.length} cached items`);
+    setTimeout(() => window.location.reload(), 900);
+  } catch (e) {
+    showToast('❌ Failed to clear data', 'error');
+  }
+}
+
+// ══════════════════════════════════════════════
+// LOGOUT
+// ══════════════════════════════════════════════
 window.logout = function () {
   if (!confirm('Sign out from Expense Tracker?\n\nYou will need to sign in again.')) return;
   const token = localStorage.getItem('google_token');
   const email = token ? getUserEmailFromToken(token) : null;
-  const keys = ['google_token', 'expense_id_counter', 'income_id_counter'];
+  const keys  = ['google_token', 'expense_id_counter', 'income_id_counter', 'nav_prefs'];
   if (email) {
     keys.push(
-      `drive_setup_${email}`,
-      `spreadsheet_id_${email}`,
-      `expenses_${email}`,
-      `incomes_${email}`,      // ← was missing before
-      `budgets_${email}`,
-      `recurring_${email}`
+      `drive_setup_${email}`, `spreadsheet_id_${email}`,
+      `expenses_${email}`,    `incomes_${email}`,
+      `budgets_${email}`,     `recurring_${email}`
     );
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i);
@@ -291,9 +727,12 @@ window.logout = function () {
   window.location.href = 'Home.html';
 };
 
-// ── Init ───────────────────────────────────────────────────
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
 loadUserInfo();
-renderBottomNav('settings');   // from utils.js — loaded in <head> so always available
+loadNavPrefs();
+renderBottomNav('settings');
 </script>
 
 </body>
