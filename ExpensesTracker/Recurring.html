@@ -895,8 +895,7 @@ function openMonthDetail(year, month) {
   if (recurringListMonth.length === 0) {
     container.innerHTML = '<div class="empty-state">No recurring expenses for this month</div>';
   } else {
-    const sorted = [...recurringListMonth].sort((a, b) => a.name.localeCompare(b.name));
-    
+    const sorted = [...recurringListMonth].sort((a, b) => a.paymentDay - b.paymentDay);    
     container.innerHTML = sorted.map(rec => {
       const icon = getRecurringCategoryIcon(rec.category);
       const freqBadge = rec.frequency === 'Monthly' ? 'Monthly' : rec.frequency === 'Quarterly' ? 'Quarterly' : 'Annual';
