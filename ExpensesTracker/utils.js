@@ -38,17 +38,18 @@ const BANK_PROVIDERS = [
 
 // ── Recurring expense categories ─────────────────────────
 const RECURRING_CATEGORIES = [
+  { value: 'Digital Tools', icon: '💻' },
+  { value: 'eCommerce',     icon: '🛒' },
   { value: 'Entertainment', icon: '🎬' },
+  { value: 'Insurance',     icon: '🛡️' },
+  { value: 'Internet',      icon: '📶' },
   { value: 'Music',         icon: '🎵' },
-  { value: 'Podcasts',      icon: '🎙️' },
+  { value: 'Other',         icon: '🔄' },
   { value: 'Phone Bill',    icon: '📱' },
+  { value: 'Podcasts',      icon: '🎙️' },
   { value: 'Rent',          icon: '🏠' },
   { value: 'Transportation',icon: '🚗' },
-  { value: 'Digital Tools', icon: '💻' },
-  { value: 'Utilities',     icon: '⚡' },
-  { value: 'Internet',      icon: '📶' },
-  { value: 'Insurance',     icon: '🛡️' },
-  { value: 'Other',         icon: '🔄' },
+  { value: 'Utilities',     icon: '⚡' }
 ];
 
 // Lookup icon for a recurring category
