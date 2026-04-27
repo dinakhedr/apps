@@ -108,19 +108,23 @@ async function updateRowById(sheetName, idCol, idValue, updates) {
   const headers = rows[0];
   const idIdx = headers.indexOf(idCol);
   if (idIdx === -1) return false;
-  let dataRowIndex = -1;
+
+  let sheetRow = -1;  // 1‑based row number in Sheets
   for (let i = 1; i < rows.length; i++) {
-    if (rows[i][idIdx] === idValue) { dataRowIndex = i; break; }
+    if (rows[i][idIdx] === idValue) {
+      sheetRow = i + 1;   // rows array is 0‑based → add 1 to get sheet row
+      break;
+    }
   }
-  if (dataRowIndex === -1) return false;
-  const sheetRow = dataRowIndex + 1; // 1-indexed, no +1 for header because rows includes header at index 0
+  if (sheetRow === -1) return false;
+
   for (const [col, val] of Object.entries(updates)) {
     const colIdx = headers.indexOf(col);
     if (colIdx === -1) continue;
     const colLetter = String.fromCharCode(65 + colIdx);
     await gapi.client.sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `${sheetName}!${colLetter}${sheetRow + 1}`,
+      range: `${sheetName}!${colLetter}${sheetRow}`,   // exactly the right row
       valueInputOption: 'RAW',
       resource: { values: [[val]] }
     });
