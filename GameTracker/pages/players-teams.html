@@ -425,8 +425,8 @@ function selectGender(prefix, value) {
   genderState[prefix] = value;
   const row = document.getElementById(`${prefix}GenderRow`);
   row.querySelectorAll('.gender-pill').forEach(pill => {
-    const isMale = pill.querySelector('.gender-pill-label').textContent.includes('♂');
-    pill.classList.toggle('active', (value === 'Male') === isMale);
+    const label = pill.querySelector('.gender-pill-label').textContent.trim();
+    pill.classList.toggle('active', label === value);
   });
   if (prefix === 'add')  updateAddPlayerPreview();
   else                   updateEditPlayerPreview();
