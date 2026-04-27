@@ -14,6 +14,29 @@
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    /* layout for label‑left rows */
+    .label-left-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .label-left-row label {
+      min-width: 60px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0;
+    }
+    .controls {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+  </style>
 </head>
 <body>
 
@@ -27,75 +50,90 @@
     <h1>👥 Players</h1>
   </div>
 
-   <div class="card">
-  <div class="card-title">Add Player</div>
-  <div class="form-group">
-    <label>Player Name</label>
-    <input type="text" id="playerName" placeholder="e.g. Alice">
-  </div>
-  <div class="form-group">
-    <div class="form-split-row">
-      <div>
-        <label style="margin-bottom:4px;">Gender</label>
-        <div class="radio-group">
-          <label>
-            <input type="radio" name="addGender" value="Male" checked style="width:auto; margin-right:4px; accent-color:var(--brand);"> ♂ Male
-          </label>
-          <label>
-            <input type="radio" name="addGender" value="Female" style="width:auto; margin-right:4px; accent-color:var(--brand);"> ♀ Female
-          </label>
-        </div>
+  <!-- ADD PLAYER CARD -->
+  <div class="card">
+    <div class="card-title">Add Player</div>
+
+    <!-- Row 1: Player Name (label above still ok, but we'll keep consistent) -->
+    <div class="label-left-row">
+      <label>Name</label>
+      <div class="controls">
+        <input type="text" id="playerName" placeholder="e.g. Alice" style="margin-bottom:0;">
       </div>
-      <div>
-        <label for="addStatusToggle" style="margin-bottom:4px;">Status</label>
-        <div class="toggle-switch">
+    </div>
+
+    <!-- Row 2: Gender -->
+    <div class="label-left-row">
+      <label>Gender</label>
+      <div class="controls radio-group">
+        <label style="display:flex; align-items:center; font-size:14px; font-weight:600; color:var(--text); cursor:pointer; margin-bottom:0;">
+          <input type="radio" name="addGender" value="Male" checked style="width:auto; margin-right:4px; accent-color:var(--brand);"> ♂ Male
+        </label>
+        <label style="display:flex; align-items:center; font-size:14px; font-weight:600; color:var(--text); cursor:pointer; margin-bottom:0; margin-left:20px;">
+          <input type="radio" name="addGender" value="Female" style="width:auto; margin-right:4px; accent-color:var(--brand);"> ♀ Female
+        </label>
+      </div>
+    </div>
+
+    <!-- Row 3: Status -->
+    <div class="label-left-row">
+      <label>Status</label>
+      <div class="controls">
+        <div class="toggle-switch" style="margin-bottom:0;">
           <input type="checkbox" id="addStatusToggle" checked>
           <label for="addStatusToggle" class="toggle-label">Active</label>
         </div>
       </div>
     </div>
-  </div>
-  <button class="submit-btn" id="addBtn">+ Add Player</button>
-</div>
 
-  
+    <button class="submit-btn" id="addBtn">+ Add Player</button>
+  </div>
+
+  <!-- ALL PLAYERS CARD -->
   <div class="card">
     <div class="card-title">All Players</div>
     <div id="playerList"></div>
   </div>
 </div>
 
-<!-- Edit Modal -->
+<!-- EDIT MODAL -->
 <div class="modal-backdrop" id="editModal" onclick="closeEditModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <div class="modal-title">Edit Player</div>
-    <div class="form-group">
-      <label>Player Name</label>
-      <input type="text" id="editName" placeholder="Player name">
+
+    <!-- Row 1: Name -->
+    <div class="label-left-row">
+      <label>Name</label>
+      <div class="controls">
+        <input type="text" id="editName" placeholder="Player name" style="margin-bottom:0;">
+      </div>
     </div>
-<div class="form-group">
-  <div class="form-split-row">
-    <div>
-      <label style="margin-bottom:4px;">Gender</label>
-      <div class="radio-group">
-        <label>
+
+    <!-- Row 2: Gender -->
+    <div class="label-left-row">
+      <label>Gender</label>
+      <div class="controls radio-group">
+        <label style="display:flex; align-items:center; font-size:14px; font-weight:600; color:var(--text); cursor:pointer; margin-bottom:0;">
           <input type="radio" name="editGender" value="Male" style="width:auto; margin-right:4px; accent-color:var(--brand);"> ♂ Male
         </label>
-        <label>
+        <label style="display:flex; align-items:center; font-size:14px; font-weight:600; color:var(--text); cursor:pointer; margin-bottom:0; margin-left:20px;">
           <input type="radio" name="editGender" value="Female" style="width:auto; margin-right:4px; accent-color:var(--brand);"> ♀ Female
         </label>
       </div>
     </div>
-    <div>
-      <label for="editStatusToggle" style="margin-bottom:4px;">Status</label>
-      <div class="toggle-switch">
-        <input type="checkbox" id="editStatusToggle">
-        <label for="editStatusToggle" class="toggle-label">Active</label>
+
+    <!-- Row 3: Status -->
+    <div class="label-left-row">
+      <label>Status</label>
+      <div class="controls">
+        <div class="toggle-switch" style="margin-bottom:0;">
+          <input type="checkbox" id="editStatusToggle">
+          <label for="editStatusToggle" class="toggle-label">Active</label>
+        </div>
       </div>
     </div>
-  </div>
-</div>
+
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="btn-save" id="editSaveBtn" onclick="saveEdit()">Save Changes</button>
@@ -134,24 +172,42 @@
     `).join('');
   }
 
-  function openEditModal(id, name, gender) {
-    selectedPlayer = { id, name, gender };
+  async function openEditModal(id, name, gender) {
+    // Fetch current status from sheet
+    const players = await loadPlayers();
+    const player = players.find(p => p.PlayerID === id);
+    const status = player ? player.Status : 'Active';
+
+    selectedPlayer = { id, name, gender, status };
     document.getElementById('editName').value = name;
-    document.getElementById('editGender').value = gender || 'Male';
+
+    // Set gender radio
+    const maleRadio = document.querySelector('input[name="editGender"][value="Male"]');
+    const femaleRadio = document.querySelector('input[name="editGender"][value="Female"]');
+    if (gender === 'Female' && femaleRadio) femaleRadio.checked = true;
+    else if (maleRadio) maleRadio.checked = true;
+
+    // Set status toggle
+    const toggle = document.getElementById('editStatusToggle');
+    if (toggle) toggle.checked = (status === 'Active');
+
     document.getElementById('editModal').classList.add('open');
   }
+
   function closeEditModal() {
     document.getElementById('editModal').classList.remove('open');
   }
 
   async function saveEdit() {
     const name   = document.getElementById('editName').value.trim();
-    const gender = document.getElementById('editGender').value;
+    const gender = document.querySelector('input[name="editGender"]:checked')?.value || 'Male';
+    const status = document.getElementById('editStatusToggle').checked ? 'Active' : 'Inactive';
+
     if (!name) return showToast('Enter a name', 'error');
     const btn = document.getElementById('editSaveBtn');
     btn.textContent = 'Saving…'; btn.disabled = true;
     try {
-      await editPlayer(selectedPlayer.id, name, gender);
+      await editPlayer(selectedPlayer.id, name, gender, status);
       closeEditModal();
       showToast('Player updated ✓');
       await loadPlayersList();
@@ -182,15 +238,22 @@
         await loadPlayersList();
       }
     });
+
     document.getElementById('addBtn').onclick = async () => {
       const name   = document.getElementById('playerName').value.trim();
-      const gender = document.getElementById('playerGender').value;
+      const gender = document.querySelector('input[name="addGender"]:checked')?.value || 'Male';
+      const status = document.getElementById('addStatusToggle').checked ? 'Active' : 'Inactive';
+
       if (!name) return showToast('Enter a player name', 'error');
       const btn = document.getElementById('addBtn');
       btn.textContent = 'Adding…'; btn.disabled = true;
       try {
-        await addPlayer(name, gender);
+        await addPlayer(name, gender, status);
         document.getElementById('playerName').value = '';
+        // Reset radio to Male
+        const maleRadio = document.querySelector('input[name="addGender"][value="Male"]');
+        if (maleRadio) maleRadio.checked = true;
+        document.getElementById('addStatusToggle').checked = true;
         showToast(`${name} added ✓`);
         await loadPlayersList();
       } catch(e) {
@@ -199,6 +262,7 @@
         btn.textContent = '+ Add Player'; btn.disabled = false;
       }
     };
+
     renderBottomNav('players');
   };
 </script>
