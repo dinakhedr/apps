@@ -38,7 +38,7 @@
     </div>
     <div class="form-group" id="playerCheckboxArea" style="display:none">
       <label id="playerCheckboxLabel">Select Players</label>
-      <div id="playerCheckboxes"></div>
+      <div id="playerCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:8px"></div>
     </div>
     <button class="submit-btn" id="createBtn">+ Create Team</button>
   </div>
@@ -49,34 +49,20 @@
   </div>
 </div>
 
-<!-- Action Sheet -->
-<div class="sheet-backdrop" id="actionSheet" onclick="closeSheet()">
-  <div class="sheet" onclick="event.stopPropagation()">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title" id="sheetTitle"></div>
-    <div class="sheet-subtitle" id="sheetSubtitle"></div>
-    <button class="sheet-action danger" onclick="confirmDelete()">
-      <span class="sheet-action-icon">🗑️</span> Delete Team
-    </button>
-    <button class="sheet-action" onclick="closeSheet()">
-      <span class="sheet-action-icon">✖️</span> Cancel
-    </button>
-  </div>
-</div>
-
 <script>
-  let allPlayers = [];
-  let allGames = [];
-  let selectedTeam = null;
+  let allPlayers  = [];
+  let allGames    = [];
   let neededPlayers = 2;
 
   async function loadData() {
     allPlayers = await loadPlayers();
-    allGames = await loadGames();
+    allGames   = await loadGames();
     const teamGames = allGames.filter(g => g.AllowsTeam === 'TRUE');
     const sel = document.getElementById('gameSelect');
     sel.innerHTML = '<option value="">Select a game…</option>' +
-      teamGames.map(g => `<option value="${g.GameID}" data-ppt="${g.PlayersPerTeam || 2}">${escapeHtml(g.GameName)}</option>`).join('');
+      teamGames.map(g =>
+        `<option value="${g.GameID}" data-ppt="${g.PlayersPerTeam || 2}">${escapeHtml(g.GameName)}</option>`
+      ).join('');
     sel.addEventListener('change', () => {
       const opt = sel.options[sel.selectedIndex];
       neededPlayers = parseInt(opt.dataset.ppt) || 2;
@@ -92,14 +78,17 @@
     const active = allPlayers.filter(p => p.Status === 'Active');
     document.getElementById('playerCheckboxes').innerHTML = active.map(p => {
       const icon = p.Gender === 'Male' ? '👨' : p.Gender === 'Female' ? '👩' : '🧑';
-      return `<label style="display:inline-flex;align-items:center;margin-right:14px;margin-bottom:8px;font-size:14px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer">
-        <input type="checkbox" value="${p.PlayerID}" style="width:auto;margin-right:6px;accent-color:var(--brand)"> ${icon} ${escapeHtml(p.PlayerName)}
+      return `<label style="display:inline-flex;align-items:center;font-size:14px;font-weight:600;
+                color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer;margin-bottom:4px">
+        <input type="checkbox" value="${p.PlayerID}"
+          style="width:auto;margin-right:6px;accent-color:var(--brand)">
+        ${icon} ${escapeHtml(p.PlayerName)}
       </label>`;
     }).join('');
   }
 
   async function loadTeamsList() {
-    const teams = await loadTeams();
+    const teams   = await loadTeams();
     const gameMap = Object.fromEntries(allGames.map(g => [g.GameID, g.GameName]));
 
     if (!teams.length) {
@@ -118,8 +107,9 @@
 
     let html = '';
     for (const gid in grouped) {
-      html += `<div style="margin-bottom:18px">
-        <div style="font-family:'Sora',sans-serif;font-size:12px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">
+      html += `<div style="margin-bottom:20px">
+        <div style="font-family:'Sora',sans-serif;font-size:11px;font-weight:700;
+          color:var(--text-2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">
           🎮 ${escapeHtml(gameMap[gid] || 'Unknown Game')}
         </div>`;
       grouped[gid].forEach(t => {
@@ -127,13 +117,18 @@
           .map(pid => allPlayers.find(p => p.PlayerID === pid)?.PlayerName || pid)
           .filter(Boolean).join(', ');
         html += `
-          <div class="expense-item" onclick="openSheet('${t.TeamID}', '${escapeHtml(t.TeamName)}', '${escapeHtml(playerNames)}')">
+          <div class="expense-item no-tap">
             <div class="cat-icon" style="background:#fef3c7">🏅</div>
             <div class="exp-details">
               <div class="exp-cat">${escapeHtml(t.TeamName)}</div>
               <div class="exp-meta">${escapeHtml(playerNames)}</div>
             </div>
-            <span class="badge ${t.Status === 'Active' ? 'badge-active' : 'badge-inactive'}">${t.Status}</span>
+            <div class="row-actions">
+              <span class="badge ${t.Status === 'Active' ? 'badge-active' : 'badge-inactive'}"
+                style="margin-right:6px">${t.Status}</span>
+              <button class="row-btn delete" title="Delete"
+                onclick="confirmDelete('${t.TeamID}','${escapeHtml(t.TeamName).replace(/'/g,"\\'")}')">🗑️</button>
+            </div>
           </div>`;
       });
       html += `</div>`;
@@ -141,20 +136,10 @@
     document.getElementById('teamsList').innerHTML = html;
   }
 
-  function openSheet(id, name, players) {
-    selectedTeam = { id, name, players };
-    document.getElementById('sheetTitle').textContent = name;
-    document.getElementById('sheetSubtitle').textContent = players;
-    document.getElementById('actionSheet').classList.add('open');
-  }
-  function closeSheet() {
-    document.getElementById('actionSheet').classList.remove('open');
-  }
-  async function confirmDelete() {
-    closeSheet();
-    if (!confirm(`Delete team "${selectedTeam.name}"?`)) return;
+  async function confirmDelete(id, name) {
+    if (!confirm(`Delete team "${name}"? This cannot be undone.`)) return;
     try {
-      await deleteTeam(selectedTeam.id);
+      await deleteTeam(id);
       showToast('Team deleted');
       await loadTeamsList();
     } catch(e) {
@@ -174,11 +159,14 @@
 
     document.getElementById('createBtn').onclick = async () => {
       const gameId = document.getElementById('gameSelect').value;
-      const name = document.getElementById('teamName').value.trim();
+      const name   = document.getElementById('teamName').value.trim();
       if (!gameId) return showToast('Select a game', 'error');
-      if (!name) return showToast('Enter a team name', 'error');
-      const checked = Array.from(document.querySelectorAll('#playerCheckboxes input:checked')).map(cb => cb.value);
-      if (checked.length !== neededPlayers) return showToast(`Select exactly ${neededPlayers} players`, 'error');
+      if (!name)   return showToast('Enter a team name', 'error');
+      const checked = Array.from(
+        document.querySelectorAll('#playerCheckboxes input:checked')
+      ).map(cb => cb.value);
+      if (checked.length !== neededPlayers)
+        return showToast(`Select exactly ${neededPlayers} players`, 'error');
 
       const btn = document.getElementById('createBtn');
       btn.textContent = 'Creating…'; btn.disabled = true;
@@ -194,6 +182,7 @@
         btn.textContent = '+ Create Team'; btn.disabled = false;
       }
     };
+
     renderBottomNav('');
   };
 </script>
