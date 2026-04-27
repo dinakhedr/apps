@@ -56,14 +56,13 @@ body {
   justify-content: space-between;
   margin-bottom: 24px; gap: 8px;
 }
-.header-left    { display: flex; align-items: center; gap: 10px; }
-.header h1      { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-.header-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
-
-/* Sub‑page headers: keep back button and title on the left */
+/* Keep sub‑page titles (with back button) on the left */
 .header:has(.back-btn) {
   justify-content: flex-start;
 }
+.header-left    { display: flex; align-items: center; gap: 10px; }
+.header h1      { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+.header-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
 
 /* Back button */
 .back-btn {
@@ -438,7 +437,6 @@ input[type="checkbox"] {
 }
 .toggle-switch label.toggle-label {
   cursor: pointer;
-  text-indent: -9999px;
   width: 44px; height: 24px;
   background: #ccc;
   border-radius: 24px;
@@ -448,40 +446,63 @@ input[type="checkbox"] {
 }
 .toggle-switch label.toggle-label::after {
   content: '';
-  position: absolute; top: 2px; left: 2px;
+  position: absolute;
+  top: 2px;
+  left: 2px;
   width: 20px; height: 20px;
-  background: #fff; border-radius: 50%;
-  transition: transform 0.2s;
+  background: #fff;
+  border-radius: 50%;
+  transition: left 0.2s ease;
 }
 .toggle-switch input:checked + label.toggle-label {
   background: var(--brand);
 }
 .toggle-switch input:checked + label.toggle-label::after {
-  transform: translateX(20px);
+  left: calc(100% - 22px);   /* 44px - 2px right padding - 20px knob = 22px from left */
 }
 
-/* ── Split form row (e.g. gender radios + status toggle) ── */
-.form-split-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.form-split-row > div {
-  display: flex;
-  flex-direction: column;
-}
-.form-split-row .radio-group {
-  display: flex;
-  gap: 12px;
+/* ── Radio with green highlight ── */
+.radio-group {
+  display: flex; gap: 12px;
 }
 .radio-group label {
+  display: inline-flex; align-items: center;
+  font-size: 14px; font-weight: 600;
+  color: var(--text);
+  text-transform: none; letter-spacing: 0;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 6px 10px;
+  border-radius: 20px;
+  margin-bottom: 0;
+}
+.radio-group label:has(input[type="radio"]:checked) {
+  background: #d1fae5;
+  color: #065f46;
+  font-weight: 700;
+}
+.radio-group input[type="radio"] {
+  accent-color: var(--success);
+}
+
+/* ── Label‑left row layout ── */
+.label-left-row {
   display: flex;
   align-items: center;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  text-transform: none;
-  letter-spacing: 0;
-  cursor: pointer;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.label-left-row label {
+  min-width: 60px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0;
+}
+.controls {
+  flex: 1;
+  display: flex;
+  align-items: center;
 }
