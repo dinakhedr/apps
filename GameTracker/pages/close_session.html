@@ -2,98 +2,148 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="manifest" href="../manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="../images/icon.png">
-  <link rel="shortcut icon" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
   <title>Close Session</title>
-  <link rel="stylesheet" href="../assets/styles.css">
+  <link rel="stylesheet" href="../styles.css">
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
-<div id="loadingOverlay" class="loading-overlay"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>
+</div>
+
 <div class="container" id="mainApp" style="display:none">
-  <div class="header"><button class="back-btn" onclick="history.back()">←</button><h1>🏁 Close Session</h1></div>
+  <div class="header">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1>🏁 Close Session</h1>
+  </div>
+
   <div class="card">
-    <div class="card-title">Select Session to Close</div>
-    <select id="sessionSelect"></select>
-    <div id="summary"></div>
-    <button class="submit-btn" id="closeBtn">Close & Calculate Winner</button>
+    <div class="card-title">Select Active Session</div>
+    <div id="noSessions" style="display:none">
+      <div class="empty-state"><span class="empty-icon">😴</span><p>No active sessions to close.</p></div>
+    </div>
+    <div id="sessionPickerWrap">
+      <div class="form-group"><select id="sessionSelect"></select></div>
+      <div id="summary" style="margin-top:16px"></div>
+      <button class="submit-btn" id="closeBtn" style="margin-top:8px">🏁 Close &amp; Calculate Winner</button>
+    </div>
   </div>
 </div>
+
 <script>
+  let games = [], allPlayers = [], allTeams = [];
+
   async function loadActiveSessions() {
+    games = await loadGames();
+    allPlayers = await loadPlayers();
+    allTeams = await loadTeams();
     const sessions = await loadSessions();
     const active = sessions.filter(s => s.Status === 'Active');
-    const select = document.getElementById('sessionSelect');
-    select.innerHTML = active.map(s => `<option value="${s.SessionID}">${s.SessionID} - ${s.Date}</option>`).join('');
-    if (active.length) select.dispatchEvent(new Event('change'));
+    const gameMap = Object.fromEntries(games.map(g => [g.GameID, g.GameName]));
+    const sel = document.getElementById('sessionSelect');
+
+    if (!active.length) {
+      document.getElementById('sessionPickerWrap').style.display = 'none';
+      document.getElementById('noSessions').style.display = 'block';
+      return;
+    }
+
+    sel.innerHTML = active.map(s =>
+      `<option value="${s.SessionID}">${escapeHtml(gameMap[s.GameID] || 'Unknown')} · ${s.Type} · ${formatDate(s.Date)}</option>`
+    ).join('');
+    sel.addEventListener('change', showSummary);
+    await showSummary();
   }
+
   async function showSummary() {
     const sessionId = document.getElementById('sessionSelect').value;
     if (!sessionId) return;
     const summaryDiv = document.getElementById('summary');
-    summaryDiv.innerHTML = '<div class="spinner"></div>';
+    summaryDiv.innerHTML = '<div style="text-align:center;padding:16px"><div class="spinner"></div></div>';
+
     const sessions = await loadSessions();
     const session = sessions.find(s => s.SessionID === sessionId);
     const participants = (await loadSessionParticipants()).filter(p => p.SessionID === sessionId);
     let totals = {};
+
     if (session.Type === 'Individual') {
-      const rounds = await loadRoundsIndividual();
-      const sessionRounds = rounds.filter(r => r.SessionID === sessionId);
-      for (let r of sessionRounds) {
-        for (let i=1; i<=4; i++) {
-          let pid = r[`Player${i}_ID`];
-          if (pid) totals[pid] = (totals[pid] || 0) + parseFloat(r[`Points${i}`] || 0);
+      const rounds = (await loadRoundsIndividual()).filter(r => r.SessionID === sessionId);
+      for (let p of participants) totals[p.ParticipantID] = 0;
+      for (let r of rounds) {
+        for (let i = 1; i <= 4; i++) {
+          const pid = r[`Player${i}_ID`];
+          if (pid && totals[pid] !== undefined) totals[pid] += parseFloat(r[`Points${i}`] || 0);
         }
       }
-      const players = await loadPlayers();
-      let html = '<div class="card-title">Individual Scores</div>';
-      for (let pid in totals) {
-        let name = players.find(p => p.PlayerID === pid)?.PlayerName || pid;
-        html += `<div class="expense-item"><div class="exp-cat">${escapeHtml(name)}</div><div class="exp-amount">${totals[pid]}</div></div>`;
-      }
-      summaryDiv.innerHTML = html;
+      const sorted = Object.entries(totals).sort((a, b) => a[1] - b[1]);
+      const minPts = sorted[0]?.[1] ?? 0;
+      summaryDiv.innerHTML = `<div class="card-title" style="margin-bottom:12px">Current Scores</div>` +
+        sorted.map(([pid, pts]) => {
+          const name = allPlayers.find(p => p.PlayerID === pid)?.PlayerName || pid;
+          const isLeading = pts === minPts;
+          return `<div class="expense-item" style="cursor:default">
+            <div class="cat-icon" style="background:${isLeading ? '#d1fae5' : '#f5f5fa'}">${isLeading ? '🥇' : '▪️'}</div>
+            <div class="exp-details"><div class="exp-cat">${escapeHtml(name)}</div></div>
+            <div class="exp-amount" style="color:${isLeading ? 'var(--success)' : 'var(--text)'}">${pts} pts</div>
+          </div>`;
+        }).join('');
     } else {
-      const rounds = await loadRoundsTeam();
-      const sessionRounds = rounds.filter(r => r.SessionID === sessionId);
-      for (let r of sessionRounds) {
+      const rounds = (await loadRoundsTeam()).filter(r => r.SessionID === sessionId);
+      for (let p of participants) totals[p.ParticipantID] = 0;
+      for (let r of rounds) {
         totals[r.TeamA_ID] = (totals[r.TeamA_ID] || 0) + parseFloat(r.PointsA || 0);
         totals[r.TeamB_ID] = (totals[r.TeamB_ID] || 0) + parseFloat(r.PointsB || 0);
       }
-      const teams = await loadTeams();
-      let html = '<div class="card-title">Team Scores</div>';
-      for (let tid in totals) {
-        let name = teams.find(t => t.TeamID === tid)?.TeamName || tid;
-        html += `<div class="expense-item"><div class="exp-cat">${escapeHtml(name)}</div><div class="exp-amount">${totals[tid]}</div></div>`;
-      }
-      summaryDiv.innerHTML = html;
+      const sorted = Object.entries(totals).sort((a, b) => a[1] - b[1]);
+      const minPts = sorted[0]?.[1] ?? 0;
+      summaryDiv.innerHTML = `<div class="card-title" style="margin-bottom:12px">Current Scores</div>` +
+        sorted.map(([tid, pts]) => {
+          const name = allTeams.find(t => t.TeamID === tid)?.TeamName || tid;
+          const isLeading = pts === minPts;
+          return `<div class="expense-item" style="cursor:default">
+            <div class="cat-icon" style="background:${isLeading ? '#d1fae5' : '#f5f5fa'}">${isLeading ? '🥇' : '🅱️'}</div>
+            <div class="exp-details"><div class="exp-cat">${escapeHtml(name)}</div></div>
+            <div class="exp-amount" style="color:${isLeading ? 'var(--success)' : 'var(--text)'}">${pts} pts</div>
+          </div>`;
+        }).join('');
     }
   }
+
   window.onload = async () => {
     await initPageAuth({
-      onNeedLogin: () => { window.location.href = 'index.html'; },
+      onNeedLogin: () => { location.href = '../Home.html'; },
       onReady: async () => {
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         await loadActiveSessions();
       }
     });
-    document.getElementById('sessionSelect').addEventListener('change', showSummary);
+
     document.getElementById('closeBtn').onclick = async () => {
       const sessionId = document.getElementById('sessionSelect').value;
       if (!sessionId) return;
-      if (confirm('Close this session? Winner will be determined by lowest total points.')) {
+      if (!confirm('Close this session? Winner = lowest total points.')) return;
+      const btn = document.getElementById('closeBtn');
+      btn.textContent = 'Closing…'; btn.disabled = true;
+      try {
         await closeSession(sessionId);
-        alert('Session closed');
-        await loadActiveSessions();
+        showToast('Session closed! 🏆');
+        setTimeout(() => location.reload(), 1200);
+      } catch(e) {
+        showToast('Error closing session', 'error');
+        btn.textContent = '🏁 Close & Calculate Winner'; btn.disabled = false;
       }
     };
+    renderBottomNav('');
   };
 </script>
 </body>

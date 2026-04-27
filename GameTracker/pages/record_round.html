@@ -2,154 +2,231 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="../manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="../manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="../images/icon.png">
-  <link rel="shortcut icon" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
-  
   <title>Record Round</title>
-  <link rel="stylesheet" href="../assets/styles.css">
+  <link rel="stylesheet" href="../styles.css">
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
-<div id="loadingOverlay" class="loading-overlay"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>
+</div>
+
 <div class="container" id="mainApp" style="display:none">
-  <div class="header"><button class="back-btn" onclick="history.back()">←</button><h1>📝 Record Round</h1></div>
-  <div class="card" id="sessionInfo"></div>
-  <div class="card">
-    <div class="card-title">New Round</div>
-    <div id="roundForm"></div>
-    <button class="submit-btn" id="saveRoundBtn">Save Round</button>
+  <div class="header">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1>📝 Record Round</h1>
   </div>
-  <div class="card">
-    <div class="card-title">Previous Rounds</div>
-    <div id="roundsList"></div>
+
+  <!-- Session picker (shown when no session in URL) -->
+  <div class="card" id="sessionPickerCard" style="display:none">
+    <div class="card-title">Select Session</div>
+    <select id="sessionPickerSelect"></select>
+    <button class="submit-btn" style="margin-top:12px" onclick="goToSession()">Open Session →</button>
+  </div>
+
+  <div id="sessionContent" style="display:none">
+    <div class="card" id="sessionInfo"></div>
+    <div class="card">
+      <div class="card-title">Round <span id="roundNumLabel">1</span></div>
+      <div id="roundForm"></div>
+      <button class="submit-btn" id="saveRoundBtn">💾 Save Round</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Previous Rounds</div>
+      <div id="roundsList"></div>
+    </div>
   </div>
 </div>
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const sessionId = urlParams.get('session');
-  let session = null;
-  let participants = [];
-  let games = [];
-  let allPlayers = [];
-  let allTeams = [];
-  let rounds = [];
 
-  async function loadSession() {
-    if (!sessionId) { alert('No session specified'); return; }
+<script>
+  const urlParams   = new URLSearchParams(window.location.search);
+  let sessionId     = urlParams.get('session');
+  let session       = null;
+  let participants  = [];
+  let allPlayers    = [];
+  let allTeams      = [];
+  let currentRounds = [];
+
+  // ── Session picker (no ?session= in URL) ──
+  async function showSessionPicker() {
+    const sessions = await loadSessions();
+    const active = sessions.filter(s => s.Status === 'Active');
+    const games = await loadGames();
+    const gameMap = Object.fromEntries(games.map(g => [g.GameID, g.GameName]));
+    const sel = document.getElementById('sessionPickerSelect');
+    if (!active.length) {
+      document.getElementById('sessionPickerCard').innerHTML =
+        `<div class="empty-state"><span class="empty-icon">😴</span><p>No active sessions. <a href="sessions.html" style="color:var(--brand);font-weight:700">Create one →</a></p></div>`;
+    } else {
+      sel.innerHTML = active.map(s =>
+        `<option value="${s.SessionID}">${escapeHtml(gameMap[s.GameID] || 'Unknown')} · ${s.Type} · ${formatDate(s.Date)}</option>`
+      ).join('');
+    }
+    document.getElementById('sessionPickerCard').style.display = 'block';
+  }
+
+  function goToSession() {
+    const id = document.getElementById('sessionPickerSelect').value;
+    if (id) location.href = `record_round.html?session=${id}`;
+  }
+
+  // ── Load full session ──
+  async function loadSessionData() {
     const sessions = await loadSessions();
     session = sessions.find(s => s.SessionID === sessionId);
-    if (!session) { alert('Session not found'); return; }
-    games = await loadGames();
+    if (!session) { showToast('Session not found', 'error'); return; }
+
     allPlayers = await loadPlayers();
-    allTeams = await loadTeams();
-    const participantsRaw = await loadSessionParticipants();
-    participants = participantsRaw.filter(p => p.SessionID === sessionId);
+    allTeams   = await loadTeams();
+    const games = await loadGames();
+    const game  = games.find(g => g.GameID === session.GameID);
+
+    const allParticipants = await loadSessionParticipants();
+    participants = allParticipants.filter(p => p.SessionID === sessionId);
+
+    document.getElementById('sessionContent').style.display = 'block';
+    document.getElementById('sessionInfo').innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="cat-icon" style="background:#ede9fe">🎲</div>
+        <div>
+          <div style="font-family:'Sora',sans-serif;font-size:16px;font-weight:800;color:var(--text)">${escapeHtml(game?.GameName || 'Unknown')}</div>
+          <div class="exp-meta">${session.Type} · ${formatDate(session.Date)}</div>
+        </div>
+        <span class="badge badge-active" style="margin-left:auto">Active</span>
+      </div>`;
+
+    await fetchAndRenderRounds();
+  }
+
+  // ── Fetch rounds (named to avoid shadowing utils.js) ──
+  async function fetchAndRenderRounds() {
     if (session.Type === 'Individual') {
-      await loadRoundsIndividual();
-      renderIndividualForm();
+      const all = await loadRoundsIndividual();
+      currentRounds = all.filter(r => r.SessionID === sessionId);
     } else {
-      await loadRoundsTeam();
-      renderTeamForm();
+      const all = await loadRoundsTeam();
+      currentRounds = all.filter(r => r.SessionID === sessionId);
     }
-    const game = games.find(g => g.GameID === session.GameID);
-    document.getElementById('sessionInfo').innerHTML = `<div><strong>${game.GameName}</strong> (${session.Type}) - Session ${sessionId}<br>Date: ${session.Date}</div>`;
-  }
-
-  async function loadRoundsIndividual() {
-    const allRounds = await loadRoundsIndividual();
-    rounds = allRounds.filter(r => r.SessionID === sessionId);
+    document.getElementById('roundNumLabel').textContent = currentRounds.length + 1;
+    renderRoundForm();
     renderRoundsList();
   }
 
-  async function loadRoundsTeam() {
-    const allRounds = await loadRoundsTeam();
-    rounds = allRounds.filter(r => r.SessionID === sessionId);
-    renderRoundsList();
-  }
-
-  function renderIndividualForm() {
-    const playerIds = participants.map(p => p.ParticipantID);
-    let html = `<div class="form-group"><label>Round Number</label><input type="number" id="roundNumber" value="${rounds.length+1}" readonly></div>`;
-    for (let i=0; i<playerIds.length; i++) {
-      const player = allPlayers.find(p => p.PlayerID === playerIds[i]);
-      const name = player ? player.PlayerName : playerIds[i];
-      html += `<div class="form-group"><label>${escapeHtml(name)} Points</label><input type="number" id="points_${playerIds[i]}" step="0.5" value="0"></div>`;
+  function renderRoundForm() {
+    if (session.Type === 'Individual') {
+      const playerIds = participants.map(p => p.ParticipantID);
+      let html = '';
+      playerIds.forEach(pid => {
+        const p = allPlayers.find(pl => pl.PlayerID === pid);
+        const icon = p?.Gender === 'Male' ? '👨' : p?.Gender === 'Female' ? '👩' : '🧑';
+        html += `<div class="form-group">
+          <label>${icon} ${escapeHtml(p?.PlayerName || pid)} — Points</label>
+          <input type="number" id="pts_${pid}" step="0.5" value="0" min="0">
+        </div>`;
+      });
+      document.getElementById('roundForm').innerHTML = html;
+    } else {
+      const teamA = allTeams.find(t => t.TeamID === participants[0]?.ParticipantID);
+      const teamB = allTeams.find(t => t.TeamID === participants[1]?.ParticipantID);
+      document.getElementById('roundForm').innerHTML = `
+        <div class="form-row">
+          <div class="form-group">
+            <label>🅰️ ${escapeHtml(teamA?.TeamName || 'Team A')}</label>
+            <input type="number" id="pointsA" step="0.5" value="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>🅱️ ${escapeHtml(teamB?.TeamName || 'Team B')}</label>
+            <input type="number" id="pointsB" step="0.5" value="0" min="0">
+          </div>
+        </div>`;
     }
-    document.getElementById('roundForm').innerHTML = html;
-  }
-
-  function renderTeamForm() {
-    const teamIds = participants.map(p => p.ParticipantID);
-    const teamA = allTeams.find(t => t.TeamID === teamIds[0]);
-    const teamB = allTeams.find(t => t.TeamID === teamIds[1]);
-    const html = `<div class="form-group"><label>Round Number</label><input type="number" id="roundNumber" value="${rounds.length+1}" readonly></div>
-      <div class="form-group"><label>${escapeHtml(teamA?.TeamName || teamIds[0])} Points</label><input type="number" id="pointsA" step="0.5" value="0"></div>
-      <div class="form-group"><label>${escapeHtml(teamB?.TeamName || teamIds[1])} Points</label><input type="number" id="pointsB" step="0.5" value="0"></div>`;
-    document.getElementById('roundForm').innerHTML = html;
   }
 
   function renderRoundsList() {
-    if (session?.Type === 'Individual') {
-      let html = '';
-      for (let r of rounds) {
-        let line = `Round ${r.RoundNumber}: `;
-        for (let i=1; i<=4; i++) {
-          let pid = r[`Player${i}_ID`];
+    if (!currentRounds.length) {
+      document.getElementById('roundsList').innerHTML =
+        `<div class="empty-state"><p>No rounds yet. Record the first one!</p></div>`;
+      return;
+    }
+    if (session.Type === 'Individual') {
+      document.getElementById('roundsList').innerHTML = [...currentRounds].reverse().map(r => {
+        const scores = [];
+        for (let i = 1; i <= 4; i++) {
+          const pid = r[`Player${i}_ID`];
           if (pid) {
-            let name = allPlayers.find(p => p.PlayerID === pid)?.PlayerName || pid;
-            line += `${name} ${r[`Points${i}`]} `;
+            const name = allPlayers.find(p => p.PlayerID === pid)?.PlayerName || pid;
+            scores.push(`${name}: <strong>${r[`Points${i}`]}</strong>`);
           }
         }
-        html += `<div class="expense-item"><div>${line}</div></div>`;
-      }
-      document.getElementById('roundsList').innerHTML = html || '<div class="empty-state">No rounds yet</div>';
+        return `<div class="expense-item" style="cursor:default">
+          <div class="cat-icon" style="background:#f0fdf4;font-size:14px;font-weight:800;color:var(--success)">R${r.RoundNumber}</div>
+          <div class="exp-details"><div class="exp-cat">${scores.join(' · ')}</div></div>
+        </div>`;
+      }).join('');
     } else {
-      let html = '';
-      for (let r of rounds) {
-        const teamA = allTeams.find(t => t.TeamID === r.TeamA_ID);
-        const teamB = allTeams.find(t => t.TeamID === r.TeamB_ID);
-        html += `<div class="expense-item"><div>Round ${r.RoundNumber}: ${teamA?.TeamName || r.TeamA_ID} ${r.PointsA} - ${teamB?.TeamName || r.TeamB_ID} ${r.PointsB}</div></div>`;
-      }
-      document.getElementById('roundsList').innerHTML = html || '<div class="empty-state">No rounds yet</div>';
+      document.getElementById('roundsList').innerHTML = [...currentRounds].reverse().map(r => {
+        const tA = allTeams.find(t => t.TeamID === r.TeamA_ID)?.TeamName || r.TeamA_ID;
+        const tB = allTeams.find(t => t.TeamID === r.TeamB_ID)?.TeamName || r.TeamB_ID;
+        return `<div class="expense-item" style="cursor:default">
+          <div class="cat-icon" style="background:#f0fdf4;font-size:14px;font-weight:800;color:var(--success)">R${r.RoundNumber}</div>
+          <div class="exp-details">
+            <div class="exp-cat">${escapeHtml(tA)} <strong>${r.PointsA}</strong> — ${escapeHtml(tB)} <strong>${r.PointsB}</strong></div>
+          </div>
+        </div>`;
+      }).join('');
     }
   }
 
   window.onload = async () => {
     await initPageAuth({
-      onNeedLogin: () => { window.location.href = 'index.html'; },
+      onNeedLogin: () => { location.href = '../Home.html'; },
       onReady: async () => {
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
-        await loadSession();
+        if (sessionId) {
+          await loadSessionData();
+        } else {
+          await showSessionPicker();
+        }
       }
     });
+
     document.getElementById('saveRoundBtn').onclick = async () => {
-      const roundNumber = parseInt(document.getElementById('roundNumber').value);
-      if (session.Type === 'Individual') {
-        const playerIds = participants.map(p => p.ParticipantID);
-        const points = [];
-        for (let pid of playerIds) {
-          points.push(parseFloat(document.getElementById(`points_${pid}`).value) || 0);
+      const roundNumber = currentRounds.length + 1;
+      const btn = document.getElementById('saveRoundBtn');
+      btn.textContent = 'Saving…'; btn.disabled = true;
+      try {
+        if (session.Type === 'Individual') {
+          const playerIds = participants.map(p => p.ParticipantID);
+          const points = playerIds.map(pid => parseFloat(document.getElementById(`pts_${pid}`)?.value) || 0);
+          const p4 = [...playerIds, '', '', ''].slice(0, 4);
+          const pts4 = [...points, 0, 0, 0].slice(0, 4);
+          await addRoundIndividual(sessionId, roundNumber, p4, pts4);
+        } else {
+          const teamA = participants[0]?.ParticipantID;
+          const teamB = participants[1]?.ParticipantID;
+          const pA = parseFloat(document.getElementById('pointsA').value) || 0;
+          const pB = parseFloat(document.getElementById('pointsB').value) || 0;
+          await addRoundTeam(sessionId, roundNumber, teamA, teamB, pA, pB);
         }
-        const players4 = [...playerIds, null, null, null].slice(0,4);
-        const points4 = [...points, 0, 0, 0].slice(0,4);
-        await addRoundIndividual(sessionId, roundNumber, players4, points4);
-      } else {
-        const teamA = participants[0].ParticipantID;
-        const teamB = participants[1].ParticipantID;
-        const pointsA = parseFloat(document.getElementById('pointsA').value) || 0;
-        const pointsB = parseFloat(document.getElementById('pointsB').value) || 0;
-        await addRoundTeam(sessionId, roundNumber, teamA, teamB, pointsA, pointsB);
+        showToast(`Round ${roundNumber} saved ✓`);
+        await fetchAndRenderRounds(); // re-render with updated round count + reset form
+      } catch(e) {
+        showToast('Error saving round', 'error');
+      } finally {
+        btn.textContent = '💾 Save Round'; btn.disabled = false;
       }
-      await loadSession();
     };
+    renderBottomNav('');
   };
 </script>
 </body>

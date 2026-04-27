@@ -2,60 +2,211 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="../manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="../manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="../images/icon.png">
-  <link rel="shortcut icon" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
   <title>Games</title>
-  <link rel="stylesheet" href="../assets/styles.css">
+  <link rel="stylesheet" href="../styles.css">
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
-  <style>
-    .game-card { background: var(--surface-2); border-radius: var(--radius-md); padding: 12px; margin-bottom: 12px; }
-    .game-name { font-weight: 700; font-size: 16px; }
-  </style>
 </head>
 <body>
-<div id="loadingOverlay" class="loading-overlay"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>
+</div>
+
 <div class="container" id="mainApp" style="display:none">
-  <div class="header"><button class="back-btn" onclick="history.back()">←</button><h1>🎮 Games</h1></div>
+  <div class="header">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1>🎮 Games</h1>
+  </div>
+
   <div class="card">
-    <div class="card-title">Add New Game</div>
-    <div class="form-group"><label>Game Name</label><input type="text" id="gameName" placeholder="e.g. Backgammon"></div>
-    <div class="form-group"><label>Total Players</label><input type="number" id="totalPlayers" min="2" max="10" value="2"></div>
-    <div class="form-row">
-      <label><input type="checkbox" id="allowsIndividual"> Allows Individual</label>
-      <label><input type="checkbox" id="allowsTeam"> Allows Team</label>
+    <div class="card-title">Add Game</div>
+    <div class="form-group">
+      <label>Game Name</label>
+      <input type="text" id="gameName" placeholder="e.g. Backgammon">
     </div>
-    <div class="form-group" id="playersPerTeamGroup" style="display:none"><label>Players per Team</label><input type="number" id="playersPerTeam" min="1" max="5" value="2"></div>
+    <div class="form-group">
+      <label>Total Players per Match</label>
+      <input type="number" id="totalPlayers" min="2" max="10" value="2">
+    </div>
+    <div class="checkbox-row">
+      <label><input type="checkbox" id="allowsIndividual"> Individual mode</label>
+      <label><input type="checkbox" id="allowsTeam"> Team mode</label>
+    </div>
+    <div class="form-group" id="playersPerTeamGroup" style="display:none">
+      <label>Players per Team</label>
+      <input type="number" id="playersPerTeam" min="1" max="5" value="2">
+    </div>
     <button class="submit-btn" id="addBtn">+ Add Game</button>
   </div>
+
   <div class="card">
-    <div class="card-title">Existing Games</div>
+    <div class="card-title">All Games</div>
     <div id="gamesList"></div>
   </div>
 </div>
+
+<!-- Action Sheet -->
+<div class="sheet-backdrop" id="actionSheet" onclick="closeSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheetTitle"></div>
+    <div class="sheet-subtitle" id="sheetSubtitle"></div>
+    <button class="sheet-action" onclick="openEditModal()">
+      <span class="sheet-action-icon">✏️</span> Edit Game
+    </button>
+    <button class="sheet-action danger" onclick="confirmDelete()">
+      <span class="sheet-action-icon">🗑️</span> Delete Game
+    </button>
+    <button class="sheet-action" onclick="closeSheet()">
+      <span class="sheet-action-icon">✖️</span> Cancel
+    </button>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-backdrop" id="editModal" onclick="closeEditModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Game</div>
+    <div class="form-group">
+      <label>Game Name</label>
+      <input type="text" id="editGameName">
+    </div>
+    <div class="form-group">
+      <label>Total Players</label>
+      <input type="number" id="editTotalPlayers" min="2" max="10">
+    </div>
+    <div class="checkbox-row">
+      <label><input type="checkbox" id="editAllowsIndividual"> Individual mode</label>
+      <label><input type="checkbox" id="editAllowsTeam"> Team mode</label>
+    </div>
+    <div class="form-group" id="editTeamGroup" style="display:none">
+      <label>Players per Team</label>
+      <input type="number" id="editPlayersPerTeam" min="1" max="5">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <script>
+  let selectedGame = null;
+
   document.getElementById('allowsTeam').addEventListener('change', function() {
     document.getElementById('playersPerTeamGroup').style.display = this.checked ? 'block' : 'none';
   });
+  document.getElementById('editAllowsTeam').addEventListener('change', function() {
+    document.getElementById('editTeamGroup').style.display = this.checked ? 'block' : 'none';
+  });
+
+  function modeLabel(g) {
+    const modes = [];
+    if (g.AllowsIndividual === 'TRUE') modes.push('Individual');
+    if (g.AllowsTeam === 'TRUE') {
+      modes.push(g.PlayersPerTeam ? `Teams (${g.PlayersPerTeam}/team)` : 'Team');
+    }
+    return modes.join(' · ') || 'No modes set';
+  }
+
+  function gameIcon(name) {
+    const n = (name || '').toLowerCase();
+    if (n.includes('backgammon')) return '🎲';
+    if (n.includes('chess')) return '♟️';
+    if (n.includes('card') || n.includes('uno')) return '🃏';
+    if (n.includes('pool') || n.includes('billiard')) return '🎱';
+    if (n.includes('dart')) return '🎯';
+    if (n.includes('ping') || n.includes('table')) return '🏓';
+    return '🎮';
+  }
+
   async function loadGamesList() {
     const games = await loadGames();
+    if (!games.length) {
+      document.getElementById('gamesList').innerHTML =
+        `<div class="empty-state"><span class="empty-icon">🎮</span><p>No games yet. Add one above!</p></div>`;
+      return;
+    }
     document.getElementById('gamesList').innerHTML = games.map(g => `
-      <div class="game-card">
-        <div class="game-name">${escapeHtml(g.GameName)}</div>
-        <div class="exp-meta">ID: ${g.GameID} | Players: ${g.TotalPlayers}</div>
-        <div class="exp-meta">Individual: ${g.AllowsIndividual === 'TRUE' ? '✅' : '❌'} | Team: ${g.AllowsTeam === 'TRUE' ? '✅' : '❌'} ${g.PlayersPerTeam ? `(${g.PlayersPerTeam}/team)` : ''}</div>
+      <div class="expense-item" onclick="openSheet(${JSON.stringify(g).replace(/"/g,'&quot;')})">
+        <div class="cat-icon" style="background:#ede9fe">${gameIcon(g.GameName)}</div>
+        <div class="exp-details">
+          <div class="exp-cat">${escapeHtml(g.GameName)}</div>
+          <div class="exp-meta">${g.TotalPlayers} players · ${modeLabel(g)}</div>
+        </div>
+        <span class="tap-chevron">›</span>
       </div>
-    `).join('') || '<div class="empty-state">No games defined</div>';
+    `).join('');
   }
+
+  function openSheet(g) {
+    selectedGame = g;
+    document.getElementById('sheetTitle').textContent = g.GameName;
+    document.getElementById('sheetSubtitle').textContent = `${g.TotalPlayers} players · ${modeLabel(g)}`;
+    document.getElementById('actionSheet').classList.add('open');
+  }
+  function closeSheet() {
+    document.getElementById('actionSheet').classList.remove('open');
+  }
+  function openEditModal() {
+    closeSheet();
+    document.getElementById('editGameName').value = selectedGame.GameName;
+    document.getElementById('editTotalPlayers').value = selectedGame.TotalPlayers;
+    const ind = selectedGame.AllowsIndividual === 'TRUE';
+    const team = selectedGame.AllowsTeam === 'TRUE';
+    document.getElementById('editAllowsIndividual').checked = ind;
+    document.getElementById('editAllowsTeam').checked = team;
+    document.getElementById('editTeamGroup').style.display = team ? 'block' : 'none';
+    document.getElementById('editPlayersPerTeam').value = selectedGame.PlayersPerTeam || 2;
+    document.getElementById('editModal').classList.add('open');
+  }
+  function closeEditModal() {
+    document.getElementById('editModal').classList.remove('open');
+  }
+  async function saveEdit() {
+    const name = document.getElementById('editGameName').value.trim();
+    const total = parseInt(document.getElementById('editTotalPlayers').value);
+    const ind = document.getElementById('editAllowsIndividual').checked;
+    const team = document.getElementById('editAllowsTeam').checked;
+    const perTeam = team ? parseInt(document.getElementById('editPlayersPerTeam').value) : null;
+    if (!name || total < 2) return showToast('Check name and player count', 'error');
+    const btn = document.querySelector('#editModal .btn-save');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    try {
+      await editGame(selectedGame.GameID, name, total, ind, team, perTeam);
+      closeEditModal();
+      showToast('Game updated ✓');
+      await loadGamesList();
+    } catch(e) {
+      showToast('Error saving', 'error');
+    } finally {
+      btn.textContent = 'Save Changes'; btn.disabled = false;
+    }
+  }
+  async function confirmDelete() {
+    closeSheet();
+    if (!confirm(`Delete "${selectedGame.GameName}"? Sessions using this game won't be affected.`)) return;
+    try {
+      await deleteGame(selectedGame.GameID);
+      showToast('Game deleted');
+      await loadGamesList();
+    } catch(e) {
+      showToast('Error deleting', 'error');
+    }
+  }
+
   window.onload = async () => {
     await initPageAuth({
-      onNeedLogin: () => { window.location.href = 'index.html'; },
+      onNeedLogin: () => { location.href = '../Home.html'; },
       onReady: async () => {
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
@@ -64,15 +215,29 @@
     });
     document.getElementById('addBtn').onclick = async () => {
       const name = document.getElementById('gameName').value.trim();
-      const totalPlayers = parseInt(document.getElementById('totalPlayers').value);
-      const allowsIndividual = document.getElementById('allowsIndividual').checked;
-      const allowsTeam = document.getElementById('allowsTeam').checked;
-      const playersPerTeam = allowsTeam ? parseInt(document.getElementById('playersPerTeam').value) : null;
-      if (!name || totalPlayers < 2) return alert('Enter valid game name and total players');
-      await addGame(name, totalPlayers, allowsIndividual, allowsTeam, playersPerTeam);
-      document.getElementById('gameName').value = '';
-      await loadGamesList();
+      const total = parseInt(document.getElementById('totalPlayers').value);
+      const ind = document.getElementById('allowsIndividual').checked;
+      const team = document.getElementById('allowsTeam').checked;
+      const perTeam = team ? parseInt(document.getElementById('playersPerTeam').value) : null;
+      if (!name || total < 2) return showToast('Enter a valid name and player count', 'error');
+      if (!ind && !team) return showToast('Select at least one mode', 'error');
+      const btn = document.getElementById('addBtn');
+      btn.textContent = 'Adding…'; btn.disabled = true;
+      try {
+        await addGame(name, total, ind, team, perTeam);
+        document.getElementById('gameName').value = '';
+        document.getElementById('allowsIndividual').checked = false;
+        document.getElementById('allowsTeam').checked = false;
+        document.getElementById('playersPerTeamGroup').style.display = 'none';
+        showToast(`${name} added ✓`);
+        await loadGamesList();
+      } catch(e) {
+        showToast('Error adding game', 'error');
+      } finally {
+        btn.textContent = '+ Add Game'; btn.disabled = false;
+      }
     };
+    renderBottomNav('');
   };
 </script>
 </body>

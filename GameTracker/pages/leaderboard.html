@@ -2,87 +2,144 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="../manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="../manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="../images/icon.png">
-  <link rel="shortcut icon" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
   <title>Leaderboard</title>
-  <link rel="stylesheet" href="../assets/styles.css">
+  <link rel="stylesheet" href="../styles.css">
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
-<div id="loadingOverlay" class="loading-overlay"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>
+</div>
+
 <div class="container" id="mainApp" style="display:none">
-  <div class="header"><button class="back-btn" onclick="history.back()">←</button><h1>📊 Leaderboard</h1></div>
+  <div class="header">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1>📊 Leaderboard</h1>
+  </div>
+
   <div class="card">
     <div class="form-row">
-      <select id="gameSelect"></select>
-      <input type="month" id="monthPicker">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Game</label>
+        <select id="gameSelect"></select>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Month</label>
+        <input type="month" id="monthPicker">
+      </div>
     </div>
-    <div id="individualBoard" style="display:none"><div class="card-title">Individual Leaderboard</div><div id="individualList"></div></div>
-    <div id="teamBoard" style="display:none"><div class="card-title">Team Leaderboard</div><div id="teamList"></div></div>
   </div>
+
+  <div id="boardsArea"></div>
 </div>
+
 <script>
   async function loadLeaderboard() {
     const gameId = document.getElementById('gameSelect').value;
-    const month = document.getElementById('monthPicker').value;
+    const month  = document.getElementById('monthPicker').value;
     if (!gameId || !month) return;
+
     const [year, monthNum] = month.split('-');
     const sessions = await loadSessions();
-    const closedSessions = sessions.filter(s => s.GameID === gameId && s.Status === 'Closed' && s.Date.startsWith(`${year}-${monthNum}`));
-    const participantsAll = await loadSessionParticipants();
+    const closedSessions = sessions.filter(s =>
+      s.GameID === gameId &&
+      s.Status === 'Closed' &&
+      s.Date && s.Date.startsWith(`${year}-${monthNum}`)
+    );
+
+    const players   = await loadPlayers();
+    const teams     = await loadTeams();
     const roundsInd = await loadRoundsIndividual();
     const roundsTeam = await loadRoundsTeam();
-    const players = await loadPlayers();
-    const teams = await loadTeams();
-    // Individual scores
+
+    // Individual
     let playerScores = {};
-    for (let sess of closedSessions.filter(s => s.Type === 'Individual')) {
-      const sessionRounds = roundsInd.filter(r => r.SessionID === sess.SessionID);
-      for (let r of sessionRounds) {
-        for (let i=1; i<=4; i++) {
-          let pid = r[`Player${i}_ID`];
+    for (const sess of closedSessions.filter(s => s.Type === 'Individual')) {
+      for (const r of roundsInd.filter(r => r.SessionID === sess.SessionID)) {
+        for (let i = 1; i <= 4; i++) {
+          const pid = r[`Player${i}_ID`];
           if (pid) playerScores[pid] = (playerScores[pid] || 0) + parseFloat(r[`Points${i}`] || 0);
         }
       }
     }
-    const playerBoard = Object.entries(playerScores).map(([id, pts]) => ({ name: players.find(p => p.PlayerID === id)?.PlayerName || id, points: pts })).sort((a,b) => a.points - b.points);
-    document.getElementById('individualList').innerHTML = playerBoard.map((p,idx) => `<div class="expense-item"><div class="exp-cat">${idx+1}. ${escapeHtml(p.name)}</div><div class="exp-amount">${p.points} pts</div></div>`).join('') || '<div class="empty-state">No individual matches this month</div>';
-    document.getElementById('individualBoard').style.display = playerBoard.length ? 'block' : 'none';
-    // Team scores
+
+    // Team
     let teamScores = {};
-    for (let sess of closedSessions.filter(s => s.Type === 'Team')) {
-      const sessionRounds = roundsTeam.filter(r => r.SessionID === sess.SessionID);
-      for (let r of sessionRounds) {
+    for (const sess of closedSessions.filter(s => s.Type === 'Team')) {
+      for (const r of roundsTeam.filter(r => r.SessionID === sess.SessionID)) {
         teamScores[r.TeamA_ID] = (teamScores[r.TeamA_ID] || 0) + parseFloat(r.PointsA || 0);
         teamScores[r.TeamB_ID] = (teamScores[r.TeamB_ID] || 0) + parseFloat(r.PointsB || 0);
       }
     }
-    const teamBoard = Object.entries(teamScores).map(([id, pts]) => ({ name: teams.find(t => t.TeamID === id)?.TeamName || id, points: pts })).sort((a,b) => a.points - b.points);
-    document.getElementById('teamList').innerHTML = teamBoard.map((t,idx) => `<div class="expense-item"><div class="exp-cat">${idx+1}. ${escapeHtml(t.name)}</div><div class="exp-amount">${t.points} pts</div></div>`).join('') || '<div class="empty-state">No team matches this month</div>';
-    document.getElementById('teamBoard').style.display = teamBoard.length ? 'block' : 'none';
+
+    const playerBoard = Object.entries(playerScores)
+      .map(([id, pts]) => ({ name: players.find(p => p.PlayerID === id)?.PlayerName || id, points: pts }))
+      .sort((a, b) => a.points - b.points);
+
+    const teamBoard = Object.entries(teamScores)
+      .map(([id, pts]) => ({ name: teams.find(t => t.TeamID === id)?.TeamName || id, points: pts }))
+      .sort((a, b) => a.points - b.points);
+
+    const rankClass = (i) => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const rankIcon  = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+
+    function renderBoard(data, emptyMsg) {
+      if (!data.length) return `<div class="empty-state"><p>${emptyMsg}</p></div>`;
+      return data.map((item, i) => `
+        <div class="rank-item">
+          <div class="rank-num ${rankClass(i)}">${rankIcon(i)}</div>
+          <div class="rank-info"><div class="rank-name">${escapeHtml(item.name)}</div></div>
+          <div class="rank-pts">${item.points} pts</div>
+        </div>
+      `).join('');
+    }
+
+    let html = '';
+    if (playerBoard.length) {
+      html += `<div class="card">
+        <div class="card-title">👤 Individual Ranking</div>
+        ${renderBoard(playerBoard, '')}
+      </div>`;
+    }
+    if (teamBoard.length) {
+      html += `<div class="card">
+        <div class="card-title">🏆 Team Ranking</div>
+        ${renderBoard(teamBoard, '')}
+      </div>`;
+    }
+    if (!playerBoard.length && !teamBoard.length) {
+      html = `<div class="card"><div class="empty-state"><span class="empty-icon">📭</span><p>No closed sessions for this game in ${month}.</p></div></div>`;
+    }
+    document.getElementById('boardsArea').innerHTML = html;
   }
+
   window.onload = async () => {
     await initPageAuth({
-      onNeedLogin: () => { window.location.href = 'index.html'; },
+      onNeedLogin: () => { location.href = '../Home.html'; },
       onReady: async () => {
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
+
         const games = await loadGames();
         const gameSelect = document.getElementById('gameSelect');
-        gameSelect.innerHTML = games.map(g => `<option value="${g.GameID}">${g.GameName}</option>`).join('');
-        document.getElementById('monthPicker').value = new Date().toISOString().slice(0,7);
+        gameSelect.innerHTML = games.map(g => `<option value="${g.GameID}">${escapeHtml(g.GameName)}</option>`).join('');
+        document.getElementById('monthPicker').value = new Date().toISOString().slice(0, 7);
+
         gameSelect.addEventListener('change', loadLeaderboard);
         document.getElementById('monthPicker').addEventListener('change', loadLeaderboard);
         await loadLeaderboard();
       }
     });
+    renderBottomNav('leaderboard');
   };
 </script>
 </body>
