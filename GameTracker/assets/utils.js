@@ -252,9 +252,11 @@ async function addSession(gameId, date, type) {
 
 async function addSessionParticipants(sessionId, participantIds, type) {
   const participantType = type === 'Individual' ? 'Player' : 'Team';
-  for (let pid of participantIds) {
-    await appendRow('SessionParticipants', [new Date().toISOString(), sessionId, pid, participantType]);
-  }
+  // Store as single row with comma-separated IDs
+  await appendRow('SessionParticipants', [
+    new Date().toISOString(), sessionId,
+    participantIds.join(','), participantType
+  ]);
 }
 
 async function addRoundIndividual(sessionId, roundNumber, players, points) {
@@ -283,8 +285,9 @@ async function closeSession(sessionId) {
   let totals = {};
   if (session.Type === 'Individual') {
     const rounds = await loadRoundsIndividual();
-    const participants = (await loadSessionParticipants()).filter(p => p.SessionID === sessionId);
-    for (let p of participants) totals[p.ParticipantID] = 0;
+    const partRows = (await loadSessionParticipants()).filter(p => p.SessionID === sessionId);
+    const participantIds = partRows.flatMap(p => p.ParticipantID.split(',').map(s => s.trim()).filter(Boolean));
+    for (let pid of participantIds) totals[pid] = 0;
     for (let r of rounds.filter(r => r.SessionID === sessionId)) {
       for (let i = 1; i <= 4; i++) {
         let pid = r[`Player${i}_ID`];
@@ -293,8 +296,9 @@ async function closeSession(sessionId) {
     }
   } else {
     const rounds = await loadRoundsTeam();
-    const participants = (await loadSessionParticipants()).filter(p => p.SessionID === sessionId);
-    for (let p of participants) totals[p.ParticipantID] = 0;
+    const partRows = (await loadSessionParticipants()).filter(p => p.SessionID === sessionId);
+    const participantIds2 = partRows.flatMap(p => p.ParticipantID.split(',').map(s => s.trim()).filter(Boolean));
+    for (let pid of participantIds2) totals[pid] = 0;
     for (let r of rounds.filter(r => r.SessionID === sessionId)) {
       totals[r.TeamA_ID] = (totals[r.TeamA_ID] || 0) + parseFloat(r.PointsA || 0);
       totals[r.TeamB_ID] = (totals[r.TeamB_ID] || 0) + parseFloat(r.PointsB || 0);
