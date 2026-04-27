@@ -423,3 +423,60 @@ input[type="checkbox"] {
 
 /* ── Prevent horizontal scroll everywhere ── */
 .container, .card, .modal, .sheet { overflow-x: hidden; }
+
+/* ── Toggle switch ── */
+.toggle-switch {
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.toggle-switch input[type="checkbox"] {
+  height: 0; width: 0; visibility: hidden; position: absolute;
+}
+.toggle-switch label.toggle-label {
+  cursor: pointer;
+  text-indent: -9999px;
+  width: 44px; height: 24px;
+  background: #ccc;
+  border-radius: 24px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle-switch label.toggle-label::after {
+  content: '';
+  position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px;
+  background: #fff; border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle-switch input:checked + label.toggle-label {
+  background: var(--brand);
+}
+.toggle-switch input:checked + label.toggle-label::after {
+  transform: translateX(20px);
+}
+
+/* ── Split form row (e.g. gender radios + status toggle) ── */
+.form-split-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.form-split-row > div {
+  display: flex;
+  flex-direction: column;
+}
+.form-split-row .radio-group {
+  display: flex;
+  gap: 12px;
+}
+.radio-group label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
