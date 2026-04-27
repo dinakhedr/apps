@@ -27,23 +27,38 @@
     <h1>👥 Players</h1>
   </div>
 
-  <div class="card">
-    <div class="card-title">Add Player</div>
-    <div class="form-group">
-      <label>Player Name</label>
-      <input type="text" id="playerName" placeholder="e.g. Alice">
-    </div>
-    <div class="form-group">
-      <label>Gender</label>
-      <select id="playerGender">
-        <option value="Male">♂ Male</option>
-        <option value="Female">♀ Female</option>
-        <option value="Other">⚧ Other</option>
-      </select>
-    </div>
-    <button class="submit-btn" id="addBtn">+ Add Player</button>
+   <div class="card">
+  <div class="card-title">Add Player</div>
+  <div class="form-group">
+    <label>Player Name</label>
+    <input type="text" id="playerName" placeholder="e.g. Alice">
   </div>
+  <div class="form-group">
+    <div class="form-split-row">
+      <div>
+        <label style="margin-bottom:4px;">Gender</label>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="addGender" value="Male" checked style="width:auto; margin-right:4px; accent-color:var(--brand);"> ♂ Male
+          </label>
+          <label>
+            <input type="radio" name="addGender" value="Female" style="width:auto; margin-right:4px; accent-color:var(--brand);"> ♀ Female
+          </label>
+        </div>
+      </div>
+      <div>
+        <label for="addStatusToggle" style="margin-bottom:4px;">Status</label>
+        <div class="toggle-switch">
+          <input type="checkbox" id="addStatusToggle" checked>
+          <label for="addStatusToggle" class="toggle-label">Active</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="submit-btn" id="addBtn">+ Add Player</button>
+</div>
 
+  
   <div class="card">
     <div class="card-title">All Players</div>
     <div id="playerList"></div>
@@ -59,14 +74,28 @@
       <label>Player Name</label>
       <input type="text" id="editName" placeholder="Player name">
     </div>
-    <div class="form-group">
-      <label>Gender</label>
-      <select id="editGender">
-        <option value="Male">♂ Male</option>
-        <option value="Female">♀ Female</option>
-        <option value="Other">⚧ Other</option>
-      </select>
+<div class="form-group">
+  <div class="form-split-row">
+    <div>
+      <label style="margin-bottom:4px;">Gender</label>
+      <div class="radio-group">
+        <label>
+          <input type="radio" name="editGender" value="Male" style="width:auto; margin-right:4px; accent-color:var(--brand);"> ♂ Male
+        </label>
+        <label>
+          <input type="radio" name="editGender" value="Female" style="width:auto; margin-right:4px; accent-color:var(--brand);"> ♀ Female
+        </label>
+      </div>
     </div>
+    <div>
+      <label for="editStatusToggle" style="margin-bottom:4px;">Status</label>
+      <div class="toggle-switch">
+        <input type="checkbox" id="editStatusToggle">
+        <label for="editStatusToggle" class="toggle-label">Active</label>
+      </div>
+    </div>
+  </div>
+</div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="btn-save" id="editSaveBtn" onclick="saveEdit()">Save Changes</button>
