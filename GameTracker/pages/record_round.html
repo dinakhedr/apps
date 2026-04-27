@@ -163,6 +163,21 @@
       border-radius: 6px; transition: background 0.12s, color 0.12s;
     }
     .del-round-btn:hover { background: #fee2e2; color: var(--danger); }
+
+    /* ── End session button ── */
+    .end-session-btn {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #fff; border: none; border-radius: var(--radius-sm);
+      font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 800;
+      cursor: pointer; letter-spacing: -0.3px;
+      box-shadow: 0 4px 18px rgba(239,68,68,0.35);
+      transition: opacity 0.15s, transform 0.12s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .end-session-btn:hover  { opacity: 0.92; }
+    .end-session-btn:active { transform: scale(0.97); }
+    .end-session-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   </style>
 </head>
 <body>
@@ -209,6 +224,13 @@
           <tfoot id="scoreFoot"></tfoot>
         </table>
       </div>
+    </div>
+
+    <!-- End Session button -->
+    <div id="endSessionWrap" style="display:none; margin-bottom:20px">
+      <button class="end-session-btn" id="endSessionBtn" onclick="endSession()">
+        🏁 End Session
+      </button>
     </div>
 
   </div>
@@ -359,6 +381,7 @@
     const card = document.getElementById('scoreboardCard');
     if (!currentRounds.length) { card.style.display = 'none'; return; }
     card.style.display = 'block';
+    document.getElementById('endSessionWrap').style.display = 'block';
 
     if (session.Type === 'Individual') {
       renderIndividualScoreboard();
@@ -491,6 +514,38 @@
   }
 
   /* ════════════════════════════════════════
+     END SESSION
+  ════════════════════════════════════════ */
+  async function endSession() {
+    if (!confirm('End this session? The winner will be determined by the lowest total points.')) return;
+    const btn = document.getElementById('endSessionBtn');
+    btn.textContent = 'Closing…'; btn.disabled = true;
+    try {
+      const result = await closeSession(sessionId);
+      // Resolve winner name
+      let winnerLabel = 'It\'s a tie!';
+      if (result.winnerId) {
+        if (session.Type === 'Individual') {
+          const p = allPlayers.find(pl => pl.PlayerID === result.winnerId);
+          winnerLabel = p ? `🏆 ${p.PlayerName} wins!` : '🏆 Winner found!';
+        } else {
+          const t = allTeams.find(tm => tm.TeamID === result.winnerId);
+          winnerLabel = t ? `🏆 ${t.TeamName} wins!` : '🏆 Winner found!';
+        }
+      }
+      // Show result banner then redirect home
+      btn.textContent = winnerLabel;
+      btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      btn.style.boxShadow  = '0 4px 18px rgba(16,185,129,0.35)';
+      showToast(winnerLabel);
+      setTimeout(() => { location.href = '../Home.html'; }, 1800);
+    } catch(e) {
+      showToast('Error ending session', 'error');
+      btn.textContent = '🏁 End Session'; btn.disabled = false;
+    }
+  }
+
+  /* ════════════════════════════════════════
      PAGE INIT
   ════════════════════════════════════════ */
   window.onload = async () => {
@@ -514,6 +569,11 @@
           const points    = playerIds.map(pid =>
             parseFloat(document.getElementById(`pts_${pid}`)?.value) || 0
           );
+          if (points.every(p => p === 0)) {
+            showToast('Please enter points before saving', 'error');
+            btn.textContent = '💾 Save Round'; btn.disabled = false;
+            return;
+          }
           const p4   = [...playerIds, '', '', ''].slice(0, 4);
           const pts4 = [...points,    0,  0,  0].slice(0, 4);
           await addRoundIndividual(sessionId, roundNumber, p4, pts4);
@@ -522,6 +582,11 @@
           const teamB = participants[1]?.ParticipantID;
           const pA = parseFloat(document.getElementById('pointsA').value) || 0;
           const pB = parseFloat(document.getElementById('pointsB').value) || 0;
+          if (pA === 0 && pB === 0) {
+            showToast('Please enter points before saving', 'error');
+            btn.textContent = '💾 Save Round'; btn.disabled = false;
+            return;
+          }
           await addRoundTeam(sessionId, roundNumber, teamA, teamB, pA, pB);
         }
         showToast(`Round ${roundNumber} saved ✓`);
