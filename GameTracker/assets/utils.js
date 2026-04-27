@@ -180,14 +180,18 @@ async function loadRoundsIndividual()    { return await getSheetData('Rounds_Ind
 async function loadRoundsTeam()          { return await getSheetData('Rounds_Team'); }
 
 // ── Add operations ──
-async function addPlayer(name, gender) {
+async function addPlayer(name, gender, status) {
   const playerId = generateGameId();
-  await appendRow('Players', [new Date().toISOString(), playerId, name, gender, 'Active']);
+  await appendRow('Players', [new Date().toISOString(), playerId, name, gender, status]);
   return playerId;
 }
 
-async function editPlayer(playerId, name, gender) {
-  return await updateRowById('Players', 'PlayerID', playerId, { PlayerName: name, Gender: gender });
+async function editPlayer(playerId, name, gender, status) {
+  return await updateRowById('Players', 'PlayerID', playerId, {
+    PlayerName: name,
+    Gender: gender,
+    Status: status
+  });
 }
 
 async function deletePlayer(playerId) {
