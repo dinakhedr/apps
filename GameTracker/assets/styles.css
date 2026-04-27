@@ -557,3 +557,23 @@ input[type="radio"] {
   text-transform: none; letter-spacing: 0;
   cursor: pointer; width: auto; margin-bottom: 0;
 }
+
+/* ── Gender pills ── */
+.gender-row { display: flex; gap: 10px; margin-bottom: 0; }
+.gender-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  border: 2px solid var(--border); background: var(--surface-2);
+  cursor: pointer; transition: all 0.18s; user-select: none; flex: 1;
+}
+.gender-pill.active { border-color: var(--brand); background: #ededff; }
+.gender-pill-check {
+  width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid var(--border); background: var(--surface); transition: all 0.18s;
+}
+.gender-pill.active .gender-pill-check { background: var(--brand); border-color: var(--brand); }
+.gender-pill.active .gender-pill-check::before {
+  content: '✓'; display: flex; align-items: center; justify-content: center;
+  height: 100%; font-size: 11px; font-weight: 900; color: #fff;
+}
+.gender-pill-label { font-size: 13px; font-weight: 700; color: var(--text); }
