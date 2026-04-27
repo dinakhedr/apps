@@ -284,7 +284,15 @@
     const game  = games.find(g => g.GameID === session.GameID);
 
     const allParts = await loadSessionParticipants();
-    participants   = allParts.filter(p => p.SessionID === sessionId);
+    // Participants stored as one row with comma-separated IDs — expand to array of objects
+    const partRow = allParts.find(p => p.SessionID === sessionId);
+    participants = partRow
+      ? partRow.ParticipantID.split(',').map(id => ({
+          SessionID: sessionId,
+          ParticipantID: id.trim(),
+          ParticipantType: partRow.ParticipantType
+        })).filter(p => p.ParticipantID)
+      : [];
 
     document.getElementById('sessionContent').style.display = 'block';
 
