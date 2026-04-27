@@ -29,12 +29,11 @@
     .tab-panel { display:none; }
     .tab-panel.active { display:block; }
 
-    /* ── Collapsible picker section ── */
+    /* ── Collapsible picker ── */
     .picker-toggle {
       display:flex; align-items:center; justify-content:space-between;
       padding:10px 12px; background:var(--surface-2); border-radius:var(--radius-sm);
-      cursor:pointer; margin-bottom:10px; border:2px solid var(--border);
-      transition:border-color 0.15s;
+      cursor:pointer; margin-bottom:10px; border:2px solid var(--border); transition:border-color 0.15s;
     }
     .picker-toggle:hover { border-color:var(--brand); }
     .picker-toggle-left { display:flex; align-items:center; gap:10px; }
@@ -48,12 +47,7 @@
     /* ── Icon & color grids ── */
     .picker-sub-label { font-size:11px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:6px; margin-top:10px; }
     .icon-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:4px; }
-    .icon-option {
-      width:100%; aspect-ratio:1; border-radius:10px;
-      background:var(--surface-2); border:2px solid transparent;
-      font-size:20px; cursor:pointer;
-      display:flex; align-items:center; justify-content:center; transition:all 0.15s;
-    }
+    .icon-option { width:100%; aspect-ratio:1; border-radius:10px; background:var(--surface-2); border:2px solid transparent; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
     .icon-option.selected { border-color:var(--brand); background:#ededff; }
     .icon-option:active { transform:scale(0.92); }
     .color-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-bottom:4px; }
@@ -62,23 +56,32 @@
     .color-option.selected::after { content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.4); }
 
     /* ── Preview card ── */
-    .entity-preview {
-      display:flex; align-items:center; gap:12px;
-      padding:12px 14px; background:var(--surface-2);
-      border-radius:var(--radius-sm); margin-bottom:14px;
-    }
+    .entity-preview { display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--surface-2); border-radius:var(--radius-sm); margin-bottom:14px; }
     .entity-preview-icon { width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; transition:background 0.2s; flex-shrink:0; }
     .entity-preview-name { font-weight:700; font-size:15px; color:var(--text); }
     .entity-preview-sub  { font-size:11px; color:var(--text-3); margin-top:2px; }
 
+    /* ── Gender pills ── */
+    .gender-row { display:flex; gap:10px; }
+    .gender-pill {
+      display:flex; align-items:center; gap:8px;
+      padding:10px 14px; border-radius:var(--radius-sm);
+      border:2px solid var(--border); background:var(--surface-2);
+      cursor:pointer; transition:all 0.18s; user-select:none; flex:1;
+    }
+    .gender-pill.active { border-color:var(--brand); background:#ededff; box-shadow:0 0 0 3px rgba(91,94,244,0.10); }
+    .gender-pill-check {
+      width:18px; height:18px; border-radius:50%; flex-shrink:0;
+      border:2px solid var(--border); background:var(--surface); transition:all 0.18s;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .gender-pill.active .gender-pill-check { background:var(--brand); border-color:var(--brand); }
+    .gender-pill.active .gender-pill-check::before { content:'✓'; font-size:11px; font-weight:900; color:#fff; line-height:1; }
+    .gender-pill-label { font-size:13px; font-weight:700; color:var(--text); }
+
     /* ── Player selector cards ── */
     .player-selector { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:8px; }
-    .player-sel-card {
-      display:flex; align-items:center; gap:10px;
-      padding:10px 12px; border-radius:var(--radius-sm);
-      border:2px solid var(--border); background:var(--surface-2);
-      cursor:pointer; transition:all 0.15s; user-select:none;
-    }
+    .player-sel-card { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:var(--radius-sm); border:2px solid var(--border); background:var(--surface-2); cursor:pointer; transition:all 0.15s; user-select:none; }
     .player-sel-card.selected { border-color:var(--brand); background:#ededff; }
     .player-sel-card.readonly { cursor:default; opacity:0.85; }
     .player-sel-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
@@ -86,10 +89,8 @@
     .player-sel-check { width:18px; height:18px; border-radius:50%; flex-shrink:0; border:2px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; transition:all 0.15s; }
     .player-sel-card.selected .player-sel-check { background:var(--brand); border-color:var(--brand); color:#fff; }
 
-    /* ── Game section label ── */
+    /* ── Team display ── */
     .game-section-label { font-family:'Sora',sans-serif; font-size:11px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; margin-top:4px; }
-
-    /* ── Team row display ── */
     .team-icon-bubble { width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
     .team-player-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:5px; }
     .team-player-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 8px 3px 4px; border-radius:20px; background:var(--surface-2); }
@@ -106,15 +107,15 @@
 <div class="container" id="mainApp" style="display:none">
   <div class="header">
     <button class="back-btn" onclick="history.back()">←</button>
-    <h1>👥 Players & Teams</h1>
+    <h1>Players & Teams</h1>
   </div>
 
   <div class="pill-tabs">
-    <button class="pill-tab active" onclick="switchTab('players')">👥 Players</button>
-    <button class="pill-tab"        onclick="switchTab('teams')">🏆 Teams</button>
+    <button class="pill-tab active" onclick="switchTab('players')">Players</button>
+    <button class="pill-tab"        onclick="switchTab('teams')">Teams</button>
   </div>
 
-  <!-- ══════════════ PLAYERS TAB ══════════════ -->
+  <!-- ══ PLAYERS TAB ══ -->
   <div class="tab-panel active" id="tab-players">
     <div class="card">
       <div class="card-title">Add Player</div>
@@ -125,13 +126,21 @@
           <input type="text" id="playerName" placeholder="e.g. Alice">
         </div>
       </div>
+
       <div class="label-left-row">
         <label>Gender</label>
-        <div class="controls radio-group">
-          <label><input type="radio" name="addGender" value="Male" checked style="width:auto;margin-right:4px"> ♂ Male</label>
-          <label><input type="radio" name="addGender" value="Female" style="width:auto;margin-right:4px"> ♀ Female</label>
+        <div class="gender-row" id="addGenderRow">
+          <div class="gender-pill active" onclick="selectGender('add','Male')">
+            <div class="gender-pill-check"></div>
+            <span class="gender-pill-label">♂ Male</span>
+          </div>
+          <div class="gender-pill" onclick="selectGender('add','Female')">
+            <div class="gender-pill-check"></div>
+            <span class="gender-pill-label">♀ Female</span>
+          </div>
         </div>
       </div>
+
       <div class="label-left-row">
         <label>Status</label>
         <div class="controls">
@@ -143,7 +152,7 @@
         </div>
       </div>
 
-      <!-- Collapsible picker: Player -->
+      <!-- Collapsible icon & color picker -->
       <div class="picker-toggle" id="addPlayerPickerToggle" onclick="togglePicker('addPlayerPicker','addPlayerPickerToggle')">
         <div class="picker-toggle-left">
           <div class="picker-toggle-preview" id="addPlayerPickerPreview" style="background:#ededff">🤩</div>
@@ -158,7 +167,7 @@
         <div class="icon-grid" id="addIconGrid"></div>
       </div>
 
-      <!-- Preview -->
+      <!-- Live preview -->
       <div class="entity-preview" style="margin-top:10px">
         <div class="entity-preview-icon" id="addPreviewIcon" style="background:#ededff">🤩</div>
         <div>
@@ -176,7 +185,7 @@
     </div>
   </div>
 
-  <!-- ══════════════ TEAMS TAB ══════════════ -->
+  <!-- ══ TEAMS TAB ══ -->
   <div class="tab-panel" id="tab-teams">
     <div class="card">
       <div class="card-title">Create Team</div>
@@ -198,7 +207,7 @@
         </div>
       </div>
 
-      <!-- Collapsible picker: Team -->
+      <!-- Collapsible team picker -->
       <div id="teamPickerToggleWrap" style="display:none">
         <div class="picker-toggle" id="addTeamPickerToggle" onclick="togglePicker('addTeamPicker','addTeamPickerToggle')">
           <div class="picker-toggle-left">
@@ -234,7 +243,7 @@
   </div>
 </div>
 
-<!-- ══════════════ EDIT PLAYER MODAL ══════════════ -->
+<!-- ══ EDIT PLAYER MODAL ══ -->
 <div class="modal-backdrop" id="editPlayerModal" onclick="closeEditPlayer()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
@@ -244,13 +253,21 @@
       <label>Name</label>
       <div class="controls"><input type="text" id="editPlayerName" placeholder="Player name"></div>
     </div>
+
     <div class="label-left-row">
       <label>Gender</label>
-      <div class="controls radio-group">
-        <label><input type="radio" name="editGender" value="Male" style="width:auto;margin-right:4px"> ♂ Male</label>
-        <label><input type="radio" name="editGender" value="Female" style="width:auto;margin-right:4px"> ♀ Female</label>
+      <div class="gender-row" id="editGenderRow">
+        <div class="gender-pill active" onclick="selectGender('edit','Male')">
+          <div class="gender-pill-check"></div>
+          <span class="gender-pill-label">♂ Male</span>
+        </div>
+        <div class="gender-pill" onclick="selectGender('edit','Female')">
+          <div class="gender-pill-check"></div>
+          <span class="gender-pill-label">♀ Female</span>
+        </div>
       </div>
     </div>
+
     <div class="label-left-row">
       <label>Status</label>
       <div class="controls">
@@ -262,7 +279,7 @@
       </div>
     </div>
 
-    <!-- Collapsible picker: Edit Player -->
+    <!-- Collapsible picker -->
     <div class="picker-toggle" id="editPlayerPickerToggle" onclick="togglePicker('editPlayerPicker','editPlayerPickerToggle')">
       <div class="picker-toggle-left">
         <div class="picker-toggle-preview" id="editPlayerPickerPreview" style="background:#ededff">🤩</div>
@@ -292,7 +309,7 @@
   </div>
 </div>
 
-<!-- ══════════════ EDIT TEAM MODAL ══════════════ -->
+<!-- ══ EDIT TEAM MODAL ══ -->
 <div class="modal-backdrop" id="editTeamModal" onclick="closeEditTeam()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
@@ -303,13 +320,11 @@
       <div class="controls"><input type="text" id="editTeamName" placeholder="Team name"></div>
     </div>
 
-    <!-- Players (read-only visual cards) -->
     <div class="form-group">
       <label>Players</label>
       <div class="player-selector" id="editTeamPlayerGrid"></div>
     </div>
 
-    <!-- Collapsible picker: Edit Team -->
     <div class="picker-toggle" id="editTeamPickerToggle" onclick="togglePicker('editTeamPicker','editTeamPickerToggle')">
       <div class="picker-toggle-left">
         <div class="picker-toggle-preview" id="editTeamPickerPreview" style="background:#fef3c7">🏆</div>
@@ -340,14 +355,13 @@
 </div>
 
 <script>
-/* ═══════════════════════════════════════
+/* ═══════════════════════
    CONSTANTS
-═══════════════════════════════════════ */
+═══════════════════════ */
 const PLAYER_ICONS = [
   '😀','😎','🤩','😏','🧐','🥳','😤',
   '👦','👧','👨','👩','🧔','👴','👵',
   '🦸','🦹','🧙','🧝','🧛','🤺','🥷',
-  // Animals
   '🦁','🐯','🐻','🦊','🐺','🦝','🦨',
   '🐸','🐧','🦅','🦉','🦋','🐲','🦄',
   '🐬','🦈','🐙','🦔','🦇','🐝','🦜',
@@ -356,7 +370,6 @@ const TEAM_ICONS = [
   '🏆','🥇','🥈','🥉','🎖️','🏅','⭐',
   '👑','💎','🔥','⚡','💪','🎯','🎱',
   '♟️','🃏','🎲','⚽','🏀','🎮','🕹️',
-  // Animal totems
   '🦁','🐯','🦅','🐺','🦊','🐻','🦂',
   '🦈','🐉','🦋','🦝','🦉','🐸','🦄',
 ];
@@ -367,22 +380,36 @@ const COLOR_OPTIONS = [
   { bg:'#ecfdf5' },{ bg:'#fef9c3' },{ bg:'#f3e8ff' },{ bg:'#fce7f3' },
 ];
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════
    STATE
-═══════════════════════════════════════ */
+═══════════════════════ */
 let allPlayers = [], allGames = [];
 let neededPlayers = 2;
 let selectedPlayerIds = new Set();
 let editingPlayer = null, editingTeam = null;
 
-let addPIcon = PLAYER_ICONS[2], addPColor = COLOR_OPTIONS[0];
-let editPIcon = PLAYER_ICONS[2], editPColor = COLOR_OPTIONS[0];
-let addTIcon = TEAM_ICONS[0],   addTColor = COLOR_OPTIONS[3];
-let editTIcon = TEAM_ICONS[0],  editTColor = COLOR_OPTIONS[3];
+// Gender state
+const genderState = { add: 'Male', edit: 'Male' };
 
-/* ═══════════════════════════════════════
-   COLLAPSIBLE PICKER TOGGLE
-═══════════════════════════════════════ */
+// Picker state
+let addPIcon = PLAYER_ICONS[2],  addPColor = COLOR_OPTIONS[0];
+let editPIcon = PLAYER_ICONS[2], editPColor = COLOR_OPTIONS[0];
+let addTIcon = TEAM_ICONS[0],    addTColor = COLOR_OPTIONS[3];
+let editTIcon = TEAM_ICONS[0],   editTColor = COLOR_OPTIONS[3];
+
+/* ═══════════════════════
+   TAB
+═══════════════════════ */
+function switchTab(tab) {
+  document.querySelectorAll('.pill-tab').forEach((b,i) =>
+    b.classList.toggle('active', (i===0&&tab==='players')||(i===1&&tab==='teams')));
+  document.getElementById('tab-players').classList.toggle('active', tab==='players');
+  document.getElementById('tab-teams').classList.toggle('active', tab==='teams');
+}
+
+/* ═══════════════════════
+   COLLAPSIBLE PICKER
+═══════════════════════ */
 function togglePicker(bodyId, toggleId) {
   const body   = document.getElementById(bodyId);
   const toggle = document.getElementById(toggleId);
@@ -391,19 +418,23 @@ function togglePicker(bodyId, toggleId) {
   toggle.classList.toggle('open', !isOpen);
 }
 
-/* ═══════════════════════════════════════
-   TAB SWITCH
-═══════════════════════════════════════ */
-function switchTab(tab) {
-  document.querySelectorAll('.pill-tab').forEach((b,i) =>
-    b.classList.toggle('active', (i===0&&tab==='players')||(i===1&&tab==='teams')));
-  document.getElementById('tab-players').classList.toggle('active', tab==='players');
-  document.getElementById('tab-teams').classList.toggle('active', tab==='teams');
+/* ═══════════════════════
+   GENDER PILLS
+═══════════════════════ */
+function selectGender(prefix, value) {
+  genderState[prefix] = value;
+  const row = document.getElementById(`${prefix}GenderRow`);
+  row.querySelectorAll('.gender-pill').forEach(pill => {
+    const isMale = pill.querySelector('.gender-pill-label').textContent.includes('♂');
+    pill.classList.toggle('active', (value === 'Male') === isMale);
+  });
+  if (prefix === 'add')  updateAddPlayerPreview();
+  else                   updateEditPlayerPreview();
 }
 
-/* ═══════════════════════════════════════
-   GENERIC GRID BUILDERS
-═══════════════════════════════════════ */
+/* ═══════════════════════
+   GRID BUILDERS
+═══════════════════════ */
 function buildIconGrid(gridId, options, selected, onSelect) {
   document.getElementById(gridId).innerHTML = options.map(ic =>
     `<button class="icon-option${ic===selected?' selected':''}" onclick="${onSelect}('${ic}')">${ic}</button>`
@@ -414,8 +445,6 @@ function buildColorGrid(gridId, selected, onSelect) {
     `<div class="color-option${c.bg===selected.bg?' selected':''}" style="background:${c.bg}" onclick="${onSelect}(${i})"></div>`
   ).join('');
 }
-
-/* ── Sync the small preview in the toggle button ── */
 function syncTogglePreview(previewId, icon, color) {
   const el = document.getElementById(previewId);
   if (!el) return;
@@ -423,9 +452,9 @@ function syncTogglePreview(previewId, icon, color) {
   el.style.background = color.bg;
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════
    ADD-PLAYER PICKERS
-═══════════════════════════════════════ */
+═══════════════════════ */
 function buildAddPlayerPickers() {
   buildIconGrid('addIconGrid', PLAYER_ICONS, addPIcon, 'selectAddPIcon');
   buildColorGrid('addColorGrid', addPColor, 'selectAddPColor');
@@ -435,7 +464,7 @@ function selectAddPIcon(ic)  { addPIcon=ic;  buildAddPlayerPickers(); updateAddP
 function selectAddPColor(i)  { addPColor=COLOR_OPTIONS[i]; buildAddPlayerPickers(); updateAddPlayerPreview(); }
 function updateAddPlayerPreview() {
   const name   = document.getElementById('playerName').value.trim() || 'Player Name';
-  const gender = document.querySelector('input[name="addGender"]:checked')?.value || 'Male';
+  const gender = genderState.add;
   const active = document.getElementById('addStatusToggle').checked;
   document.getElementById('addStatusLabel').textContent = active ? 'Active' : 'Inactive';
   document.getElementById('addPreviewIcon').textContent  = addPIcon;
@@ -445,9 +474,9 @@ function updateAddPlayerPreview() {
   syncTogglePreview('addPlayerPickerPreview', addPIcon, addPColor);
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════
    EDIT-PLAYER PICKERS
-═══════════════════════════════════════ */
+═══════════════════════ */
 function buildEditPlayerPickers() {
   buildIconGrid('editIconGrid', PLAYER_ICONS, editPIcon, 'selectEditPIcon');
   buildColorGrid('editColorGrid', editPColor, 'selectEditPColor');
@@ -457,7 +486,7 @@ function selectEditPIcon(ic) { editPIcon=ic;  buildEditPlayerPickers(); updateEd
 function selectEditPColor(i) { editPColor=COLOR_OPTIONS[i]; buildEditPlayerPickers(); updateEditPlayerPreview(); }
 function updateEditPlayerPreview() {
   const name   = document.getElementById('editPlayerName').value.trim() || 'Player Name';
-  const gender = document.querySelector('input[name="editGender"]:checked')?.value || 'Male';
+  const gender = genderState.edit;
   const active = document.getElementById('editStatusToggle').checked;
   document.getElementById('editStatusLabel').textContent = active ? 'Active' : 'Inactive';
   document.getElementById('editPreviewIcon').textContent  = editPIcon;
@@ -467,9 +496,9 @@ function updateEditPlayerPreview() {
   syncTogglePreview('editPlayerPickerPreview', editPIcon, editPColor);
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════
    ADD-TEAM PICKERS
-═══════════════════════════════════════ */
+═══════════════════════ */
 function buildAddTeamPickers() {
   buildIconGrid('addTeamIconGrid', TEAM_ICONS, addTIcon, 'selectAddTIcon');
   buildColorGrid('addTeamColorGrid', addTColor, 'selectAddTColor');
@@ -479,9 +508,8 @@ function selectAddTIcon(ic) { addTIcon=ic;  buildAddTeamPickers(); updateAddTeam
 function selectAddTColor(i) { addTColor=COLOR_OPTIONS[i]; buildAddTeamPickers(); updateAddTeamPreview(); }
 function updateAddTeamPreview() {
   const name = document.getElementById('teamName').value.trim() || 'Team Name';
-  const ids  = Array.from(selectedPlayerIds);
-  const sub  = ids.length
-    ? ids.map(id => allPlayers.find(p=>p.PlayerID===id)?.PlayerName||'?').join(' · ')
+  const sub  = selectedPlayerIds.size
+    ? Array.from(selectedPlayerIds).map(id => allPlayers.find(p=>p.PlayerID===id)?.PlayerName||'?').join(' · ')
     : 'No players selected';
   document.getElementById('teamPreviewIcon').textContent  = addTIcon;
   document.getElementById('teamPreviewIcon').style.background = addTColor.bg;
@@ -490,9 +518,9 @@ function updateAddTeamPreview() {
   syncTogglePreview('addTeamPickerPreview', addTIcon, addTColor);
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════
    EDIT-TEAM PICKERS
-═══════════════════════════════════════ */
+═══════════════════════ */
 function buildEditTeamPickers() {
   buildIconGrid('editTeamIconGrid', TEAM_ICONS, editTIcon, 'selectEditTIcon');
   buildColorGrid('editTeamColorGrid', editTColor, 'selectEditTColor');
@@ -508,9 +536,9 @@ function updateEditTeamPreview() {
   syncTogglePreview('editTeamPickerPreview', editTIcon, editTColor);
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════
    PLAYERS LIST
-═══════════════════════════════════════ */
+═══════════════════════ */
 async function loadPlayersList() {
   allPlayers = await loadPlayers();
   const el = document.getElementById('playerList');
@@ -536,26 +564,24 @@ async function loadPlayersList() {
           </div>
         </div>
         <div class="row-actions">
-          <button class="row-btn edit"   title="Edit"   onclick="openEditPlayer('${safeData}')">✏️</button>
-          <button class="row-btn delete" title="Delete" onclick="confirmDeletePlayer('${p.PlayerID}','${escapeHtml(p.PlayerName).replace(/'/g,"\\'")}')">🗑️</button>
+          <button class="row-btn edit"   onclick="openEditPlayer('${safeData}')">✏️</button>
+          <button class="row-btn delete" onclick="confirmDeletePlayer('${p.PlayerID}','${escapeHtml(p.PlayerName).replace(/'/g,"\\'")}')">🗑️</button>
         </div>
       </div>`;
   }).join('');
 }
 
-/* ── Edit player modal ── */
+/* ── Edit player ── */
 function openEditPlayer(encoded) {
   const p = JSON.parse(decodeURIComponent(encoded));
   editingPlayer = p;
   document.getElementById('editPlayerName').value = p.PlayerName;
-  const maleR  = document.querySelector('input[name="editGender"][value="Male"]');
-  const femaleR = document.querySelector('input[name="editGender"][value="Female"]');
-  if (p.Gender === 'Female' && femaleR) femaleR.checked = true;
-  else if (maleR) maleR.checked = true;
   document.getElementById('editStatusToggle').checked = (p.Status !== 'Inactive');
   editPIcon  = PLAYER_ICONS.includes(p.Icon) ? p.Icon : PLAYER_ICONS[2];
   editPColor = COLOR_OPTIONS.find(c=>c.bg===p.BG) || COLOR_OPTIONS[0];
-  // Reset picker to closed
+  // Set gender pill
+  selectGender('edit', p.Gender === 'Female' ? 'Female' : 'Male');
+  // Reset picker closed
   document.getElementById('editPlayerPicker').classList.remove('open');
   document.getElementById('editPlayerPickerToggle').classList.remove('open');
   buildEditPlayerPickers();
@@ -566,14 +592,14 @@ function closeEditPlayer() { document.getElementById('editPlayerModal').classLis
 
 async function saveEditPlayer() {
   const name   = document.getElementById('editPlayerName').value.trim();
-  const gender = document.querySelector('input[name="editGender"]:checked')?.value || 'Male';
+  const gender = genderState.edit;
   const status = document.getElementById('editStatusToggle').checked ? 'Active' : 'Inactive';
   if (!name) return showToast('Enter a name', 'error');
   const btn = document.getElementById('editPlayerSaveBtn');
   btn.textContent = 'Saving…'; btn.disabled = true;
+  closeEditPlayer();
   try {
     await editPlayer(editingPlayer.PlayerID, name, gender, status, editPIcon, editPColor.bg);
-    closeEditPlayer();
     showToast('Player updated ✓');
     await loadPlayersList();
     rebuildTeamPlayerSelector();
@@ -591,9 +617,9 @@ async function confirmDeletePlayer(id, name) {
   } catch(e) { showToast('Error deleting', 'error'); }
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════
    TEAMS
-═══════════════════════════════════════ */
+═══════════════════════ */
 async function loadTeamsData() {
   allGames = await loadGames();
   const teamGames = allGames.filter(g => g.AllowsTeam === 'TRUE');
@@ -622,7 +648,7 @@ async function loadTeamsData() {
 
 function rebuildTeamPlayerSelector() {
   const active = allPlayers.filter(p => p.Status === 'Active');
-  const grid = document.getElementById('playerSelectorGrid');
+  const grid  = document.getElementById('playerSelectorGrid');
   const label = document.getElementById('playerSelectorLabel');
   if (label) label.textContent = `Select exactly ${neededPlayers} players`;
   if (!grid) return;
@@ -676,37 +702,24 @@ async function loadTeamsList() {
     return;
   }
   const grouped = {};
-  teams.forEach(t => {
-    const gid = t.GameID || 'unknown';
-    if (!grouped[gid]) grouped[gid] = [];
-    grouped[gid].push(t);
-  });
+  teams.forEach(t => { const gid = t.GameID||'unknown'; if (!grouped[gid]) grouped[gid]=[]; grouped[gid].push(t); });
   let html = '';
   for (const gid in grouped) {
     html += `<div style="margin-bottom:20px">
       <div class="game-section-label">🎮 ${escapeHtml(gameMap[gid]||'Unknown Game')}</div>`;
     grouped[gid].forEach(t => {
-      const teamIcon = t.Icon || '🏅';
-      const teamBg   = t.BG   || '#fef3c7';
-
-      // Build player chips: each with own icon + name
+      const teamIcon = t.Icon||'🏅', teamBg = t.BG||'#fef3c7';
       const playerChips = (t.PlayerIDs||'').split(',').map(pid => {
-        const pl = allPlayers.find(p => p.PlayerID === pid.trim());
+        const pl = allPlayers.find(p=>p.PlayerID===pid.trim());
         if (!pl) return '';
-        const ic = pl.Icon || '🧑';
-        const bg = pl.BG   || '#f3f4f6';
         return `<div class="team-player-chip">
-          <div class="team-player-chip-icon" style="background:${bg}">${ic}</div>
+          <div class="team-player-chip-icon" style="background:${pl.BG||'#f3f4f6'}">${pl.Icon||'🧑'}</div>
           <span class="team-player-chip-name">${escapeHtml(pl.PlayerName)}</span>
         </div>`;
       }).filter(Boolean).join('');
-
       const safeData = encodeURIComponent(JSON.stringify({
-        TeamID: t.TeamID, TeamName: t.TeamName,
-        GameID: t.GameID, PlayerIDs: t.PlayerIDs,
-        Icon: t.Icon, BG: t.BG
+        TeamID:t.TeamID, TeamName:t.TeamName, GameID:t.GameID, PlayerIDs:t.PlayerIDs, Icon:t.Icon, BG:t.BG
       }));
-
       html += `
         <div class="expense-item no-tap" style="align-items:flex-start;padding-top:14px;padding-bottom:14px">
           <div class="team-icon-bubble" style="background:${teamBg};margin-top:2px">${teamIcon}</div>
@@ -715,8 +728,8 @@ async function loadTeamsList() {
             <div class="team-player-list">${playerChips}</div>
           </div>
           <div class="row-actions" style="margin-top:2px">
-            <button class="row-btn edit"   title="Edit"   onclick="openEditTeam('${safeData}')">✏️</button>
-            <button class="row-btn delete" title="Delete" onclick="confirmDeleteTeam('${t.TeamID}','${escapeHtml(t.TeamName).replace(/'/g,"\\'")}')">🗑️</button>
+            <button class="row-btn edit"   onclick="openEditTeam('${safeData}')">✏️</button>
+            <button class="row-btn delete" onclick="confirmDeleteTeam('${t.TeamID}','${escapeHtml(t.TeamName).replace(/'/g,"\\'")}')">🗑️</button>
           </div>
         </div>`;
     });
@@ -725,35 +738,25 @@ async function loadTeamsList() {
   el.innerHTML = html;
 }
 
-/* ── Edit team modal ── */
+/* ── Edit team ── */
 function openEditTeam(encoded) {
   const t = JSON.parse(decodeURIComponent(encoded));
   editingTeam = t;
   document.getElementById('editTeamName').value = t.TeamName;
   editTIcon  = TEAM_ICONS.includes(t.Icon) ? t.Icon : TEAM_ICONS[0];
-  editTColor = COLOR_OPTIONS.find(c => c.bg === t.BG) || COLOR_OPTIONS[3];
-
-  // Build read-only player cards (same visual as selector but not clickable)
-  const playerGrid = document.getElementById('editTeamPlayerGrid');
+  editTColor = COLOR_OPTIONS.find(c=>c.bg===t.BG) || COLOR_OPTIONS[3];
   const pids = (t.PlayerIDs||'').split(',').map(s=>s.trim()).filter(Boolean);
-  playerGrid.innerHTML = pids.map(pid => {
-    const pl = allPlayers.find(p => p.PlayerID === pid);
-    const ic = pl?.Icon || '🧑';
-    const bg = pl?.BG   || '#f3f4f6';
-    const name = pl?.PlayerName || pid;
+  document.getElementById('editTeamPlayerGrid').innerHTML = pids.map(pid => {
+    const pl = allPlayers.find(p=>p.PlayerID===pid);
     return `
       <div class="player-sel-card selected readonly">
-        <div class="player-sel-icon" style="background:${bg}">${ic}</div>
-        <span class="player-sel-name">${escapeHtml(name)}</span>
+        <div class="player-sel-icon" style="background:${pl?.BG||'#f3f4f6'}">${pl?.Icon||'🧑'}</div>
+        <span class="player-sel-name">${escapeHtml(pl?.PlayerName||pid)}</span>
         <div class="player-sel-check">✓</div>
       </div>`;
   }).join('');
-
-  // Show player names as preview subtitle
-  const playerNames = pids.map(pid => allPlayers.find(p=>p.PlayerID===pid)?.PlayerName||pid).filter(Boolean).join(' · ');
+  const playerNames = pids.map(pid=>allPlayers.find(p=>p.PlayerID===pid)?.PlayerName||pid).join(' · ');
   document.getElementById('editTeamPreviewSub').textContent = playerNames;
-
-  // Reset picker to closed
   document.getElementById('editTeamPicker').classList.remove('open');
   document.getElementById('editTeamPickerToggle').classList.remove('open');
   buildEditTeamPickers();
@@ -767,9 +770,9 @@ async function saveEditTeam() {
   if (!name) return showToast('Enter a team name', 'error');
   const btn = document.getElementById('editTeamSaveBtn');
   btn.textContent = 'Saving…'; btn.disabled = true;
+  closeEditTeam();
   try {
     await editTeam(editingTeam.TeamID, name, editTIcon, editTColor.bg);
-    closeEditTeam();
     showToast('Team updated ✓');
     await loadTeamsList();
   } catch(e) { showToast('Error saving', 'error'); }
@@ -785,9 +788,9 @@ async function confirmDeleteTeam(id, name) {
   } catch(e) { showToast('Error deleting team', 'error'); }
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════
    PAGE INIT
-═══════════════════════════════════════ */
+═══════════════════════ */
 window.onload = async () => {
   await initPageAuth({
     onNeedLogin: () => { location.href = '../Home.html'; },
@@ -798,10 +801,8 @@ window.onload = async () => {
       buildAddPlayerPickers(); updateAddPlayerPreview();
 
       document.getElementById('playerName').addEventListener('input', updateAddPlayerPreview);
-      document.querySelectorAll('input[name="addGender"]').forEach(r => r.addEventListener('change', updateAddPlayerPreview));
       document.getElementById('addStatusToggle').addEventListener('change', updateAddPlayerPreview);
       document.getElementById('editPlayerName').addEventListener('input', updateEditPlayerPreview);
-      document.querySelectorAll('input[name="editGender"]').forEach(r => r.addEventListener('change', updateEditPlayerPreview));
       document.getElementById('editStatusToggle').addEventListener('change', updateEditPlayerPreview);
       document.getElementById('teamName').addEventListener('input', updateAddTeamPreview);
       document.getElementById('editTeamName').addEventListener('input', updateEditTeamPreview);
@@ -813,7 +814,7 @@ window.onload = async () => {
 
   document.getElementById('addBtn').onclick = async () => {
     const name   = document.getElementById('playerName').value.trim();
-    const gender = document.querySelector('input[name="addGender"]:checked')?.value || 'Male';
+    const gender = genderState.add;
     const status = document.getElementById('addStatusToggle').checked ? 'Active' : 'Inactive';
     if (!name) return showToast('Enter a player name', 'error');
     const btn = document.getElementById('addBtn');
@@ -821,7 +822,7 @@ window.onload = async () => {
     try {
       await addPlayer(name, gender, status, addPIcon, addPColor.bg);
       document.getElementById('playerName').value = '';
-      document.querySelector('input[name="addGender"][value="Male"]').checked = true;
+      selectGender('add', 'Male');
       document.getElementById('addStatusToggle').checked = true;
       addPIcon = PLAYER_ICONS[2]; addPColor = COLOR_OPTIONS[0];
       buildAddPlayerPickers(); updateAddPlayerPreview();
