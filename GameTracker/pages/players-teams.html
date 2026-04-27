@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="../manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
+  <link rel="icon" type="image/png" href="../images/icon.png">
+  <title>Players & Teams</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="../assets/utils.js"></script>
+  <script src="../assets/auth.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    /* ── Pill tabs ── */
+    .pill-tabs { display:flex; gap:6px; margin-bottom:20px; }
+    .pill-tab {
+      flex:1; padding:11px 6px;
+      background:rgba(255,255,255,0.18);
+      border:1px solid rgba(255,255,255,0.25);
+      border-radius:30px; font-size:14px; font-weight:700;
+      color:rgba(255,255,255,0.85); cursor:pointer;
+      font-family:'DM Sans',sans-serif; transition:all 0.2s;
+    }
+    .pill-tab.active {
+      background:#fff; color:var(--brand);
+      border-color:transparent;
+      box-shadow:0 4px 14px rgba(0,0,0,0.10);
+    }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    /* ── Icon & color picker ── */
+    .picker-label {
+      font-size:11px; font-weight:700; color:var(--text-2);
+      text-transform:uppercase; letter-spacing:0.05em;
+      display:block; margin-bottom:8px; margin-top:4px;
+    }
+    .icon-grid {
+      display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:16px;
+    }
+    .icon-option {
+      width:100%; aspect-ratio:1; border-radius:10px;
+      background:var(--surface-2); border:2px solid transparent;
+      font-size:20px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:all 0.15s;
+    }
+    .icon-option.selected { border-color:var(--brand); background:#ededff; }
+    .icon-option:active { transform:scale(0.92); }
+
+    .color-grid {
+      display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-bottom:16px;
+    }
+    .color-option {
+      width:100%; aspect-ratio:1; border-radius:10px;
+      border:2.5px solid transparent; cursor:pointer; transition:all 0.15s; position:relative;
+    }
+    .color-option.selected { border-color:var(--text); }
+    .color-option.selected::after {
+      content:'✓'; position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:13px; font-weight:800; color:#fff;
+      text-shadow:0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    /* ── Player preview card ── */
+    .player-preview {
+      display:flex; align-items:center; gap:12px;
+      padding:12px 14px; background:var(--surface-2);
+      border-radius:var(--radius-sm); margin-bottom:16px;
+    }
+    .player-preview-icon {
+      width:46px; height:46px; border-radius:14px;
+      display:flex; align-items:center; justify-content:center; font-size:24px;
+    }
+    .player-preview-name { font-weight:700; font-size:15px; color:var(--text); }
+    .player-preview-sub  { font-size:11px; color:var(--text-3); margin-top:2px; }
+
+    /* ── Team player selector (visual cards) ── */
+    .player-selector {
+      display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:8px;
+    }
+    .player-sel-card {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px; border-radius:var(--radius-sm);
+      border:2px solid var(--border); background:var(--surface-2);
+      cursor:pointer; transition:all 0.15s; user-select:none;
+    }
+    .player-sel-card.selected {
+      border-color:var(--brand); background:#ededff;
+    }
+    .player-sel-icon {
+      width:34px; height:34px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+    }
+    .player-sel-name { font-size:13px; font-weight:700; color:var(--text); flex:1; min-width:0;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .player-sel-check {
+      width:18px; height:18px; border-radius:50%; flex-shrink:0;
+      border:2px solid var(--border); background:var(--surface);
+      display:flex; align-items:center; justify-content:center;
+      font-size:10px; font-weight:800; transition:all 0.15s;
+    }
+    .player-sel-card.selected .player-sel-check {
+      background:var(--brand); border-color:var(--brand); color:#fff;
+    }
+
+    /* ── Game section header inside teams list ── */
+    .game-section-label {
+      font-family:'Sora',sans-serif; font-size:11px; font-weight:700;
+      color:var(--text-2); text-transform:uppercase; letter-spacing:0.06em;
+      margin-bottom:10px; margin-top:4px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>
+</div>
+
+<div class="container" id="mainApp" style="display:none">
+  <div class="header">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1>👥 Players & Teams</h1>
+  </div>
+
+  <!-- Pill tabs -->
+  <div class="pill-tabs">
+    <button class="pill-tab active" onclick="switchTab('players')">👥 Players</button>
+    <button class="pill-tab"        onclick="switchTab('teams')">🏆 Teams</button>
+  </div>
+
+  <!-- ══ PLAYERS TAB ══ -->
+  <div class="tab-panel active" id="tab-players">
+
+    <div class="card">
+      <div class="card-title">Add Player</div>
+
+      <div class="label-left-row">
+        <label>Name</label>
+        <div class="controls">
+          <input type="text" id="playerName" placeholder="e.g. Alice">
+        </div>
+      </div>
+
+      <div class="label-left-row">
+        <label>Gender</label>
+        <div class="controls radio-group">
+          <label><input type="radio" name="addGender" value="Male" checked style="width:auto;margin-right:4px"> ♂ Male</label>
+          <label><input type="radio" name="addGender" value="Female" style="width:auto;margin-right:4px"> ♀ Female</label>
+        </div>
+      </div>
+
+      <div class="label-left-row">
+        <label>Status</label>
+        <div class="controls">
+          <div class="toggle-switch">
+            <input type="checkbox" id="addStatusToggle" checked>
+            <label for="addStatusToggle" class="toggle-label"></label>
+          </div>
+          <span id="addStatusLabel" style="margin-left:10px;font-size:13px;font-weight:600;color:var(--text-2)">Active</span>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div class="player-preview" id="addPreview">
+        <div class="player-preview-icon" id="addPreviewIcon" style="background:#ededff">❓</div>
+        <div>
+          <div class="player-preview-name" id="addPreviewName">Player Name</div>
+          <div class="player-preview-sub" id="addPreviewSub">Male · Active</div>
+        </div>
+      </div>
+
+      <span class="picker-label">Background Color</span>
+      <div class="color-grid" id="addColorGrid"></div>
+
+      <span class="picker-label">Icon</span>
+      <div class="icon-grid" id="addIconGrid"></div>
+
+      <button class="submit-btn" id="addBtn">+ Add Player</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">All Players</div>
+      <div id="playerList"></div>
+    </div>
+  </div>
+
+  <!-- ══ TEAMS TAB ══ -->
+  <div class="tab-panel" id="tab-teams">
+
+    <div class="card">
+      <div class="card-title">Create Team</div>
+      <div class="form-group">
+        <label>Game</label>
+        <select id="gameSelect"><option value="">Select a game…</option></select>
+      </div>
+      <div class="form-group">
+        <label>Team Name</label>
+        <input type="text" id="teamName" placeholder="e.g. Spade Kings">
+      </div>
+      <div id="playerSelectorArea" style="display:none">
+        <div class="form-group">
+          <label id="playerSelectorLabel">Select Players</label>
+          <div class="player-selector" id="playerSelectorGrid"></div>
+          <div id="selectionCount" style="font-size:12px;color:var(--text-3);margin-top:8px;"></div>
+        </div>
+      </div>
+      <button class="submit-btn" id="createTeamBtn">+ Create Team</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">All Teams</div>
+      <div id="teamsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT PLAYER MODAL ══ -->
+<div class="modal-backdrop" id="editPlayerModal" onclick="closeEditPlayer()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Player</div>
+
+    <div class="label-left-row">
+      <label>Name</label>
+      <div class="controls"><input type="text" id="editPlayerName" placeholder="Player name"></div>
+    </div>
+    <div class="label-left-row">
+      <label>Gender</label>
+      <div class="controls radio-group">
+        <label><input type="radio" name="editGender" value="Male" style="width:auto;margin-right:4px"> ♂ Male</label>
+        <label><input type="radio" name="editGender" value="Female" style="width:auto;margin-right:4px"> ♀ Female</label>
+      </div>
+    </div>
+    <div class="label-left-row">
+      <label>Status</label>
+      <div class="controls">
+        <div class="toggle-switch">
+          <input type="checkbox" id="editStatusToggle">
+          <label for="editStatusToggle" class="toggle-label"></label>
+        </div>
+        <span id="editStatusLabel" style="margin-left:10px;font-size:13px;font-weight:600;color:var(--text-2)">Active</span>
+      </div>
+    </div>
+
+    <div class="player-preview" id="editPreview">
+      <div class="player-preview-icon" id="editPreviewIcon" style="background:#ededff">❓</div>
+      <div>
+        <div class="player-preview-name" id="editPreviewName">Player Name</div>
+        <div class="player-preview-sub"  id="editPreviewSub">Male · Active</div>
+      </div>
+    </div>
+
+    <span class="picker-label">Background Color</span>
+    <div class="color-grid" id="editColorGrid"></div>
+    <span class="picker-label">Icon</span>
+    <div class="icon-grid" id="editIconGrid"></div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeEditPlayer()">Cancel</button>
+      <button class="btn-save" id="editPlayerSaveBtn" onclick="saveEditPlayer()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════ */
+const ICON_OPTIONS = [
+  '😀','😎','🤩','😏','🧐','🥳','😤',
+  '👦','👧','👨','👩','🧔','👴','👵',
+  '🧑','🦸','🦹','🧙','🧝','🧛','🤺',
+  '⚽','🏀','🎯','♟️','🎲','🃏','🎱',
+  '🦁','🐯','🦊','🐺','🐻','🦅','🐲',
+  '🔥','⚡','💎','👑','🏆','🎖️','⭐'
+];
+const COLOR_OPTIONS = [
+  { bg:'#dbeafe', label:'Blue'    },
+  { bg:'#fce7f3', label:'Pink'    },
+  { bg:'#d1fae5', label:'Green'   },
+  { bg:'#fef3c7', label:'Yellow'  },
+  { bg:'#ede9fe', label:'Purple'  },
+  { bg:'#fee2e2', label:'Red'     },
+  { bg:'#ffedd5', label:'Orange'  },
+  { bg:'#f0fdf4', label:'Mint'    },
+  { bg:'#e0f2fe', label:'Sky'     },
+  { bg:'#fdf4ff', label:'Lavender'},
+  { bg:'#f1f5f9', label:'Slate'   },
+  { bg:'#fff7ed', label:'Cream'   },
+  { bg:'#ecfdf5', label:'Teal'    },
+  { bg:'#fef9c3', label:'Lemon'   },
+  { bg:'#f3e8ff', label:'Violet'  },
+  { bg:'#fce7f3', label:'Rose'    },
+];
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let allPlayers   = [];
+let allGames     = [];
+let neededPlayers = 2;
+let selectedPlayerIds = new Set();
+let editingPlayer = null;
+
+// Add form picker state
+let addSelectedIcon  = ICON_OPTIONS[2];  // 🤩
+let addSelectedColor = COLOR_OPTIONS[0]; // blue
+
+// Edit form picker state
+let editSelectedIcon  = ICON_OPTIONS[2];
+let editSelectedColor = COLOR_OPTIONS[0];
+
+/* ═══════════════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════════════ */
+function switchTab(tab) {
+  document.querySelectorAll('.pill-tab').forEach((b,i) => {
+    b.classList.toggle('active', (i===0 && tab==='players') || (i===1 && tab==='teams'));
+  });
+  document.getElementById('tab-players').classList.toggle('active', tab==='players');
+  document.getElementById('tab-teams').classList.toggle('active', tab==='teams');
+}
+
+/* ═══════════════════════════════════════════════
+   ICON / COLOR PICKERS  (Add)
+═══════════════════════════════════════════════ */
+function buildAddIconGrid() {
+  document.getElementById('addIconGrid').innerHTML = ICON_OPTIONS.map(ic =>
+    `<button class="icon-option${ic===addSelectedIcon?' selected':''}" onclick="selectAddIcon('${ic}')">${ic}</button>`
+  ).join('');
+}
+function buildAddColorGrid() {
+  document.getElementById('addColorGrid').innerHTML = COLOR_OPTIONS.map((c,i) =>
+    `<div class="color-option${c.bg===addSelectedColor.bg?' selected':''}" style="background:${c.bg}" onclick="selectAddColor(${i})"></div>`
+  ).join('');
+}
+function selectAddIcon(ic)  { addSelectedIcon=ic;  buildAddIconGrid();  updateAddPreview(); }
+function selectAddColor(i)  { addSelectedColor=COLOR_OPTIONS[i]; buildAddColorGrid(); updateAddPreview(); }
+
+function updateAddPreview() {
+  const name   = document.getElementById('playerName').value.trim() || 'Player Name';
+  const gender = document.querySelector('input[name="addGender"]:checked')?.value || 'Male';
+  const active = document.getElementById('addStatusToggle').checked;
+  document.getElementById('addStatusLabel').textContent = active ? 'Active' : 'Inactive';
+  document.getElementById('addPreviewIcon').textContent  = addSelectedIcon;
+  document.getElementById('addPreviewIcon').style.background = addSelectedColor.bg;
+  document.getElementById('addPreviewName').textContent  = name;
+  document.getElementById('addPreviewSub').textContent   = `${gender} · ${active?'Active':'Inactive'}`;
+}
+
+/* ═══════════════════════════════════════════════
+   ICON / COLOR PICKERS  (Edit)
+═══════════════════════════════════════════════ */
+function buildEditIconGrid() {
+  document.getElementById('editIconGrid').innerHTML = ICON_OPTIONS.map(ic =>
+    `<button class="icon-option${ic===editSelectedIcon?' selected':''}" onclick="selectEditIcon('${ic}')">${ic}</button>`
+  ).join('');
+}
+function buildEditColorGrid() {
+  document.getElementById('editColorGrid').innerHTML = COLOR_OPTIONS.map((c,i) =>
+    `<div class="color-option${c.bg===editSelectedColor.bg?' selected':''}" style="background:${c.bg}" onclick="selectEditColor(${i})"></div>`
+  ).join('');
+}
+function selectEditIcon(ic)  { editSelectedIcon=ic;  buildEditIconGrid();  updateEditPreview(); }
+function selectEditColor(i)  { editSelectedColor=COLOR_OPTIONS[i]; buildEditColorGrid(); updateEditPreview(); }
+
+function updateEditPreview() {
+  const name   = document.getElementById('editPlayerName').value.trim() || 'Player Name';
+  const gender = document.querySelector('input[name="editGender"]:checked')?.value || 'Male';
+  const active = document.getElementById('editStatusToggle').checked;
+  document.getElementById('editStatusLabel').textContent = active ? 'Active' : 'Inactive';
+  document.getElementById('editPreviewIcon').textContent  = editSelectedIcon;
+  document.getElementById('editPreviewIcon').style.background = editSelectedColor.bg;
+  document.getElementById('editPreviewName').textContent  = name;
+  document.getElementById('editPreviewSub').textContent   = `${gender} · ${active?'Active':'Inactive'}`;
+}
+
+/* ═══════════════════════════════════════════════
+   PLAYERS LIST
+═══════════════════════════════════════════════ */
+function renderPlayerRow(p) {
+  const icon = p.Icon || '🧑';
+  const bg   = p.BG   || '#f3f4f6';
+  return `
+    <div class="expense-item no-tap">
+      <div class="cat-icon" style="background:${bg};font-size:22px">${icon}</div>
+      <div class="exp-details">
+        <div class="exp-cat">${escapeHtml(p.PlayerName)}</div>
+        <div class="exp-meta">
+          ${p.Gender||'Not set'} &nbsp;·&nbsp;
+          <span class="badge ${p.Status==='Active'?'badge-active':'badge-inactive'}">${p.Status||'Active'}</span>
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="row-btn edit"   title="Edit"   onclick='openEditPlayer(${JSON.stringify(p)})'>✏️</button>
+        <button class="row-btn delete" title="Delete" onclick="confirmDeletePlayer('${p.PlayerID}','${escapeHtml(p.PlayerName).replace(/'/g,"\\'")}')">🗑️</button>
+      </div>
+    </div>`;
+}
+
+async function loadPlayersList() {
+  allPlayers = await loadPlayers();
+  const el = document.getElementById('playerList');
+  if (!allPlayers.length) {
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">👥</span><p>No players yet. Add one above!</p></div>`;
+    return;
+  }
+  el.innerHTML = allPlayers.map(renderPlayerRow).join('');
+}
+
+/* ── Add player ── */
+document.addEventListener('DOMContentLoaded', () => {
+  // live preview wiring
+  document.getElementById('playerName').addEventListener('input', updateAddPreview);
+  document.querySelectorAll('input[name="addGender"]').forEach(r => r.addEventListener('change', updateAddPreview));
+  document.getElementById('addStatusToggle').addEventListener('change', updateAddPreview);
+  document.getElementById('editPlayerName').addEventListener('input', updateEditPreview);
+  document.querySelectorAll('input[name="editGender"]').forEach(r => r.addEventListener('change', updateEditPreview));
+  document.getElementById('editStatusToggle').addEventListener('change', updateEditPreview);
+
+  // status label live
+  buildAddIconGrid(); buildAddColorGrid(); updateAddPreview();
+});
+
+/* ── Edit player ── */
+function openEditPlayer(p) {
+  if (typeof p === 'string') p = JSON.parse(p);
+  editingPlayer = p;
+  document.getElementById('editPlayerName').value = p.PlayerName;
+
+  const maleR   = document.querySelector('input[name="editGender"][value="Male"]');
+  const femaleR  = document.querySelector('input[name="editGender"][value="Female"]');
+  if (p.Gender === 'Female' && femaleR) femaleR.checked = true;
+  else if (maleR) maleR.checked = true;
+
+  document.getElementById('editStatusToggle').checked = (p.Status !== 'Inactive');
+
+  editSelectedIcon  = p.Icon  || ICON_OPTIONS[2];
+  editSelectedColor = COLOR_OPTIONS.find(c => c.bg === p.BG) || COLOR_OPTIONS[0];
+
+  buildEditIconGrid(); buildEditColorGrid(); updateEditPreview();
+  document.getElementById('editPlayerModal').classList.add('open');
+}
+function closeEditPlayer() {
+  document.getElementById('editPlayerModal').classList.remove('open');
+}
+async function saveEditPlayer() {
+  const name   = document.getElementById('editPlayerName').value.trim();
+  const gender = document.querySelector('input[name="editGender"]:checked')?.value || 'Male';
+  const status = document.getElementById('editStatusToggle').checked ? 'Active' : 'Inactive';
+  if (!name) return showToast('Enter a name', 'error');
+  const btn = document.getElementById('editPlayerSaveBtn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    await editPlayer(editingPlayer.PlayerID, name, gender, status, editSelectedIcon, editSelectedColor.bg);
+    closeEditPlayer();
+    showToast('Player updated ✓');
+    await loadPlayersList();
+    rebuildTeamPlayerSelector(); // refresh selector if teams tab was open
+  } catch(e) { showToast('Error saving', 'error'); }
+  finally { btn.textContent = 'Save Changes'; btn.disabled = false; }
+}
+async function confirmDeletePlayer(id, name) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try {
+    await deletePlayer(id);
+    showToast('Player deleted');
+    await loadPlayersList();
+    rebuildTeamPlayerSelector();
+  } catch(e) { showToast('Error deleting', 'error'); }
+}
+
+/* ═══════════════════════════════════════════════
+   TEAMS
+═══════════════════════════════════════════════ */
+async function loadTeamsData() {
+  allGames = await loadGames();
+  const teamGames = allGames.filter(g => g.AllowsTeam === 'TRUE');
+  const sel = document.getElementById('gameSelect');
+  sel.innerHTML = '<option value="">Select a game…</option>' +
+    teamGames.map(g =>
+      `<option value="${g.GameID}" data-ppt="${g.PlayersPerTeam||2}">${escapeHtml(g.GameName)}</option>`
+    ).join('');
+  sel.onchange = () => {
+    const opt = sel.options[sel.selectedIndex];
+    neededPlayers = parseInt(opt.dataset.ppt) || 2;
+    if (sel.value) {
+      rebuildTeamPlayerSelector();
+      document.getElementById('playerSelectorArea').style.display = 'block';
+    } else {
+      document.getElementById('playerSelectorArea').style.display = 'none';
+    }
+  };
+  await loadTeamsList();
+}
+
+function rebuildTeamPlayerSelector() {
+  const active = (allPlayers.length ? allPlayers : []).filter(p => p.Status === 'Active');
+  const grid = document.getElementById('playerSelectorGrid');
+  const label = document.getElementById('playerSelectorLabel');
+  if (label) label.textContent = `Select exactly ${neededPlayers} players`;
+  if (!grid) return;
+
+  // preserve current selections
+  const prev = new Set(selectedPlayerIds);
+  selectedPlayerIds = new Set();
+
+  grid.innerHTML = active.map(p => {
+    const icon = p.Icon || '🧑';
+    const bg   = p.BG   || '#f3f4f6';
+    const sel  = prev.has(p.PlayerID);
+    if (sel) selectedPlayerIds.add(p.PlayerID);
+    return `
+      <div class="player-sel-card${sel?' selected':''}" data-pid="${p.PlayerID}"
+           onclick="togglePlayerSel(this,'${p.PlayerID}')">
+        <div class="player-sel-icon" style="background:${bg}">${icon}</div>
+        <span class="player-sel-name">${escapeHtml(p.PlayerName)}</span>
+        <div class="player-sel-check">${sel?'✓':''}</div>
+      </div>`;
+  }).join('');
+
+  if (!active.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><p>No active players. Add players first.</p></div>`;
+  }
+  updateSelectionCount();
+}
+
+function togglePlayerSel(card, pid) {
+  if (selectedPlayerIds.has(pid)) {
+    selectedPlayerIds.delete(pid);
+    card.classList.remove('selected');
+    card.querySelector('.player-sel-check').textContent = '';
+  } else {
+    selectedPlayerIds.add(pid);
+    card.classList.add('selected');
+    card.querySelector('.player-sel-check').textContent = '✓';
+  }
+  updateSelectionCount();
+}
+
+function updateSelectionCount() {
+  const el = document.getElementById('selectionCount');
+  if (!el) return;
+  const n = selectedPlayerIds.size;
+  el.textContent = `${n} of ${neededPlayers} selected`;
+  el.style.color = n === neededPlayers ? 'var(--success)' : 'var(--text-3)';
+}
+
+async function loadTeamsList() {
+  const teams   = await loadTeams();
+  const gameMap = Object.fromEntries(allGames.map(g => [g.GameID, g.GameName]));
+  const el = document.getElementById('teamsList');
+  if (!teams.length) {
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">🏆</span><p>No teams yet. Create one above!</p></div>`;
+    return;
+  }
+  const grouped = {};
+  teams.forEach(t => {
+    const gid = t.GameID || 'unknown';
+    if (!grouped[gid]) grouped[gid] = [];
+    grouped[gid].push(t);
+  });
+  let html = '';
+  for (const gid in grouped) {
+    html += `<div style="margin-bottom:20px">
+      <div class="game-section-label">🎮 ${escapeHtml(gameMap[gid]||'Unknown Game')}</div>`;
+    grouped[gid].forEach(t => {
+      const playerNames = (t.PlayerIDs||'').split(',')
+        .map(pid => allPlayers.find(p=>p.PlayerID===pid)?.PlayerName || pid)
+        .filter(Boolean).join(', ');
+      // Build player icon strip
+      const icons = (t.PlayerIDs||'').split(',').map(pid => {
+        const pl = allPlayers.find(p=>p.PlayerID===pid);
+        const ic = pl?.Icon || '🧑';
+        const bg = pl?.BG   || '#f3f4f6';
+        return `<div style="width:28px;height:28px;border-radius:8px;background:${bg};display:inline-flex;align-items:center;justify-content:center;font-size:14px;margin-right:4px">${ic}</div>`;
+      }).join('');
+      html += `
+        <div class="expense-item no-tap">
+          <div style="display:flex;align-items:center;gap:2px;flex-shrink:0">${icons}</div>
+          <div class="exp-details">
+            <div class="exp-cat">${escapeHtml(t.TeamName)}</div>
+            <div class="exp-meta">${escapeHtml(playerNames)}</div>
+          </div>
+          <div class="row-actions">
+            <span class="badge ${t.Status==='Active'?'badge-active':'badge-inactive'}" style="margin-right:4px">${t.Status}</span>
+            <button class="row-btn delete" title="Delete"
+              onclick="confirmDeleteTeam('${t.TeamID}','${escapeHtml(t.TeamName).replace(/'/g,"\\'")}')">🗑️</button>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+  el.innerHTML = html;
+}
+
+async function confirmDeleteTeam(id, name) {
+  if (!confirm(`Delete team "${name}"? This cannot be undone.`)) return;
+  try {
+    await deleteTeam(id);
+    showToast('Team deleted');
+    await loadTeamsList();
+  } catch(e) { showToast('Error deleting team', 'error'); }
+}
+
+/* ═══════════════════════════════════════════════
+   PAGE INIT
+═══════════════════════════════════════════════ */
+window.onload = async () => {
+  await initPageAuth({
+    onNeedLogin: () => { location.href = '../Home.html'; },
+    onReady: async () => {
+      document.getElementById('loadingOverlay').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+
+      // Build pickers now DOM is live
+      buildAddIconGrid(); buildAddColorGrid(); updateAddPreview();
+
+      // Wire live-preview events
+      document.getElementById('playerName').addEventListener('input', updateAddPreview);
+      document.querySelectorAll('input[name="addGender"]').forEach(r=>r.addEventListener('change',updateAddPreview));
+      document.getElementById('addStatusToggle').addEventListener('change', updateAddPreview);
+      document.getElementById('editPlayerName').addEventListener('input', updateEditPreview);
+      document.querySelectorAll('input[name="editGender"]').forEach(r=>r.addEventListener('change',updateEditPreview));
+      document.getElementById('editStatusToggle').addEventListener('change', updateEditPreview);
+
+      await loadPlayersList();
+      await loadTeamsData();
+    }
+  });
+
+  /* Add player button */
+  document.getElementById('addBtn').onclick = async () => {
+    const name   = document.getElementById('playerName').value.trim();
+    const gender = document.querySelector('input[name="addGender"]:checked')?.value || 'Male';
+    const status = document.getElementById('addStatusToggle').checked ? 'Active' : 'Inactive';
+    if (!name) return showToast('Enter a player name', 'error');
+    const btn = document.getElementById('addBtn');
+    btn.textContent = 'Adding…'; btn.disabled = true;
+    try {
+      await addPlayer(name, gender, status, addSelectedIcon, addSelectedColor.bg);
+      document.getElementById('playerName').value = '';
+      document.querySelector('input[name="addGender"][value="Male"]').checked = true;
+      document.getElementById('addStatusToggle').checked = true;
+      addSelectedIcon  = ICON_OPTIONS[2];
+      addSelectedColor = COLOR_OPTIONS[0];
+      buildAddIconGrid(); buildAddColorGrid(); updateAddPreview();
+      showToast(`${name} added ✓`);
+      await loadPlayersList();
+      rebuildTeamPlayerSelector();
+    } catch(e) { showToast('Error adding player', 'error'); }
+    finally { btn.textContent = '+ Add Player'; btn.disabled = false; }
+  };
+
+  /* Create team button */
+  document.getElementById('createTeamBtn').onclick = async () => {
+    const gameId = document.getElementById('gameSelect').value;
+    const name   = document.getElementById('teamName').value.trim();
+    if (!gameId)  return showToast('Select a game', 'error');
+    if (!name)    return showToast('Enter a team name', 'error');
+    const chosen = Array.from(selectedPlayerIds);
+    if (chosen.length !== neededPlayers)
+      return showToast(`Select exactly ${neededPlayers} players`, 'error');
+    const btn = document.getElementById('createTeamBtn');
+    btn.textContent = 'Creating…'; btn.disabled = true;
+    try {
+      await addTeam(gameId, name, chosen);
+      document.getElementById('teamName').value = '';
+      selectedPlayerIds.clear();
+      rebuildTeamPlayerSelector();
+      showToast(`${name} created ✓`);
+      await loadTeamsList();
+    } catch(e) { showToast('Error creating team', 'error'); }
+    finally { btn.textContent = '+ Create Team'; btn.disabled = false; }
+  };
+
+  renderBottomNav('players');
+};
+</script>
+</body>
+</html>
