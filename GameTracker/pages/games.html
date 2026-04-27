@@ -14,6 +14,83 @@
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    /* ── Mode toggle pills ── */
+    .mode-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      margin-bottom: 14px;
+    }
+    .mode-pill {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; border-radius: var(--radius-sm);
+      border: 2px solid var(--border); background: var(--surface-2);
+      cursor: pointer; transition: all 0.15s; user-select: none;
+    }
+    .mode-pill.active {
+      border-color: var(--brand); background: #ededff;
+    }
+    .mode-pill input[type="checkbox"] {
+      width: 18px; height: 18px; accent-color: var(--brand);
+      flex-shrink: 0; cursor: pointer; margin: 0; padding: 0; border: none;
+    }
+    .mode-pill-label {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      text-transform: none; letter-spacing: 0; margin: 0;
+      display: block;
+    }
+    .mode-pill-icon { font-size: 18px; flex-shrink: 0; }
+
+    /* ── Expandable sub-section ── */
+    .mode-sub {
+      background: var(--surface-2); border-radius: var(--radius-sm);
+      border: 1px solid var(--border); overflow: hidden;
+      max-height: 0; transition: max-height 0.25s ease, padding 0.2s ease;
+      margin-bottom: 0;
+    }
+    .mode-sub.open {
+      max-height: 200px; padding: 14px;
+      margin-bottom: 14px;
+    }
+    .mode-sub .sub-label {
+      font-size: 11px; font-weight: 700; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      display: block; margin-bottom: 8px;
+    }
+    .mode-sub .sub-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .mode-sub .sub-row input {
+      width: 80px; text-align: center;
+      font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 800;
+      padding: 8px; flex-shrink: 0;
+    }
+    .mode-sub .sub-row .sub-desc {
+      font-size: 12px; color: var(--text-3); line-height: 1.5;
+    }
+
+    /* ── Game list item ── */
+    .game-item {
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .game-item:last-child { border-bottom: none; }
+    .game-icon-bubble {
+      width: 44px; height: 44px; border-radius: 13px;
+      background: #ede9fe; display: flex; align-items: center;
+      justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .game-details { flex: 1; min-width: 0; }
+    .game-name { font-weight: 700; font-size: 15px; color: var(--text); }
+    .game-meta { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+    .game-mode-chips { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    .game-mode-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+    }
+    .chip-ind  { background: #dbeafe; color: #1e40af; }
+    .chip-team { background: #d1fae5; color: #065f46; }
+  </style>
 </head>
 <body>
 
@@ -27,54 +104,104 @@
     <h1>🎮 Games</h1>
   </div>
 
+  <!-- ── Add Game card ── -->
   <div class="card">
     <div class="card-title">Add Game</div>
+
     <div class="form-group">
       <label>Game Name</label>
       <input type="text" id="gameName" placeholder="e.g. Backgammon">
     </div>
+
     <div class="form-group">
       <label>Total Players per Match</label>
-      <input type="number" id="totalPlayers" min="2" max="10" value="2">
+      <input type="number" id="totalPlayers" min="2" max="20" value="4">
     </div>
-    <div class="checkbox-row">
-      <label><input type="checkbox" id="allowsIndividual"> Individual mode</label>
-      <label><input type="checkbox" id="allowsTeam"> Team mode</label>
+
+    <label style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;display:block">
+      Game Modes
+    </label>
+    <div class="mode-row">
+      <!-- Individual pill -->
+      <div class="mode-pill" id="addIndPill" onclick="toggleMode('add','ind')">
+        <span class="mode-pill-icon">👤</span>
+        <div>
+          <input type="checkbox" id="allowsIndividual" onclick="event.stopPropagation()">
+          <label class="mode-pill-label" for="allowsIndividual">Individual</label>
+        </div>
+      </div>
+      <!-- Team pill -->
+      <div class="mode-pill" id="addTeamPill" onclick="toggleMode('add','team')">
+        <span class="mode-pill-icon">👥</span>
+        <div>
+          <input type="checkbox" id="allowsTeam" onclick="event.stopPropagation()">
+          <label class="mode-pill-label" for="allowsTeam">Team</label>
+        </div>
+      </div>
     </div>
-    <div class="form-group" id="playersPerTeamGroup" style="display:none">
-      <label>Players per Team</label>
-      <input type="number" id="playersPerTeam" min="1" max="5" value="2">
+
+    <!-- Team sub-section -->
+    <div class="mode-sub" id="addTeamSub">
+      <span class="sub-label">Players per Team</span>
+      <div class="sub-row">
+        <input type="number" id="playersPerTeam" min="1" max="10" value="2">
+        <span class="sub-desc">How many players make up each team in this game?</span>
+      </div>
     </div>
+
     <button class="submit-btn" id="addBtn">+ Add Game</button>
   </div>
 
+  <!-- ── All Games card ── -->
   <div class="card">
     <div class="card-title">All Games</div>
     <div id="gamesList"></div>
   </div>
 </div>
 
-<!-- Edit Modal -->
+<!-- ── Edit Modal ── -->
 <div class="modal-backdrop" id="editModal" onclick="closeEditModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <div class="modal-title">Edit Game</div>
+
     <div class="form-group">
       <label>Game Name</label>
       <input type="text" id="editGameName">
     </div>
     <div class="form-group">
       <label>Total Players per Match</label>
-      <input type="number" id="editTotalPlayers" min="2" max="10">
+      <input type="number" id="editTotalPlayers" min="2" max="20">
     </div>
-    <div class="checkbox-row">
-      <label><input type="checkbox" id="editAllowsIndividual"> Individual mode</label>
-      <label><input type="checkbox" id="editAllowsTeam"> Team mode</label>
+
+    <label style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;display:block">
+      Game Modes
+    </label>
+    <div class="mode-row">
+      <div class="mode-pill" id="editIndPill" onclick="toggleMode('edit','ind')">
+        <span class="mode-pill-icon">👤</span>
+        <div>
+          <input type="checkbox" id="editAllowsIndividual" onclick="event.stopPropagation()">
+          <label class="mode-pill-label" for="editAllowsIndividual">Individual</label>
+        </div>
+      </div>
+      <div class="mode-pill" id="editTeamPill" onclick="toggleMode('edit','team')">
+        <span class="mode-pill-icon">👥</span>
+        <div>
+          <input type="checkbox" id="editAllowsTeam" onclick="event.stopPropagation()">
+          <label class="mode-pill-label" for="editAllowsTeam">Team</label>
+        </div>
+      </div>
     </div>
-    <div class="form-group" id="editTeamGroup" style="display:none">
-      <label>Players per Team</label>
-      <input type="number" id="editPlayersPerTeam" min="1" max="5">
+
+    <div class="mode-sub" id="editTeamSub">
+      <span class="sub-label">Players per Team</span>
+      <div class="sub-row">
+        <input type="number" id="editPlayersPerTeam" min="1" max="10" value="2">
+        <span class="sub-desc">How many players make up each team in this game?</span>
+      </div>
     </div>
+
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="btn-save" id="editSaveBtn" onclick="saveEdit()">Save Changes</button>
@@ -85,66 +212,96 @@
 <script>
   let selectedGame = null;
 
-  document.getElementById('allowsTeam').addEventListener('change', function () {
-    document.getElementById('playersPerTeamGroup').style.display = this.checked ? 'block' : 'none';
-  });
-  document.getElementById('editAllowsTeam').addEventListener('change', function () {
-    document.getElementById('editTeamGroup').style.display = this.checked ? 'block' : 'none';
-  });
+  /* ════════════════════════════
+     MODE PILL TOGGLE
+  ════════════════════════════ */
+  function toggleMode(prefix, mode) {
+    const isAdd  = prefix === 'add';
+    const cbId   = isAdd
+      ? (mode === 'ind' ? 'allowsIndividual' : 'allowsTeam')
+      : (mode === 'ind' ? 'editAllowsIndividual' : 'editAllowsTeam');
+    const pillId = isAdd
+      ? (mode === 'ind' ? 'addIndPill' : 'addTeamPill')
+      : (mode === 'ind' ? 'editIndPill' : 'editTeamPill');
+    const subId  = isAdd ? 'addTeamSub' : 'editTeamSub';
 
-  const modeLabel = g => {
-    const parts = [];
-    if (g.AllowsIndividual === 'TRUE') parts.push('Individual');
-    if (g.AllowsTeam === 'TRUE') parts.push(g.PlayersPerTeam ? `Teams (${g.PlayersPerTeam}/team)` : 'Team');
-    return parts.join(' · ') || 'No modes set';
-  };
+    const cb = document.getElementById(cbId);
+    cb.checked = !cb.checked;
+    document.getElementById(pillId).classList.toggle('active', cb.checked);
 
+    // Only team mode has a sub-section
+    if (mode === 'team') {
+      document.getElementById(subId).classList.toggle('open', cb.checked);
+    }
+  }
+
+  // Sync pill state without toggling (used when pre-filling edit modal)
+  function syncPillState(prefix, indChecked, teamChecked) {
+    const isAdd = prefix === 'add';
+    document.getElementById(isAdd ? 'addIndPill'  : 'editIndPill').classList.toggle('active', indChecked);
+    document.getElementById(isAdd ? 'addTeamPill' : 'editTeamPill').classList.toggle('active', teamChecked);
+    document.getElementById(isAdd ? 'addTeamSub'  : 'editTeamSub').classList.toggle('open', teamChecked);
+    document.getElementById(isAdd ? 'allowsIndividual' : 'editAllowsIndividual').checked = indChecked;
+    document.getElementById(isAdd ? 'allowsTeam'       : 'editAllowsTeam').checked = teamChecked;
+  }
+
+  /* ════════════════════════════
+     GAME LIST
+  ════════════════════════════ */
   const gameIcon = name => {
     const n = (name || '').toLowerCase();
-    if (n.includes('backgammon')) return '🎲';
-    if (n.includes('chess'))      return '♟️';
-    if (n.includes('card') || n.includes('uno')) return '🃏';
+    if (n.includes('backgammon'))                   return '🎲';
+    if (n.includes('chess'))                        return '♟️';
+    if (n.includes('screw') || n.includes('card') || n.includes('uno')) return '🃏';
     if (n.includes('pool') || n.includes('billiard')) return '🎱';
-    if (n.includes('dart'))  return '🎯';
-    if (n.includes('ping') || n.includes('table')) return '🏓';
+    if (n.includes('dart'))                         return '🎯';
+    if (n.includes('ping') || n.includes('table'))  return '🏓';
+    if (n.includes('domino'))                       return '🀱';
     return '🎮';
   };
 
   async function loadGamesList() {
     const games = await loadGames();
+    const el = document.getElementById('gamesList');
     if (!games.length) {
-      document.getElementById('gamesList').innerHTML =
-        `<div class="empty-state"><span class="empty-icon">🎮</span><p>No games yet. Add one above!</p></div>`;
+      el.innerHTML = `<div class="empty-state"><span class="empty-icon">🎮</span><p>No games yet. Add one above!</p></div>`;
       return;
     }
-    document.getElementById('gamesList').innerHTML = games.map(g => {
-      // Safely encode the game object for the edit button
+    el.innerHTML = games.map(g => {
       const safeG = encodeURIComponent(JSON.stringify(g));
+      const indChip  = g.AllowsIndividual === 'TRUE'
+        ? `<span class="game-mode-chip chip-ind">👤 Individual</span>` : '';
+      const teamChip = g.AllowsTeam === 'TRUE'
+        ? `<span class="game-mode-chip chip-team">👥 Team · ${g.PlayersPerTeam||'?'}/team</span>` : '';
       return `
-        <div class="expense-item no-tap">
-          <div class="cat-icon" style="background:#ede9fe">${gameIcon(g.GameName)}</div>
-          <div class="exp-details">
-            <div class="exp-cat">${escapeHtml(g.GameName)}</div>
-            <div class="exp-meta">${g.TotalPlayers} players · ${modeLabel(g)}</div>
+        <div class="game-item">
+          <div class="game-icon-bubble">${gameIcon(g.GameName)}</div>
+          <div class="game-details">
+            <div class="game-name">${escapeHtml(g.GameName)}</div>
+            <div class="game-meta">${g.TotalPlayers} players per match</div>
+            <div class="game-mode-chips">${indChip}${teamChip}</div>
           </div>
           <div class="row-actions">
-            <button class="row-btn edit" title="Edit" onclick="openEditModal(decodeURIComponent('${safeG}'))">✏️</button>
-            <button class="row-btn delete" title="Delete" onclick="confirmDelete('${g.GameID}','${escapeHtml(g.GameName).replace(/'/g,"\\'")}')">🗑️</button>
+            <button class="row-btn edit" title="Edit"
+              onclick="openEditModal(decodeURIComponent('${safeG}'))">✏️</button>
+            <button class="row-btn delete" title="Delete"
+              onclick="confirmDelete('${g.GameID}','${escapeHtml(g.GameName).replace(/'/g,"\\'")}')">🗑️</button>
           </div>
         </div>`;
     }).join('');
   }
 
+  /* ════════════════════════════
+     EDIT MODAL
+  ════════════════════════════ */
   function openEditModal(gRaw) {
     selectedGame = typeof gRaw === 'string' ? JSON.parse(gRaw) : gRaw;
-    document.getElementById('editGameName').value      = selectedGame.GameName;
-    document.getElementById('editTotalPlayers').value  = selectedGame.TotalPlayers;
+    document.getElementById('editGameName').value     = selectedGame.GameName;
+    document.getElementById('editTotalPlayers').value = selectedGame.TotalPlayers;
+    document.getElementById('editPlayersPerTeam').value = selectedGame.PlayersPerTeam || 2;
     const ind  = selectedGame.AllowsIndividual === 'TRUE';
     const team = selectedGame.AllowsTeam === 'TRUE';
-    document.getElementById('editAllowsIndividual').checked = ind;
-    document.getElementById('editAllowsTeam').checked       = team;
-    document.getElementById('editTeamGroup').style.display  = team ? 'block' : 'none';
-    document.getElementById('editPlayersPerTeam').value     = selectedGame.PlayersPerTeam || 2;
+    syncPillState('edit', ind, team);
     document.getElementById('editModal').classList.add('open');
   }
   function closeEditModal() {
@@ -152,10 +309,10 @@
   }
 
   async function saveEdit() {
-    const name   = document.getElementById('editGameName').value.trim();
-    const total  = parseInt(document.getElementById('editTotalPlayers').value);
-    const ind    = document.getElementById('editAllowsIndividual').checked;
-    const team   = document.getElementById('editAllowsTeam').checked;
+    const name    = document.getElementById('editGameName').value.trim();
+    const total   = parseInt(document.getElementById('editTotalPlayers').value);
+    const ind     = document.getElementById('editAllowsIndividual').checked;
+    const team    = document.getElementById('editAllowsTeam').checked;
     const perTeam = team ? parseInt(document.getElementById('editPlayersPerTeam').value) : null;
     if (!name || total < 2) return showToast('Check name and player count', 'error');
     if (!ind && !team)      return showToast('Select at least one mode', 'error');
@@ -165,7 +322,7 @@
       await editGame(selectedGame.GameID, name, total, ind, team, perTeam);
       closeEditModal();
       showToast('Game updated ✓');
-      await loadGamesList();
+      await loadGamesList();          // ← refresh list immediately after close
     } catch(e) {
       showToast('Error saving', 'error');
     } finally {
@@ -184,6 +341,9 @@
     }
   }
 
+  /* ════════════════════════════
+     PAGE INIT
+  ════════════════════════════ */
   window.onload = async () => {
     await initPageAuth({
       onNeedLogin: () => { location.href = '../Home.html'; },
@@ -200,16 +360,16 @@
       const ind     = document.getElementById('allowsIndividual').checked;
       const team    = document.getElementById('allowsTeam').checked;
       const perTeam = team ? parseInt(document.getElementById('playersPerTeam').value) : null;
-      if (!name || total < 2)  return showToast('Enter a valid name and player count', 'error');
-      if (!ind && !team)        return showToast('Select at least one mode', 'error');
+      if (!name || total < 2) return showToast('Enter a valid name and player count', 'error');
+      if (!ind && !team)      return showToast('Select at least one mode', 'error');
       const btn = document.getElementById('addBtn');
       btn.textContent = 'Adding…'; btn.disabled = true;
       try {
         await addGame(name, total, ind, team, perTeam);
+        // Reset form
         document.getElementById('gameName').value = '';
-        document.getElementById('allowsIndividual').checked = false;
-        document.getElementById('allowsTeam').checked = false;
-        document.getElementById('playersPerTeamGroup').style.display = 'none';
+        document.getElementById('totalPlayers').value = '4';
+        syncPillState('add', false, false);
         showToast(`${name} added ✓`);
         await loadGamesList();
       } catch(e) {
