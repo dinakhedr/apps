@@ -235,8 +235,8 @@ async function addTeam(gameId, teamName, playerIds, icon, bg) {
 async function editTeam(teamId, teamName, icon, bg) {
   return await updateRowById('Teams', 'TeamID', teamId, {
     TeamName: teamName,
-    Icon: icon || '🏅',
-    BG: bg || '#fef3c7'
+    Icon:     icon || '🏅',
+    BG:       bg   || '#fef3c7'
   });
 }
 
