@@ -80,7 +80,7 @@ async function ensureGameTabs() {
 
   // Note: Teams now includes GameID column
   const headersMap = {
-    Players:             ['TimeStamp','PlayerID','PlayerName','Gender','Status'],
+    Players:             ['TimeStamp','PlayerID','PlayerName','Gender','Status','Icon','BG'],
     Games:               ['TimeStamp','GameID','GameName','TotalPlayers','AllowsIndividual','AllowsTeam','PlayersPerTeam'],
     Teams:               ['TimeStamp','TeamID','TeamName','GameID','PlayerIDs','Status'],
     Sessions:            ['TimeStamp','SessionID','GameID','Date','Type','Status','WinnerID'],

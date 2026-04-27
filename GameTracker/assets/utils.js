@@ -29,7 +29,7 @@ function renderBottomNav(active) {
     { id: 'home',        icon: '🏠', label: 'Home',       href: 'Home.html' },
     { id: 'sessions',    icon: '🎮', label: 'Sessions',   href: 'pages/sessions.html' },
     { id: 'leaderboard', icon: '📊', label: 'Leaders',    href: 'pages/leaderboard.html' },
-    { id: 'players',     icon: '👥', label: 'Players',    href: 'pages/players.html' },
+    { id: 'players',     icon: '👥', label: 'Players',    href: 'pages/players-teams.html' },
   ];
   // Resolve hrefs relative to current page
   const isPage = window.location.pathname.includes('/pages/');
@@ -180,17 +180,19 @@ async function loadRoundsIndividual()    { return await getSheetData('Rounds_Ind
 async function loadRoundsTeam()          { return await getSheetData('Rounds_Team'); }
 
 // ── Add operations ──
-async function addPlayer(name, gender, status) {
+async function addPlayer(name, gender, status, icon, bg) {
   const playerId = generateGameId();
-  await appendRow('Players', [new Date().toISOString(), playerId, name, gender, status]);
+  await appendRow('Players', [new Date().toISOString(), playerId, name, gender, status, icon||'🧑', bg||'#f3f4f6']);
   return playerId;
 }
 
-async function editPlayer(playerId, name, gender, status) {
+async function editPlayer(playerId, name, gender, status, icon, bg) {
   return await updateRowById('Players', 'PlayerID', playerId, {
     PlayerName: name,
     Gender: gender,
-    Status: status
+    Status: status,
+    Icon: icon || '🧑',
+    BG: bg || '#f3f4f6'
   });
 }
 
