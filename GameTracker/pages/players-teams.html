@@ -20,8 +20,7 @@
     .pill-tabs { display:flex; gap:6px; margin-bottom:20px; }
     .pill-tab {
       flex:1; padding:11px 6px;
-      background:rgba(255,255,255,0.18);
-      border:1px solid rgba(255,255,255,0.25);
+      background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.25);
       border-radius:30px; font-size:14px; font-weight:700;
       color:rgba(255,255,255,0.85); cursor:pointer;
       font-family:'DM Sans',sans-serif; transition:all 0.2s;
@@ -30,9 +29,25 @@
     .tab-panel { display:none; }
     .tab-panel.active { display:block; }
 
-    /* ── Icon & color picker ── */
-    .picker-label { font-size:11px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:8px; margin-top:4px; }
-    .icon-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:16px; }
+    /* ── Collapsible picker section ── */
+    .picker-toggle {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 12px; background:var(--surface-2); border-radius:var(--radius-sm);
+      cursor:pointer; margin-bottom:10px; border:2px solid var(--border);
+      transition:border-color 0.15s;
+    }
+    .picker-toggle:hover { border-color:var(--brand); }
+    .picker-toggle-left { display:flex; align-items:center; gap:10px; }
+    .picker-toggle-preview { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:17px; transition:background 0.2s; }
+    .picker-toggle-label { font-size:13px; font-weight:700; color:var(--text); }
+    .picker-toggle-arrow { font-size:12px; color:var(--text-3); transition:transform 0.2s; }
+    .picker-toggle.open .picker-toggle-arrow { transform:rotate(180deg); }
+    .picker-body { display:none; padding-top:4px; }
+    .picker-body.open { display:block; }
+
+    /* ── Icon & color grids ── */
+    .picker-sub-label { font-size:11px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:6px; margin-top:10px; }
+    .icon-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:4px; }
     .icon-option {
       width:100%; aspect-ratio:1; border-radius:10px;
       background:var(--surface-2); border:2px solid transparent;
@@ -41,7 +56,7 @@
     }
     .icon-option.selected { border-color:var(--brand); background:#ededff; }
     .icon-option:active { transform:scale(0.92); }
-    .color-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-bottom:16px; }
+    .color-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-bottom:4px; }
     .color-option { width:100%; aspect-ratio:1; border-radius:10px; border:2.5px solid transparent; cursor:pointer; transition:all 0.15s; position:relative; }
     .color-option.selected { border-color:var(--text); }
     .color-option.selected::after { content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.4); }
@@ -50,13 +65,13 @@
     .entity-preview {
       display:flex; align-items:center; gap:12px;
       padding:12px 14px; background:var(--surface-2);
-      border-radius:var(--radius-sm); margin-bottom:16px;
+      border-radius:var(--radius-sm); margin-bottom:14px;
     }
-    .entity-preview-icon { width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; transition:background 0.2s; }
+    .entity-preview-icon { width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; transition:background 0.2s; flex-shrink:0; }
     .entity-preview-name { font-weight:700; font-size:15px; color:var(--text); }
     .entity-preview-sub  { font-size:11px; color:var(--text-3); margin-top:2px; }
 
-    /* ── Team player selector ── */
+    /* ── Player selector cards ── */
     .player-selector { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:8px; }
     .player-sel-card {
       display:flex; align-items:center; gap:10px;
@@ -65,6 +80,7 @@
       cursor:pointer; transition:all 0.15s; user-select:none;
     }
     .player-sel-card.selected { border-color:var(--brand); background:#ededff; }
+    .player-sel-card.readonly { cursor:default; opacity:0.85; }
     .player-sel-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
     .player-sel-name { font-size:13px; font-weight:700; color:var(--text); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .player-sel-check { width:18px; height:18px; border-radius:50%; flex-shrink:0; border:2px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; transition:all 0.15s; }
@@ -73,10 +89,12 @@
     /* ── Game section label ── */
     .game-section-label { font-family:'Sora',sans-serif; font-size:11px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; margin-top:4px; }
 
-    /* ── Team icon display ── */
-    .team-icon-bubble { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
-    .team-player-strip { display:flex; gap:4px; flex-shrink:0; }
-    .team-player-pip { width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; }
+    /* ── Team row display ── */
+    .team-icon-bubble { width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+    .team-player-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:5px; }
+    .team-player-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 8px 3px 4px; border-radius:20px; background:var(--surface-2); }
+    .team-player-chip-icon { width:20px; height:20px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
+    .team-player-chip-name { font-size:11px; font-weight:700; color:var(--text-2); white-space:nowrap; }
   </style>
 </head>
 <body>
@@ -98,7 +116,6 @@
 
   <!-- ══════════════ PLAYERS TAB ══════════════ -->
   <div class="tab-panel active" id="tab-players">
-
     <div class="card">
       <div class="card-title">Add Player</div>
 
@@ -108,7 +125,6 @@
           <input type="text" id="playerName" placeholder="e.g. Alice">
         </div>
       </div>
-
       <div class="label-left-row">
         <label>Gender</label>
         <div class="controls radio-group">
@@ -116,7 +132,6 @@
           <label><input type="radio" name="addGender" value="Female" style="width:auto;margin-right:4px"> ♀ Female</label>
         </div>
       </div>
-
       <div class="label-left-row">
         <label>Status</label>
         <div class="controls">
@@ -128,18 +143,29 @@
         </div>
       </div>
 
-      <div class="entity-preview">
+      <!-- Collapsible picker: Player -->
+      <div class="picker-toggle" id="addPlayerPickerToggle" onclick="togglePicker('addPlayerPicker','addPlayerPickerToggle')">
+        <div class="picker-toggle-left">
+          <div class="picker-toggle-preview" id="addPlayerPickerPreview" style="background:#ededff">🤩</div>
+          <span class="picker-toggle-label">Icon &amp; Color</span>
+        </div>
+        <span class="picker-toggle-arrow">▼</span>
+      </div>
+      <div class="picker-body" id="addPlayerPicker">
+        <span class="picker-sub-label">Background Color</span>
+        <div class="color-grid" id="addColorGrid"></div>
+        <span class="picker-sub-label">Icon</span>
+        <div class="icon-grid" id="addIconGrid"></div>
+      </div>
+
+      <!-- Preview -->
+      <div class="entity-preview" style="margin-top:10px">
         <div class="entity-preview-icon" id="addPreviewIcon" style="background:#ededff">🤩</div>
         <div>
           <div class="entity-preview-name" id="addPreviewName">Player Name</div>
           <div class="entity-preview-sub"  id="addPreviewSub">Male · Active</div>
         </div>
       </div>
-
-      <span class="picker-label">Background Color</span>
-      <div class="color-grid" id="addColorGrid"></div>
-      <span class="picker-label">Icon</span>
-      <div class="icon-grid" id="addIconGrid"></div>
 
       <button class="submit-btn" id="addBtn">+ Add Player</button>
     </div>
@@ -152,7 +178,6 @@
 
   <!-- ══════════════ TEAMS TAB ══════════════ -->
   <div class="tab-panel" id="tab-teams">
-
     <div class="card">
       <div class="card-title">Create Team</div>
 
@@ -173,20 +198,30 @@
         </div>
       </div>
 
+      <!-- Collapsible picker: Team -->
+      <div id="teamPickerToggleWrap" style="display:none">
+        <div class="picker-toggle" id="addTeamPickerToggle" onclick="togglePicker('addTeamPicker','addTeamPickerToggle')">
+          <div class="picker-toggle-left">
+            <div class="picker-toggle-preview" id="addTeamPickerPreview" style="background:#fef3c7">🏆</div>
+            <span class="picker-toggle-label">Team Icon &amp; Color</span>
+          </div>
+          <span class="picker-toggle-arrow">▼</span>
+        </div>
+        <div class="picker-body" id="addTeamPicker">
+          <span class="picker-sub-label">Background Color</span>
+          <div class="color-grid" id="addTeamColorGrid"></div>
+          <span class="picker-sub-label">Icon</span>
+          <div class="icon-grid" id="addTeamIconGrid"></div>
+        </div>
+      </div>
+
       <!-- Team preview -->
-      <div class="entity-preview" id="teamPreviewWrap" style="display:none">
-        <div class="entity-preview-icon" id="teamPreviewIcon" style="background:#fef3c7">🏅</div>
+      <div class="entity-preview" id="teamPreviewWrap" style="display:none;margin-top:10px">
+        <div class="entity-preview-icon" id="teamPreviewIcon" style="background:#fef3c7">🏆</div>
         <div>
           <div class="entity-preview-name" id="teamPreviewName">Team Name</div>
           <div class="entity-preview-sub"  id="teamPreviewSub">No players selected</div>
         </div>
-      </div>
-
-      <div id="teamPickerArea" style="display:none">
-        <span class="picker-label">Team Background Color</span>
-        <div class="color-grid" id="addTeamColorGrid"></div>
-        <span class="picker-label">Team Icon</span>
-        <div class="icon-grid" id="addTeamIconGrid"></div>
       </div>
 
       <button class="submit-btn" id="createTeamBtn">+ Create Team</button>
@@ -227,18 +262,28 @@
       </div>
     </div>
 
-    <div class="entity-preview">
+    <!-- Collapsible picker: Edit Player -->
+    <div class="picker-toggle" id="editPlayerPickerToggle" onclick="togglePicker('editPlayerPicker','editPlayerPickerToggle')">
+      <div class="picker-toggle-left">
+        <div class="picker-toggle-preview" id="editPlayerPickerPreview" style="background:#ededff">🤩</div>
+        <span class="picker-toggle-label">Icon &amp; Color</span>
+      </div>
+      <span class="picker-toggle-arrow">▼</span>
+    </div>
+    <div class="picker-body" id="editPlayerPicker">
+      <span class="picker-sub-label">Background Color</span>
+      <div class="color-grid" id="editColorGrid"></div>
+      <span class="picker-sub-label">Icon</span>
+      <div class="icon-grid" id="editIconGrid"></div>
+    </div>
+
+    <div class="entity-preview" style="margin-top:10px">
       <div class="entity-preview-icon" id="editPreviewIcon" style="background:#ededff">🤩</div>
       <div>
         <div class="entity-preview-name" id="editPreviewName">Player Name</div>
         <div class="entity-preview-sub"  id="editPreviewSub">Male · Active</div>
       </div>
     </div>
-
-    <span class="picker-label">Background Color</span>
-    <div class="color-grid" id="editColorGrid"></div>
-    <span class="picker-label">Icon</span>
-    <div class="icon-grid" id="editIconGrid"></div>
 
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeEditPlayer()">Cancel</button>
@@ -258,18 +303,34 @@
       <div class="controls"><input type="text" id="editTeamName" placeholder="Team name"></div>
     </div>
 
-    <div class="entity-preview">
-      <div class="entity-preview-icon" id="editTeamPreviewIcon" style="background:#fef3c7">🏅</div>
+    <!-- Players (read-only visual cards) -->
+    <div class="form-group">
+      <label>Players</label>
+      <div class="player-selector" id="editTeamPlayerGrid"></div>
+    </div>
+
+    <!-- Collapsible picker: Edit Team -->
+    <div class="picker-toggle" id="editTeamPickerToggle" onclick="togglePicker('editTeamPicker','editTeamPickerToggle')">
+      <div class="picker-toggle-left">
+        <div class="picker-toggle-preview" id="editTeamPickerPreview" style="background:#fef3c7">🏆</div>
+        <span class="picker-toggle-label">Team Icon &amp; Color</span>
+      </div>
+      <span class="picker-toggle-arrow">▼</span>
+    </div>
+    <div class="picker-body" id="editTeamPicker">
+      <span class="picker-sub-label">Background Color</span>
+      <div class="color-grid" id="editTeamColorGrid"></div>
+      <span class="picker-sub-label">Icon</span>
+      <div class="icon-grid" id="editTeamIconGrid"></div>
+    </div>
+
+    <div class="entity-preview" style="margin-top:10px">
+      <div class="entity-preview-icon" id="editTeamPreviewIcon" style="background:#fef3c7">🏆</div>
       <div>
         <div class="entity-preview-name" id="editTeamPreviewName">Team Name</div>
         <div class="entity-preview-sub"  id="editTeamPreviewSub"></div>
       </div>
     </div>
-
-    <span class="picker-label">Background Color</span>
-    <div class="color-grid" id="editTeamColorGrid"></div>
-    <span class="picker-label">Icon</span>
-    <div class="icon-grid" id="editTeamIconGrid"></div>
 
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeEditTeam()">Cancel</button>
@@ -280,25 +341,22 @@
 
 <script>
 /* ═══════════════════════════════════════
-   ICON & COLOR CONSTANTS
-   (players: faces + animals | teams: trophies + symbols)
+   CONSTANTS
 ═══════════════════════════════════════ */
 const PLAYER_ICONS = [
-  // Faces
   '😀','😎','🤩','😏','🧐','🥳','😤',
   '👦','👧','👨','👩','🧔','👴','👵',
   '🦸','🦹','🧙','🧝','🧛','🤺','🥷',
   // Animals
   '🦁','🐯','🐻','🦊','🐺','🦝','🦨',
   '🐸','🐧','🦅','🦉','🦋','🐲','🦄',
-  '🐬','🦈','🐙','🦊','🦝','🐝','🐺',
+  '🐬','🦈','🐙','🦔','🦇','🐝','🦜',
 ];
 const TEAM_ICONS = [
-  // Trophies & medals
   '🏆','🥇','🥈','🥉','🎖️','🏅','⭐',
   '👑','💎','🔥','⚡','💪','🎯','🎱',
   '♟️','🃏','🎲','⚽','🏀','🎮','🕹️',
-  // Animals (team totems)
+  // Animal totems
   '🦁','🐯','🦅','🐺','🦊','🐻','🦂',
   '🦈','🐉','🦋','🦝','🦉','🐸','🦄',
 ];
@@ -317,24 +375,24 @@ let neededPlayers = 2;
 let selectedPlayerIds = new Set();
 let editingPlayer = null, editingTeam = null;
 
-// Add-player picker state
-let addPIcon  = PLAYER_ICONS[2];          // 🤩
-let addPColor = COLOR_OPTIONS[0];         // blue
-
-// Edit-player picker state
-let editPIcon = PLAYER_ICONS[2];
-let editPColor = COLOR_OPTIONS[0];
-
-// Add-team picker state
-let addTIcon  = TEAM_ICONS[0];            // 🏆
-let addTColor = COLOR_OPTIONS[3];         // yellow
-
-// Edit-team picker state
-let editTIcon  = TEAM_ICONS[0];
-let editTColor = COLOR_OPTIONS[3];
+let addPIcon = PLAYER_ICONS[2], addPColor = COLOR_OPTIONS[0];
+let editPIcon = PLAYER_ICONS[2], editPColor = COLOR_OPTIONS[0];
+let addTIcon = TEAM_ICONS[0],   addTColor = COLOR_OPTIONS[3];
+let editTIcon = TEAM_ICONS[0],  editTColor = COLOR_OPTIONS[3];
 
 /* ═══════════════════════════════════════
-   TAB
+   COLLAPSIBLE PICKER TOGGLE
+═══════════════════════════════════════ */
+function togglePicker(bodyId, toggleId) {
+  const body   = document.getElementById(bodyId);
+  const toggle = document.getElementById(toggleId);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+}
+
+/* ═══════════════════════════════════════
+   TAB SWITCH
 ═══════════════════════════════════════ */
 function switchTab(tab) {
   document.querySelectorAll('.pill-tab').forEach((b,i) =>
@@ -344,7 +402,7 @@ function switchTab(tab) {
 }
 
 /* ═══════════════════════════════════════
-   GENERIC PICKER BUILDER
+   GENERIC GRID BUILDERS
 ═══════════════════════════════════════ */
 function buildIconGrid(gridId, options, selected, onSelect) {
   document.getElementById(gridId).innerHTML = options.map(ic =>
@@ -357,12 +415,21 @@ function buildColorGrid(gridId, selected, onSelect) {
   ).join('');
 }
 
+/* ── Sync the small preview in the toggle button ── */
+function syncTogglePreview(previewId, icon, color) {
+  const el = document.getElementById(previewId);
+  if (!el) return;
+  el.textContent = icon;
+  el.style.background = color.bg;
+}
+
 /* ═══════════════════════════════════════
    ADD-PLAYER PICKERS
 ═══════════════════════════════════════ */
 function buildAddPlayerPickers() {
   buildIconGrid('addIconGrid', PLAYER_ICONS, addPIcon, 'selectAddPIcon');
   buildColorGrid('addColorGrid', addPColor, 'selectAddPColor');
+  syncTogglePreview('addPlayerPickerPreview', addPIcon, addPColor);
 }
 function selectAddPIcon(ic)  { addPIcon=ic;  buildAddPlayerPickers(); updateAddPlayerPreview(); }
 function selectAddPColor(i)  { addPColor=COLOR_OPTIONS[i]; buildAddPlayerPickers(); updateAddPlayerPreview(); }
@@ -375,6 +442,7 @@ function updateAddPlayerPreview() {
   document.getElementById('addPreviewIcon').style.background = addPColor.bg;
   document.getElementById('addPreviewName').textContent  = name;
   document.getElementById('addPreviewSub').textContent   = `${gender} · ${active?'Active':'Inactive'}`;
+  syncTogglePreview('addPlayerPickerPreview', addPIcon, addPColor);
 }
 
 /* ═══════════════════════════════════════
@@ -383,6 +451,7 @@ function updateAddPlayerPreview() {
 function buildEditPlayerPickers() {
   buildIconGrid('editIconGrid', PLAYER_ICONS, editPIcon, 'selectEditPIcon');
   buildColorGrid('editColorGrid', editPColor, 'selectEditPColor');
+  syncTogglePreview('editPlayerPickerPreview', editPIcon, editPColor);
 }
 function selectEditPIcon(ic) { editPIcon=ic;  buildEditPlayerPickers(); updateEditPlayerPreview(); }
 function selectEditPColor(i) { editPColor=COLOR_OPTIONS[i]; buildEditPlayerPickers(); updateEditPlayerPreview(); }
@@ -395,6 +464,7 @@ function updateEditPlayerPreview() {
   document.getElementById('editPreviewIcon').style.background = editPColor.bg;
   document.getElementById('editPreviewName').textContent  = name;
   document.getElementById('editPreviewSub').textContent   = `${gender} · ${active?'Active':'Inactive'}`;
+  syncTogglePreview('editPlayerPickerPreview', editPIcon, editPColor);
 }
 
 /* ═══════════════════════════════════════
@@ -403,19 +473,21 @@ function updateEditPlayerPreview() {
 function buildAddTeamPickers() {
   buildIconGrid('addTeamIconGrid', TEAM_ICONS, addTIcon, 'selectAddTIcon');
   buildColorGrid('addTeamColorGrid', addTColor, 'selectAddTColor');
+  syncTogglePreview('addTeamPickerPreview', addTIcon, addTColor);
 }
 function selectAddTIcon(ic) { addTIcon=ic;  buildAddTeamPickers(); updateAddTeamPreview(); }
 function selectAddTColor(i) { addTColor=COLOR_OPTIONS[i]; buildAddTeamPickers(); updateAddTeamPreview(); }
 function updateAddTeamPreview() {
   const name = document.getElementById('teamName').value.trim() || 'Team Name';
   const ids  = Array.from(selectedPlayerIds);
-  const playerSub = ids.length
+  const sub  = ids.length
     ? ids.map(id => allPlayers.find(p=>p.PlayerID===id)?.PlayerName||'?').join(' · ')
     : 'No players selected';
   document.getElementById('teamPreviewIcon').textContent  = addTIcon;
   document.getElementById('teamPreviewIcon').style.background = addTColor.bg;
   document.getElementById('teamPreviewName').textContent  = name;
-  document.getElementById('teamPreviewSub').textContent   = playerSub;
+  document.getElementById('teamPreviewSub').textContent   = sub;
+  syncTogglePreview('addTeamPickerPreview', addTIcon, addTColor);
 }
 
 /* ═══════════════════════════════════════
@@ -424,6 +496,7 @@ function updateAddTeamPreview() {
 function buildEditTeamPickers() {
   buildIconGrid('editTeamIconGrid', TEAM_ICONS, editTIcon, 'selectEditTIcon');
   buildColorGrid('editTeamColorGrid', editTColor, 'selectEditTColor');
+  syncTogglePreview('editTeamPickerPreview', editTIcon, editTColor);
 }
 function selectEditTIcon(ic) { editTIcon=ic;  buildEditTeamPickers(); updateEditTeamPreview(); }
 function selectEditTColor(i) { editTColor=COLOR_OPTIONS[i]; buildEditTeamPickers(); updateEditTeamPreview(); }
@@ -432,6 +505,7 @@ function updateEditTeamPreview() {
   document.getElementById('editTeamPreviewIcon').textContent  = editTIcon;
   document.getElementById('editTeamPreviewIcon').style.background = editTColor.bg;
   document.getElementById('editTeamPreviewName').textContent  = name;
+  syncTogglePreview('editTeamPickerPreview', editTIcon, editTColor);
 }
 
 /* ═══════════════════════════════════════
@@ -447,7 +521,6 @@ async function loadPlayersList() {
   el.innerHTML = allPlayers.map(p => {
     const ic = p.Icon || '🧑';
     const bg = p.BG   || '#f3f4f6';
-    // Safely encode the full player object to pass to edit modal
     const safeData = encodeURIComponent(JSON.stringify({
       PlayerID: p.PlayerID, PlayerName: p.PlayerName,
       Gender: p.Gender, Status: p.Status, Icon: p.Icon, BG: p.BG
@@ -470,18 +543,21 @@ async function loadPlayersList() {
   }).join('');
 }
 
-/* ── Edit player ── */
+/* ── Edit player modal ── */
 function openEditPlayer(encoded) {
-  const p = typeof encoded === 'string' ? JSON.parse(decodeURIComponent(encoded)) : encoded;
+  const p = JSON.parse(decodeURIComponent(encoded));
   editingPlayer = p;
   document.getElementById('editPlayerName').value = p.PlayerName;
-  const maleR   = document.querySelector('input[name="editGender"][value="Male"]');
+  const maleR  = document.querySelector('input[name="editGender"][value="Male"]');
   const femaleR = document.querySelector('input[name="editGender"][value="Female"]');
   if (p.Gender === 'Female' && femaleR) femaleR.checked = true;
   else if (maleR) maleR.checked = true;
   document.getElementById('editStatusToggle').checked = (p.Status !== 'Inactive');
   editPIcon  = PLAYER_ICONS.includes(p.Icon) ? p.Icon : PLAYER_ICONS[2];
   editPColor = COLOR_OPTIONS.find(c=>c.bg===p.BG) || COLOR_OPTIONS[0];
+  // Reset picker to closed
+  document.getElementById('editPlayerPicker').classList.remove('open');
+  document.getElementById('editPlayerPickerToggle').classList.remove('open');
   buildEditPlayerPickers();
   updateEditPlayerPreview();
   document.getElementById('editPlayerModal').classList.add('open');
@@ -531,14 +607,14 @@ async function loadTeamsData() {
     neededPlayers = parseInt(opt.dataset.ppt) || 2;
     if (sel.value) {
       rebuildTeamPlayerSelector();
-      document.getElementById('playerSelectorArea').style.display = 'block';
-      document.getElementById('teamPreviewWrap').style.display    = 'flex';
-      document.getElementById('teamPickerArea').style.display     = 'block';
+      document.getElementById('playerSelectorArea').style.display   = 'block';
+      document.getElementById('teamPickerToggleWrap').style.display = 'block';
+      document.getElementById('teamPreviewWrap').style.display      = 'flex';
       buildAddTeamPickers(); updateAddTeamPreview();
     } else {
-      document.getElementById('playerSelectorArea').style.display = 'none';
-      document.getElementById('teamPreviewWrap').style.display    = 'none';
-      document.getElementById('teamPickerArea').style.display     = 'none';
+      document.getElementById('playerSelectorArea').style.display   = 'none';
+      document.getElementById('teamPickerToggleWrap').style.display = 'none';
+      document.getElementById('teamPreviewWrap').style.display      = 'none';
     }
   };
   await loadTeamsList();
@@ -550,19 +626,14 @@ function rebuildTeamPlayerSelector() {
   const label = document.getElementById('playerSelectorLabel');
   if (label) label.textContent = `Select exactly ${neededPlayers} players`;
   if (!grid) return;
-
-  // preserve existing selections
   const prev = new Set(selectedPlayerIds);
   selectedPlayerIds = new Set();
-
   if (!active.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><p>No active players. Add players first.</p></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><p>No active players.</p></div>`;
     updateSelectionCount(); return;
   }
-
   grid.innerHTML = active.map(p => {
-    const ic  = p.Icon || '🧑';
-    const bg  = p.BG   || '#f3f4f6';
+    const ic = p.Icon || '🧑', bg = p.BG || '#f3f4f6';
     const isSel = prev.has(p.PlayerID);
     if (isSel) selectedPlayerIds.add(p.PlayerID);
     return `
@@ -588,7 +659,6 @@ function togglePlayerSel(card, pid) {
   updateSelectionCount();
   updateAddTeamPreview();
 }
-
 function updateSelectionCount() {
   const el = document.getElementById('selectionCount');
   if (!el) return;
@@ -601,62 +671,50 @@ async function loadTeamsList() {
   const teams   = await loadTeams();
   const gameMap = Object.fromEntries(allGames.map(g => [g.GameID, g.GameName]));
   const el = document.getElementById('teamsList');
-
   if (!teams.length) {
     el.innerHTML = `<div class="empty-state"><span class="empty-icon">🏆</span><p>No teams yet. Create one above!</p></div>`;
     return;
   }
-
-  // Group by game
   const grouped = {};
   teams.forEach(t => {
     const gid = t.GameID || 'unknown';
     if (!grouped[gid]) grouped[gid] = [];
     grouped[gid].push(t);
   });
-
   let html = '';
   for (const gid in grouped) {
     html += `<div style="margin-bottom:20px">
       <div class="game-section-label">🎮 ${escapeHtml(gameMap[gid]||'Unknown Game')}</div>`;
-
     grouped[gid].forEach(t => {
       const teamIcon = t.Icon || '🏅';
       const teamBg   = t.BG   || '#fef3c7';
 
-      // Player names (no IDs shown)
-      const playerNames = (t.PlayerIDs||'').split(',')
-        .map(pid => {
-          const pl = allPlayers.find(p => p.PlayerID === pid.trim());
-          return pl ? pl.PlayerName : null;
-        })
-        .filter(Boolean).join(' · ');
-
-      // Player pip strip (small icons)
-      const pips = (t.PlayerIDs||'').split(',').map(pid => {
+      // Build player chips: each with own icon + name
+      const playerChips = (t.PlayerIDs||'').split(',').map(pid => {
         const pl = allPlayers.find(p => p.PlayerID === pid.trim());
-        const ic = pl?.Icon || '🧑';
-        const bg = pl?.BG   || '#f3f4f6';
-        return `<div class="team-player-pip" style="background:${bg}">${ic}</div>`;
-      }).join('');
+        if (!pl) return '';
+        const ic = pl.Icon || '🧑';
+        const bg = pl.BG   || '#f3f4f6';
+        return `<div class="team-player-chip">
+          <div class="team-player-chip-icon" style="background:${bg}">${ic}</div>
+          <span class="team-player-chip-name">${escapeHtml(pl.PlayerName)}</span>
+        </div>`;
+      }).filter(Boolean).join('');
 
-      // Safely encode team for edit modal
       const safeData = encodeURIComponent(JSON.stringify({
         TeamID: t.TeamID, TeamName: t.TeamName,
-        PlayerIDs: t.PlayerIDs, Icon: t.Icon, BG: t.BG
+        GameID: t.GameID, PlayerIDs: t.PlayerIDs,
+        Icon: t.Icon, BG: t.BG
       }));
 
       html += `
-        <div class="expense-item no-tap">
-          <div class="team-icon-bubble" style="background:${teamBg}">${teamIcon}</div>
+        <div class="expense-item no-tap" style="align-items:flex-start;padding-top:14px;padding-bottom:14px">
+          <div class="team-icon-bubble" style="background:${teamBg};margin-top:2px">${teamIcon}</div>
           <div class="exp-details">
             <div class="exp-cat">${escapeHtml(t.TeamName)}</div>
-            <div class="exp-meta" style="display:flex;align-items:center;gap:4px;margin-top:4px">
-              <div class="team-player-strip">${pips}</div>
-              <span>${escapeHtml(playerNames)}</span>
-            </div>
+            <div class="team-player-list">${playerChips}</div>
           </div>
-          <div class="row-actions">
+          <div class="row-actions" style="margin-top:2px">
             <button class="row-btn edit"   title="Edit"   onclick="openEditTeam('${safeData}')">✏️</button>
             <button class="row-btn delete" title="Delete" onclick="confirmDeleteTeam('${t.TeamID}','${escapeHtml(t.TeamName).replace(/'/g,"\\'")}')">🗑️</button>
           </div>
@@ -667,21 +725,37 @@ async function loadTeamsList() {
   el.innerHTML = html;
 }
 
-/* ── Edit team ── */
+/* ── Edit team modal ── */
 function openEditTeam(encoded) {
-  const t = typeof encoded === 'string' ? JSON.parse(decodeURIComponent(encoded)) : encoded;
+  const t = JSON.parse(decodeURIComponent(encoded));
   editingTeam = t;
   document.getElementById('editTeamName').value = t.TeamName;
-
   editTIcon  = TEAM_ICONS.includes(t.Icon) ? t.Icon : TEAM_ICONS[0];
   editTColor = COLOR_OPTIONS.find(c => c.bg === t.BG) || COLOR_OPTIONS[3];
 
-  // Show player names as subtitle
-  const playerNames = (t.PlayerIDs||'').split(',')
-    .map(pid => allPlayers.find(p=>p.PlayerID===pid.trim())?.PlayerName||null)
-    .filter(Boolean).join(' · ');
+  // Build read-only player cards (same visual as selector but not clickable)
+  const playerGrid = document.getElementById('editTeamPlayerGrid');
+  const pids = (t.PlayerIDs||'').split(',').map(s=>s.trim()).filter(Boolean);
+  playerGrid.innerHTML = pids.map(pid => {
+    const pl = allPlayers.find(p => p.PlayerID === pid);
+    const ic = pl?.Icon || '🧑';
+    const bg = pl?.BG   || '#f3f4f6';
+    const name = pl?.PlayerName || pid;
+    return `
+      <div class="player-sel-card selected readonly">
+        <div class="player-sel-icon" style="background:${bg}">${ic}</div>
+        <span class="player-sel-name">${escapeHtml(name)}</span>
+        <div class="player-sel-check">✓</div>
+      </div>`;
+  }).join('');
+
+  // Show player names as preview subtitle
+  const playerNames = pids.map(pid => allPlayers.find(p=>p.PlayerID===pid)?.PlayerName||pid).filter(Boolean).join(' · ');
   document.getElementById('editTeamPreviewSub').textContent = playerNames;
 
+  // Reset picker to closed
+  document.getElementById('editTeamPicker').classList.remove('open');
+  document.getElementById('editTeamPickerToggle').classList.remove('open');
   buildEditTeamPickers();
   updateEditTeamPreview();
   document.getElementById('editTeamModal').classList.add('open');
@@ -721,28 +795,22 @@ window.onload = async () => {
       document.getElementById('loadingOverlay').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
 
-      // Build pickers
       buildAddPlayerPickers(); updateAddPlayerPreview();
 
-      // Wire live-preview events — players
       document.getElementById('playerName').addEventListener('input', updateAddPlayerPreview);
       document.querySelectorAll('input[name="addGender"]').forEach(r => r.addEventListener('change', updateAddPlayerPreview));
       document.getElementById('addStatusToggle').addEventListener('change', updateAddPlayerPreview);
-
-      // Wire live-preview events — edit player
       document.getElementById('editPlayerName').addEventListener('input', updateEditPlayerPreview);
       document.querySelectorAll('input[name="editGender"]').forEach(r => r.addEventListener('change', updateEditPlayerPreview));
       document.getElementById('editStatusToggle').addEventListener('change', updateEditPlayerPreview);
-
-      // Wire team name input → preview
       document.getElementById('teamName').addEventListener('input', updateAddTeamPreview);
+      document.getElementById('editTeamName').addEventListener('input', updateEditTeamPreview);
 
       await loadPlayersList();
       await loadTeamsData();
     }
   });
 
-  /* ── Add player ── */
   document.getElementById('addBtn').onclick = async () => {
     const name   = document.getElementById('playerName').value.trim();
     const gender = document.querySelector('input[name="addGender"]:checked')?.value || 'Male';
@@ -755,8 +823,7 @@ window.onload = async () => {
       document.getElementById('playerName').value = '';
       document.querySelector('input[name="addGender"][value="Male"]').checked = true;
       document.getElementById('addStatusToggle').checked = true;
-      addPIcon  = PLAYER_ICONS[2];
-      addPColor = COLOR_OPTIONS[0];
+      addPIcon = PLAYER_ICONS[2]; addPColor = COLOR_OPTIONS[0];
       buildAddPlayerPickers(); updateAddPlayerPreview();
       showToast(`${name} added ✓`);
       await loadPlayersList();
@@ -765,7 +832,6 @@ window.onload = async () => {
     finally { btn.textContent = '+ Add Player'; btn.disabled = false; }
   };
 
-  /* ── Create team ── */
   document.getElementById('createTeamBtn').onclick = async () => {
     const gameId = document.getElementById('gameSelect').value;
     const name   = document.getElementById('teamName').value.trim();
@@ -781,11 +847,10 @@ window.onload = async () => {
       document.getElementById('teamName').value = '';
       document.getElementById('gameSelect').value = '';
       selectedPlayerIds.clear();
-      document.getElementById('playerSelectorArea').style.display = 'none';
-      document.getElementById('teamPreviewWrap').style.display    = 'none';
-      document.getElementById('teamPickerArea').style.display     = 'none';
-      addTIcon  = TEAM_ICONS[0];
-      addTColor = COLOR_OPTIONS[3];
+      document.getElementById('playerSelectorArea').style.display   = 'none';
+      document.getElementById('teamPickerToggleWrap').style.display = 'none';
+      document.getElementById('teamPreviewWrap').style.display      = 'none';
+      addTIcon = TEAM_ICONS[0]; addTColor = COLOR_OPTIONS[3];
       showToast(`${name} created ✓`);
       await loadTeamsList();
     } catch(e) { showToast('Error creating team', 'error'); }
