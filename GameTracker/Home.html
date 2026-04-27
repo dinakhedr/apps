@@ -2,44 +2,71 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="images/icon.png">
-  <link rel="icon" type="image/png" sizes="180x180" href="images/icon.png">
-  <link rel="shortcut icon" href="images/icon.png">
   <link rel="icon" type="image/png" href="images/icon.png">
-
-  <title>Score Tracker</title>
+  <title>🎲 Score Tracker</title>
   <link rel="stylesheet" href="styles.css">
   <script src="assets/utils.js"></script>
   <script src="assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
-  <style>
-    .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
-    .quick-card { background: white; border-radius: 20px; padding: 16px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
-    .quick-card:active { transform: scale(0.96); }
-    .active-session { padding: 10px 0; border-bottom: 1px solid var(--border); }
-  </style>
 </head>
 <body>
-<div id="loadingOverlay" class="loading-overlay"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>
+</div>
+
 <div class="container" id="mainApp" style="display:none">
-  <div class="header"><h1>🎲 Café Score Tracker</h1></div>
-  <div class="quick-grid">
-    <div class="quick-card" onclick="location.href='players.html'">👥 Players</div>
-    <div class="quick-card" onclick="location.href='games.html'">🎮 Games</div>
-    <div class="quick-card" onclick="location.href='teams.html'">🏆 Teams</div>
-    <div class="quick-card" onclick="location.href='sessions.html'">➕ New Session</div>
-    <div class="quick-card" onclick="location.href='record_round.html'">📝 Record Round</div>
-    <div class="quick-card" onclick="location.href='leaderboard.html'">📊 Leaderboard</div>
+  <div class="header">
+    <div class="header-left">
+      <h1>🎲 Score Tracker</h1>
+    </div>
+    <div class="header-actions">
+      <button class="hdr-icon-btn" onclick="handleLogout()" title="Sign out">🚪</button>
+    </div>
   </div>
+
+  <div class="quick-grid">
+    <div class="quick-card" onclick="location.href='pages/sessions.html'">
+      <span class="quick-card-icon">➕</span>
+      <span class="quick-card-label">New Session</span>
+    </div>
+    <div class="quick-card" onclick="location.href='pages/record_round.html'">
+      <span class="quick-card-icon">📝</span>
+      <span class="quick-card-label">Record Round</span>
+    </div>
+    <div class="quick-card" onclick="location.href='pages/games.html'">
+      <span class="quick-card-icon">🎮</span>
+      <span class="quick-card-label">Games</span>
+    </div>
+    <div class="quick-card" onclick="location.href='pages/teams.html'">
+      <span class="quick-card-icon">🏆</span>
+      <span class="quick-card-label">Teams</span>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-title">🟢 Active Sessions</div>
     <div id="activeSessions"></div>
   </div>
 </div>
-<div id="loginContainer" style="display:none; text-align:center; margin-top:40px;"></div>
+
+<div id="loginScreen" style="display:none">
+  <div class="screen">
+    <div class="screen-box">
+      <span class="screen-icon">🎲</span>
+      <h2>Score Tracker</h2>
+      <p>Sign in with Google to start tracking your games. Your data lives in your own Drive.</p>
+      <div id="googleSignInButton" style="display:flex; justify-content:center; margin:20px 0;"></div>
+      <small>Private spreadsheet · Google Drive · Your account only</small>
+    </div>
+  </div>
+</div>
 
 <script>
   async function loadActiveSessions() {
@@ -47,38 +74,50 @@
     const active = sessions.filter(s => s.Status === 'Active');
     const games = await loadGames();
     const gameMap = Object.fromEntries(games.map(g => [g.GameID, g.GameName]));
-    const html = active.map(s => `
-      <div class="active-session">
-        <div><strong>${gameMap[s.GameID] || s.GameID}</strong> (${s.Type})</div>
-        <div>Date: ${s.Date} | Session ID: ${s.SessionID}</div>
-        <div style="margin-top:6px">
-          <button class="btn-cancel" onclick="location.href='record_round.html?session=${s.SessionID}'">➕ Add Round</button>
-          <button class="btn-save" onclick="closeAndReload('${s.SessionID}')">🏁 Close Session</button>
+
+    if (!active.length) {
+      document.getElementById('activeSessions').innerHTML =
+        `<div class="empty-state"><span class="empty-icon">😴</span><p>No active sessions. Create one!</p></div>`;
+      return;
+    }
+
+    document.getElementById('activeSessions').innerHTML = active.map(s => `
+      <div class="session-row">
+        <div class="session-row-title">${escapeHtml(gameMap[s.GameID] || 'Unknown Game')}</div>
+        <div class="session-row-meta">${s.Type} · ${formatDate(s.Date)}</div>
+        <div class="session-row-btns">
+          <button class="session-btn primary" onclick="location.href='pages/record_round.html?session=${s.SessionID}'">
+            📝 Add Round
+          </button>
+          <button class="session-btn danger" onclick="closeAndReload('${s.SessionID}')">
+            🏁 Close
+          </button>
         </div>
       </div>
     `).join('');
-    document.getElementById('activeSessions').innerHTML = html || '<div class="empty-state">No active sessions. Create one!</div>';
   }
 
   async function closeAndReload(sessionId) {
-    if (confirm('Close this session? Winner will be determined by lowest total points.')) {
-      await closeSession(sessionId);
+    if (!confirm('Close this session? Winner = lowest total points.')) return;
+    try {
+      const result = await closeSession(sessionId);
+      showToast('Session closed! 🏆');
       await loadActiveSessions();
+    } catch(e) {
+      showToast('Error closing session', 'error');
     }
   }
 
-  function showGoogleSignIn() {
+  function handleLogout() {
+    if (!confirm('Sign out?')) return;
+    localStorage.removeItem('google_token');
+    sessionStorage.removeItem('gapi_access_token');
+    location.reload();
+  }
+
+  function showLoginScreen() {
     document.getElementById('loadingOverlay').style.display = 'none';
-    const loginDiv = document.getElementById('loginContainer');
-    loginDiv.style.display = 'block';
-    loginDiv.innerHTML = `
-      <div class="card" style="max-width:400px; margin:0 auto;">
-        <h2 style="margin-bottom:20px">🎲 Café Score Tracker</h2>
-        <p>Sign in with your Google account to start.</p>
-        <div id="googleSignInButton" style="display:flex; justify-content:center; margin:20px 0;"></div>
-        <small>Your data will be stored in a private spreadsheet in your Google Drive.</small>
-      </div>
-    `;
+    document.getElementById('loginScreen').style.display = 'block';
     google.accounts.id.initialize({
       client_id: CLIENT_ID,
       callback: (response) => {
@@ -86,19 +125,22 @@
         window.location.reload();
       }
     });
-    google.accounts.id.renderButton(document.getElementById('googleSignInButton'), { theme: 'outline', size: 'large' });
+    google.accounts.id.renderButton(
+      document.getElementById('googleSignInButton'),
+      { theme: 'outline', size: 'large' }
+    );
   }
 
   window.onload = async () => {
     await initPageAuth({
-      onNeedLogin: () => showGoogleSignIn(),
+      onNeedLogin: () => showLoginScreen(),
       onReady: async () => {
-        document.getElementById('loginContainer').style.display = 'none';
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         await loadActiveSessions();
       }
     });
+    renderBottomNav('home');
   };
 </script>
 </body>
