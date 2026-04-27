@@ -56,10 +56,6 @@ body {
   justify-content: space-between;
   margin-bottom: 24px; gap: 8px;
 }
-/* Keep sub‑page titles (with back button) on the left */
-.header:has(.back-btn) {
-  justify-content: flex-start;
-}
 .header-left    { display: flex; align-items: center; gap: 10px; }
 .header h1      { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
 .header-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
@@ -240,40 +236,35 @@ input[type="checkbox"] {
 /* ── Bottom navigation ── */
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-  display: flex; align-items: center; justify-content: center;
-  padding: 8px 10px 10px;
-  background: rgba(50,42,130,0.88); backdrop-filter: blur(20px);
+  display: flex; align-items: stretch; justify-content: center;
+  padding: 10px 12px 12px;
+  background: rgba(40,34,110,0.96); backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+  border-top: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.22);
 }
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-  display: flex; align-items: center; justify-content: stretch;   /* was center */
-  padding: 8px 10px 10px;
-  background: rgba(50,42,130,0.88); backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
-}
+  .bottom-nav { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 }
 .nav-tabs {
-  flex: 1;                        /* take all available space */
-  display: flex; gap: 4px;
-  list-style: none;
-  padding: 0; margin: 0;          /* kill any browser defaults */
+  display: flex; gap: 6px;
+  width: 100%; max-width: 500px;
+  list-style: none; margin: 0; padding: 0;
 }
+.nav-tabs li { flex: 1; display: flex; }
 .nav-tab {
-  flex: 1; display: flex; flex-direction: column; align-items: center;
-  gap: 2px; padding: 6px 2px; border-radius: 12px;
-  border: none; background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.70);
-  font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600;
-  cursor: pointer; transition: all 0.15s; min-width: 0;
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 7px 4px 6px; border-radius: 14px;
+  border: none; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.60);
+  font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s; min-width: 0; line-height: 1.1;
 }
-.nav-tab:active { background: rgba(255,255,255,0.22); }
-.nav-tab.active { background: rgba(255,255,255,0.50); color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.28); font-weight: 700; }
-.nav-tab-icon   { font-size: 18px; line-height: 1; }
+.nav-tab:active { transform: scale(0.94); background: rgba(255,255,255,0.18); }
+.nav-tab.active {
+  background: rgba(255,255,255,0.22); color: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.30); font-weight: 700;
+}
+.nav-tab-icon { font-size: 22px; line-height: 1; display: block; }
 
 /* ── Modal (bottom sheet) ── */
 .modal-backdrop {
@@ -411,8 +402,8 @@ input[type="checkbox"] {
   .submit-btn { padding: 13px; font-size: 14px; }
   .cat-icon { width: 36px; height: 36px; border-radius: 10px; font-size: 17px; }
   .exp-cat  { font-size: 13px; }
-  .nav-tab  { font-size: 9px; padding: 5px 1px; gap: 1px; }
-  .nav-tab-icon { font-size: 16px; }
+  .nav-tab  { font-size: 10px; padding: 6px 2px; gap: 2px; }
+  .nav-tab-icon { font-size: 20px; }
   .quick-card { padding: 14px 10px; }
   .quick-card-icon { font-size: 24px; }
   .quick-card-label { font-size: 12px; }
@@ -440,82 +431,3 @@ input[type="checkbox"] {
 
 /* ── Prevent horizontal scroll everywhere ── */
 .container, .card, .modal, .sheet { overflow-x: hidden; }
-
-/* ── Toggle switch ── */
-.toggle-switch {
-  display: inline-flex; align-items: center; gap: 8px;
-}
-.toggle-switch input[type="checkbox"] {
-  height: 0; width: 0; visibility: hidden; position: absolute;
-}
-.toggle-switch label.toggle-label {
-  cursor: pointer;
-  width: 44px; height: 24px;
-  background: #ccc;
-  border-radius: 24px;
-  position: relative;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-.toggle-switch label.toggle-label::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px; height: 20px;
-  background: #fff;
-  border-radius: 50%;
-  transition: left 0.2s ease;
-}
-.toggle-switch input:checked + label.toggle-label {
-  background: var(--brand);
-}
-.toggle-switch input:checked + label.toggle-label::after {
-  left: calc(100% - 22px);   /* 44px - 2px right padding - 20px knob = 22px from left */
-}
-
-/* ── Radio with green highlight ── */
-.radio-group {
-  display: flex; gap: 12px;
-}
-.radio-group label {
-  display: inline-flex; align-items: center;
-  font-size: 14px; font-weight: 600;
-  color: var(--text);
-  text-transform: none; letter-spacing: 0;
-  cursor: pointer;
-  transition: all 0.15s;
-  padding: 6px 10px;
-  border-radius: 20px;
-  margin-bottom: 0;
-}
-.radio-group label:has(input[type="radio"]:checked) {
-  background: #d1fae5;
-  color: #065f46;
-  font-weight: 700;
-}
-.radio-group input[type="radio"] {
-  accent-color: var(--success);
-}
-
-/* ── Label‑left row layout ── */
-.label-left-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 14px;
-}
-.label-left-row label {
-  min-width: 60px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-2);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0;
-}
-.controls {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
