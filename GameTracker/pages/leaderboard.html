@@ -14,6 +14,58 @@
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    /* ── Rank row ── */
+    .rank-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+    }
+    .rank-row:last-child { border-bottom: none; }
+
+    /* Number badge */
+    .rank-badge {
+      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 800;
+      background: var(--surface-2); color: var(--text-2);
+    }
+    .rank-badge.r1 { background: #fef3c7; color: #92400e; }
+    .rank-badge.r2 { background: #f1f5f9; color: #475569; }
+    .rank-badge.r3 { background: #ffedd5; color: #9a3412; }
+
+    /* Player icon pip */
+    .rank-pip {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+
+    .rank-name { flex: 1; font-weight: 700; font-size: 14px; color: var(--text); min-width: 0; }
+    .rank-pts  {
+      font-family: 'Sora', sans-serif; font-weight: 800; font-size: 15px;
+      color: var(--brand); flex-shrink: 0;
+    }
+    .rank-pts.winner { color: var(--success); }
+
+    /* ── Mode section divider inside a card ── */
+    .mode-section { margin-bottom: 20px; }
+    .mode-section:last-child { margin-bottom: 0; }
+    .mode-section-title {
+      font-size: 11px; font-weight: 700; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .mode-divider {
+      border: none; border-top: 1px solid var(--border); margin: 18px 0;
+    }
+
+    /* ── Filter card ── */
+    .filter-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--shadow);
+    }
+    .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .filter-row .form-group { margin-bottom: 0; }
+  </style>
 </head>
 <body>
 
@@ -22,20 +74,23 @@
 </div>
 
 <div class="container" id="mainApp" style="display:none">
-  <div class="header">
+
+  <!-- Header: back-btn LEFT, title CENTER -->
+  <div class="header" style="justify-content:flex-start; gap:14px">
     <button class="back-btn" onclick="history.back()">←</button>
     <h1>📊 Leaderboard</h1>
   </div>
 
-  <div class="card">
-    <div class="form-row">
-      <div class="form-group" style="margin-bottom:0">
-        <label>Game</label>
-        <select id="gameSelect"></select>
-      </div>
-      <div class="form-group" style="margin-bottom:0">
+  <!-- Filter card -->
+  <div class="filter-card">
+    <div class="filter-row">
+      <div class="form-group">
         <label>Month</label>
         <input type="month" id="monthPicker">
+      </div>
+      <div class="form-group">
+        <label>Game</label>
+        <select id="gameSelect"></select>
       </div>
     </div>
   </div>
@@ -44,26 +99,41 @@
 </div>
 
 <script>
+  /* ════════════════════════════
+     LOAD LEADERBOARD
+  ════════════════════════════ */
   async function loadLeaderboard() {
     const gameId = document.getElementById('gameSelect').value;
     const month  = document.getElementById('monthPicker').value;
-    if (!gameId || !month) return;
+    const area   = document.getElementById('boardsArea');
+    if (!gameId || !month) { area.innerHTML = ''; return; }
+
+    area.innerHTML = `<div style="text-align:center;padding:30px"><div class="spinner"></div></div>`;
 
     const [year, monthNum] = month.split('-');
-    const sessions = await loadSessions();
+
+    const [sessions, players, teams, roundsInd, roundsTeam] = await Promise.all([
+      loadSessions(), loadPlayers(), loadTeams(),
+      loadRoundsIndividual(), loadRoundsTeam()
+    ]);
+
     const closedSessions = sessions.filter(s =>
       s.GameID === gameId &&
       s.Status === 'Closed' &&
       s.Date && s.Date.startsWith(`${year}-${monthNum}`)
     );
 
-    const players   = await loadPlayers();
-    const teams     = await loadTeams();
-    const roundsInd = await loadRoundsIndividual();
-    const roundsTeam = await loadRoundsTeam();
+    if (!closedSessions.length) {
+      const d = new Date(`${year}-${monthNum}-01`);
+      const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      area.innerHTML = `<div class="card">
+        <div class="empty-state"><span class="empty-icon">📭</span>
+        <p>No closed sessions for ${label}.</p></div></div>`;
+      return;
+    }
 
-    // Individual
-    let playerScores = {};
+    /* ── Individual scores ── */
+    const playerScores = {};
     for (const sess of closedSessions.filter(s => s.Type === 'Individual')) {
       for (const r of roundsInd.filter(r => r.SessionID === sess.SessionID)) {
         for (let i = 1; i <= 4; i++) {
@@ -73,8 +143,8 @@
       }
     }
 
-    // Team
-    let teamScores = {};
+    /* ── Team scores ── */
+    const teamScores = {};
     for (const sess of closedSessions.filter(s => s.Type === 'Team')) {
       for (const r of roundsTeam.filter(r => r.SessionID === sess.SessionID)) {
         teamScores[r.TeamA_ID] = (teamScores[r.TeamA_ID] || 0) + parseFloat(r.PointsA || 0);
@@ -83,46 +153,80 @@
     }
 
     const playerBoard = Object.entries(playerScores)
-      .map(([id, pts]) => ({ name: players.find(p => p.PlayerID === id)?.PlayerName || id, points: pts }))
+      .map(([id, pts]) => {
+        const p = players.find(pl => pl.PlayerID === id);
+        return { name: p?.PlayerName || id, icon: p?.Icon || '🧑', bg: p?.BG || '#f3f4f6', points: pts };
+      })
       .sort((a, b) => a.points - b.points);
 
     const teamBoard = Object.entries(teamScores)
-      .map(([id, pts]) => ({ name: teams.find(t => t.TeamID === id)?.TeamName || id, points: pts }))
+      .map(([id, pts]) => {
+        const t = teams.find(tm => tm.TeamID === id);
+        // Build player name list from team PlayerIDs
+        const memberNames = (t?.PlayerIDs || '').split(',')
+          .map(pid => players.find(p => p.PlayerID === pid.trim())?.PlayerName || null)
+          .filter(Boolean).join(' · ');
+        return { name: t?.TeamName || id, icon: t?.Icon || '🏅', bg: t?.BG || '#fef3c7', members: memberNames, points: pts };
+      })
       .sort((a, b) => a.points - b.points);
 
-    const rankClass = (i) => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
-    const rankIcon  = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+    /* ── Render ── */
+    const badgeClass = i => i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
+    const minPts = arr => arr.length ? arr[0].points : null;
 
-    function renderBoard(data, emptyMsg) {
-      if (!data.length) return `<div class="empty-state"><p>${emptyMsg}</p></div>`;
-      return data.map((item, i) => `
-        <div class="rank-item">
-          <div class="rank-num ${rankClass(i)}">${rankIcon(i)}</div>
-          <div class="rank-info"><div class="rank-name">${escapeHtml(item.name)}</div></div>
-          <div class="rank-pts">${item.points} pts</div>
-        </div>
-      `).join('');
+    function renderPlayerRow(item, i) {
+      const isWinner = item.points === minPts(playerBoard);
+      return `
+        <div class="rank-row">
+          <div class="rank-badge ${badgeClass(i)}">${i + 1}</div>
+          <div class="rank-pip" style="background:${item.bg}">${item.icon}</div>
+          <div class="rank-name">${escapeHtml(item.name)}</div>
+          <div class="rank-pts${isWinner?' winner':''}">${item.points} pts</div>
+        </div>`;
     }
 
-    let html = '';
+    function renderTeamRow(item, i) {
+      const isWinner = item.points === minPts(teamBoard);
+      return `
+        <div class="rank-row">
+          <div class="rank-badge ${badgeClass(i)}">${i + 1}</div>
+          <div class="rank-pip" style="background:${item.bg}">${item.icon}</div>
+          <div class="rank-name">
+            <div>${escapeHtml(item.name)}</div>
+            ${item.members ? `<div style="font-size:11px;color:var(--text-3);font-weight:500;margin-top:1px">${escapeHtml(item.members)}</div>` : ''}
+          </div>
+          <div class="rank-pts${isWinner?' winner':''}">${item.points} pts</div>
+        </div>`;
+    }
+
+    // One card per game — sections inside for each mode
+    let html = '<div class="card">';
+
     if (playerBoard.length) {
-      html += `<div class="card">
-        <div class="card-title">👤 Individual Ranking</div>
-        ${renderBoard(playerBoard, '')}
+      html += `<div class="mode-section">
+        <div class="mode-section-title">👤 Individual</div>
+        ${playerBoard.map(renderPlayerRow).join('')}
       </div>`;
     }
+
+    if (playerBoard.length && teamBoard.length) {
+      html += `<hr class="mode-divider">`;
+    }
+
     if (teamBoard.length) {
-      html += `<div class="card">
-        <div class="card-title">🏆 Team Ranking</div>
-        ${renderBoard(teamBoard, '')}
+      html += `<div class="mode-section">
+        <div class="mode-section-title">🏆 Team</div>
+        ${teamBoard.map(renderTeamRow).join('')}
       </div>`;
     }
-    if (!playerBoard.length && !teamBoard.length) {
-      html = `<div class="card"><div class="empty-state"><span class="empty-icon">📭</span><p>No closed sessions for this game in ${month}.</p></div></div>`;
-    }
-    document.getElementById('boardsArea').innerHTML = html;
+
+    html += '</div>';
+    area.innerHTML = html;
   }
 
+  /* ════════════════════════════
+     PAGE INIT
+  ════════════════════════════ */
   window.onload = async () => {
     await initPageAuth({
       onNeedLogin: () => { location.href = '../Home.html'; },
@@ -132,7 +236,9 @@
 
         const games = await loadGames();
         const gameSelect = document.getElementById('gameSelect');
-        gameSelect.innerHTML = games.map(g => `<option value="${g.GameID}">${escapeHtml(g.GameName)}</option>`).join('');
+        gameSelect.innerHTML = games.map(g =>
+          `<option value="${g.GameID}">${escapeHtml(g.GameName)}</option>`
+        ).join('');
         document.getElementById('monthPicker').value = new Date().toISOString().slice(0, 7);
 
         gameSelect.addEventListener('change', loadLeaderboard);
