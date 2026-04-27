@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="images/icon.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="images/icon.png">
+  <link rel="shortcut icon" href="images/icon.png">
+  <link rel="icon" type="image/png" href="images/icon.png">
+  <title>New Session</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="utils.js"></script>
+  <script src="auth.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+<div id="loadingOverlay" class="loading-overlay"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+<div class="container" id="mainApp" style="display:none">
+  <div class="header"><button class="back-btn" onclick="history.back()">←</button><h1>➕ New Session</h1></div>
+  <div class="card">
+    <div class="form-group"><label>Game</label><select id="gameSelect"></select></div>
+    <div class="form-group"><label>Date</label><input type="date" id="sessionDate"></div>
+    <div class="form-group"><label>Type</label><select id="typeSelect"><option value="Individual">Individual</option><option value="Team">Team</option></select></div>
+    <div id="participantsArea"></div>
+    <button class="submit-btn" id="createBtn">Start Session</button>
+  </div>
+</div>
+<script>
+  let games = [];
+  let allPlayers = [];
+  let allTeams = [];
+  async function loadData() {
+    games = await loadGames();
+    allPlayers = await loadPlayers();
+    allTeams = await loadTeams();
+    const gameSelect = document.getElementById('gameSelect');
+    gameSelect.innerHTML = games.map(g => `<option value="${g.GameID}" data-individual="${g.AllowsIndividual}" data-team="${g.AllowsTeam}" data-players="${g.TotalPlayers}">${g.GameName}</option>`).join('');
+    gameSelect.addEventListener('change', updateParticipantsForm);
+    document.getElementById('typeSelect').addEventListener('change', updateParticipantsForm);
+    updateParticipantsForm();
+    document.getElementById('sessionDate').value = new Date().toISOString().slice(0,10);
+  }
+function updateParticipantsForm() {
+  const gameId = document.getElementById('gameSelect').value;
+  const game = games.find(g => g.GameID === gameId);
+  if (!game) return;
+  const type = document.getElementById('typeSelect').value;
+  const container = document.getElementById('participantsArea');
+  
+  if (type === 'Individual' && game.AllowsIndividual !== 'TRUE') {
+    container.innerHTML = '<div class="empty-state">This game does not allow individual mode</div>';
+    return;
+  }
+  if (type === 'Team' && game.AllowsTeam !== 'TRUE') {
+    container.innerHTML = '<div class="empty-state">This game does not allow team mode</div>';
+    return;
+  }
+  
+  if (type === 'Individual') {
+    const playersNeeded = parseInt(game.TotalPlayers);
+    const activePlayers = allPlayers.filter(p => p.Status === 'Active');
+    container.innerHTML = `<label>Select exactly ${playersNeeded} players:</label><div id="playerCheckboxes">`;
+    activePlayers.forEach(p => {
+      let genderIcon = '🧑';
+      if (p.Gender === 'Male') genderIcon = '👨';
+      else if (p.Gender === 'Female') genderIcon = '👩';
+      container.innerHTML += `<label style="display:inline-block; margin-right:12px"><input type="checkbox" value="${p.PlayerID}"> ${genderIcon} ${escapeHtml(p.PlayerName)}</label>`;
+    });
+    container.innerHTML += `</div><div id="playerError" style="color:red; display:none">Select exactly ${playersNeeded} players</div>`;
+  } else {
+    const gameTeams = allTeams.filter(t => t.GameID === gameId && t.Status === 'Active');
+    if (gameTeams.length < 2) {
+      container.innerHTML = '<div class="empty-state">Need at least 2 teams for this game. Create teams first.</div>';
+    } else {
+      container.innerHTML = `<label>Select 2 teams:</label>
+        <select id="teamASelect"><option value="">Select Team A</option>${gameTeams.map(t => `<option value="${t.TeamID}">${escapeHtml(t.TeamName)}</option>`).join('')}</select>
+        <select id="teamBSelect"><option value="">Select Team B</option>${gameTeams.map(t => `<option value="${t.TeamID}">${escapeHtml(t.TeamName)}</option>`).join('')}</select>`;
+    }
+  }
+}
+  window.onload = async () => {
+    await initPageAuth({
+      onNeedLogin: () => { window.location.href = 'index.html'; },
+      onReady: async () => {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        await loadData();
+      }
+    });
+    document.getElementById('createBtn').onclick = async () => {
+      const gameId = document.getElementById('gameSelect').value;
+      const date = document.getElementById('sessionDate').value;
+      const type = document.getElementById('typeSelect').value;
+      if (!gameId || !date) return alert('Select game and date');
+      let participantIds = [];
+      if (type === 'Individual') {
+        const checkboxes = document.querySelectorAll('#playerCheckboxes input:checked');
+        participantIds = Array.from(checkboxes).map(cb => cb.value);
+        const game = games.find(g => g.GameID === gameId);
+        if (participantIds.length !== parseInt(game.TotalPlayers)) return alert(`Select exactly ${game.TotalPlayers} players`);
+      } else {
+        const teamA = document.getElementById('teamASelect').value;
+        const teamB = document.getElementById('teamBSelect').value;
+        if (!teamA || !teamB || teamA === teamB) return alert('Select two different teams');
+        participantIds = [teamA, teamB];
+      }
+      const sessionId = await addSession(gameId, date, type);
+      await addSessionParticipants(sessionId, participantIds, type);
+      alert('Session created!');
+      window.location.href = 'record_round.html?session=' + sessionId;
+    };
+  };
+</script>
+</body>
+</html>
