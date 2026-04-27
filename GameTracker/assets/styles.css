@@ -60,6 +60,11 @@ body {
 .header h1      { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
 .header-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
 
+/* Sub‑page headers: keep back button and title on the left */
+.header:has(.back-btn) {
+  justify-content: flex-start;
+}
+
 /* Back button */
 .back-btn {
   width: 38px; height: 38px; border-radius: 50%;
