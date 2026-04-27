@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="images/icon.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="images/icon.png">
+  <link rel="shortcut icon" href="images/icon.png">
+  <link rel="icon" type="image/png" href="images/icon.png">
+  <title>Games</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="utils.js"></script>
+  <script src="auth.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    .game-card { background: var(--surface-2); border-radius: var(--radius-md); padding: 12px; margin-bottom: 12px; }
+    .game-name { font-weight: 700; font-size: 16px; }
+  </style>
+</head>
+<body>
+<div id="loadingOverlay" class="loading-overlay"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+<div class="container" id="mainApp" style="display:none">
+  <div class="header"><button class="back-btn" onclick="history.back()">←</button><h1>🎮 Games</h1></div>
+  <div class="card">
+    <div class="card-title">Add New Game</div>
+    <div class="form-group"><label>Game Name</label><input type="text" id="gameName" placeholder="e.g. Backgammon"></div>
+    <div class="form-group"><label>Total Players</label><input type="number" id="totalPlayers" min="2" max="10" value="2"></div>
+    <div class="form-row">
+      <label><input type="checkbox" id="allowsIndividual"> Allows Individual</label>
+      <label><input type="checkbox" id="allowsTeam"> Allows Team</label>
+    </div>
+    <div class="form-group" id="playersPerTeamGroup" style="display:none"><label>Players per Team</label><input type="number" id="playersPerTeam" min="1" max="5" value="2"></div>
+    <button class="submit-btn" id="addBtn">+ Add Game</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Existing Games</div>
+    <div id="gamesList"></div>
+  </div>
+</div>
+<script>
+  document.getElementById('allowsTeam').addEventListener('change', function() {
+    document.getElementById('playersPerTeamGroup').style.display = this.checked ? 'block' : 'none';
+  });
+  async function loadGamesList() {
+    const games = await loadGames();
+    document.getElementById('gamesList').innerHTML = games.map(g => `
+      <div class="game-card">
+        <div class="game-name">${escapeHtml(g.GameName)}</div>
+        <div class="exp-meta">ID: ${g.GameID} | Players: ${g.TotalPlayers}</div>
+        <div class="exp-meta">Individual: ${g.AllowsIndividual === 'TRUE' ? '✅' : '❌'} | Team: ${g.AllowsTeam === 'TRUE' ? '✅' : '❌'} ${g.PlayersPerTeam ? `(${g.PlayersPerTeam}/team)` : ''}</div>
+      </div>
+    `).join('') || '<div class="empty-state">No games defined</div>';
+  }
+  window.onload = async () => {
+    await initPageAuth({
+      onNeedLogin: () => { window.location.href = 'index.html'; },
+      onReady: async () => {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        await loadGamesList();
+      }
+    });
+    document.getElementById('addBtn').onclick = async () => {
+      const name = document.getElementById('gameName').value.trim();
+      const totalPlayers = parseInt(document.getElementById('totalPlayers').value);
+      const allowsIndividual = document.getElementById('allowsIndividual').checked;
+      const allowsTeam = document.getElementById('allowsTeam').checked;
+      const playersPerTeam = allowsTeam ? parseInt(document.getElementById('playersPerTeam').value) : null;
+      if (!name || totalPlayers < 2) return alert('Enter valid game name and total players');
+      await addGame(name, totalPlayers, allowsIndividual, allowsTeam, playersPerTeam);
+      document.getElementById('gameName').value = '';
+      await loadGamesList();
+    };
+  };
+</script>
+</body>
+</html>

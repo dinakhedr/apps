@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="images/icon.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="images/icon.png">
+  <link rel="shortcut icon" href="images/icon.png">
+  <link rel="icon" type="image/png" href="images/icon.png">
+  <title>Teams</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="utils.js"></script>
+  <script src="auth.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+<div id="loadingOverlay" class="loading-overlay"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+<div class="container" id="mainApp" style="display:none">
+  <div class="header"><button class="back-btn" onclick="history.back()">←</button><h1>🏆 Teams</h1></div>
+  <div class="card">
+    <div class="card-title">Create Team</div>
+    <div class="form-group"><label>Game</label><select id="gameSelect"></select></div>
+    <div class="form-group"><label>Team Name</label><input type="text" id="teamName" placeholder="e.g. Spade Kings"></div>
+    <div class="form-group"><label>Select Players (exactly N)</label><div id="playerCheckboxes"></div></div>
+    <button class="submit-btn" id="createBtn">+ Create Team</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Teams by Game</div>
+    <div id="teamsList"></div>
+  </div>
+</div>
+<script>
+  let allPlayers = [];
+  let selectedGame = null;
+  async function loadPlayersAndGames() {
+    allPlayers = await loadPlayers();
+    const games = await loadGames();
+    const teamGames = games.filter(g => g.AllowsTeam === 'TRUE');
+    const gameSelect = document.getElementById('gameSelect');
+    gameSelect.innerHTML = '<option value="">Select a game</option>' + teamGames.map(g => `<option value="${g.GameID}" data-players-per-team="${g.PlayersPerTeam}">${g.GameName}</option>`).join('');
+    gameSelect.addEventListener('change', () => {
+      selectedGame = gameSelect.value;
+      const opt = gameSelect.options[gameSelect.selectedIndex];
+      const needed = parseInt(opt.dataset.playersPerTeam);
+      renderPlayerCheckboxes(needed);
+    });
+    await loadTeamsList();
+  }
+function renderPlayerCheckboxes(needed) {
+  const container = document.getElementById('playerCheckboxes');
+  container.innerHTML = `<div class="form-group"><label>Select exactly ${needed} players:</label><div>`;
+  allPlayers.filter(p => p.Status === 'Active').forEach(p => {
+    const genderIcon = p.Gender === 'Male' ? '👨' : (p.Gender === 'Female' ? '👩' : '🧑');
+    container.innerHTML += `<label style="display:inline-block; margin-right:12px"><input type="checkbox" value="${p.PlayerID}"> ${genderIcon} ${escapeHtml(p.PlayerName)}</label>`;
+  });
+  container.innerHTML += `</div></div><div id="playerError" style="color:red; display:none">Select exactly ${needed} players</div>`;
+}
+  async function loadTeamsList() {
+    const teams = await loadTeams();
+    const games = await loadGames();
+    const gameMap = Object.fromEntries(games.map(g => [g.GameID, g.GameName]));
+    const grouped = {};
+    teams.forEach(t => { if (!grouped[t.GameID]) grouped[t.GameID] = []; grouped[t.GameID].push(t); });
+    let html = '';
+    for (let gid in grouped) {
+      html += `<div class="card" style="margin-top:12px"><div class="card-title">${gameMap[gid] || gid}</div>`;
+      grouped[gid].forEach(t => {
+        const playerNames = t.PlayerIDs.split(',').map(pid => allPlayers.find(p => p.PlayerID === pid)?.PlayerName || pid).join(', ');
+        html += `<div class="expense-item"><div class="exp-details"><div class="exp-cat">${escapeHtml(t.TeamName)}</div><div class="exp-meta">Players: ${playerNames}</div></div><div class="exp-amount">${t.Status}</div></div>`;
+      });
+      html += `</div>`;
+    }
+    document.getElementById('teamsList').innerHTML = html || '<div class="empty-state">No teams yet. Create one!</div>';
+  }
+  window.onload = async () => {
+    await initPageAuth({
+      onNeedLogin: () => { window.location.href = 'index.html'; },
+      onReady: async () => {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        await loadPlayersAndGames();
+      }
+    });
+    document.getElementById('createBtn').onclick = async () => {
+      if (!selectedGame) return alert('Select a game');
+      const teamName = document.getElementById('teamName').value.trim();
+      const checkboxes = document.querySelectorAll('#playerCheckboxes input:checked');
+      const selectedPlayers = Array.from(checkboxes).map(cb => cb.value);
+      const opt = document.getElementById('gameSelect').options[document.getElementById('gameSelect').selectedIndex];
+      const needed = parseInt(opt.dataset.playersPerTeam);
+      if (selectedPlayers.length !== needed) return alert(`Select exactly ${needed} players`);
+      if (!teamName) return alert('Enter team name');
+      await addTeam(selectedGame, teamName, selectedPlayers);
+      document.getElementById('teamName').value = '';
+      checkboxes.forEach(cb => cb.checked = false);
+      await loadTeamsList();
+    };
+  };
+</script>
+</body>
+</html>
