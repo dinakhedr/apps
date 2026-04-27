@@ -14,6 +14,76 @@
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    /* ── Mode pill selector (reused from games) ── */
+    .type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+    .type-pill {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; border-radius: var(--radius-sm);
+      border: 2px solid var(--border); background: var(--surface-2);
+      cursor: pointer; transition: all 0.18s; user-select: none;
+    }
+    .type-pill.active { border-color: var(--brand); background: #ededff; box-shadow: 0 0 0 3px rgba(91,94,244,0.10); }
+    .type-pill-check {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid var(--border); background: var(--surface); transition: all 0.18s;
+    }
+    .type-pill.active .type-pill-check { background: var(--brand); border-color: var(--brand); }
+    .type-pill.active .type-pill-check::before { content: '✓'; display: flex; align-items: center; justify-content: center; height: 100%; font-size: 12px; font-weight: 900; color: #fff; }
+    .type-pill-title { font-size: 14px; font-weight: 700; color: var(--text); display: block; }
+    .type-pill-sub   { font-size: 11px; color: var(--text-3); }
+
+    /* ── Player selector grid ── */
+    .player-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px; }
+    .player-sel-card {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      border: 2px solid var(--border); background: var(--surface-2);
+      cursor: pointer; transition: all 0.15s; user-select: none;
+    }
+    .player-sel-card.selected { border-color: var(--brand); background: #ededff; }
+    .player-sel-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .player-sel-name { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .player-sel-check {
+      width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid var(--border); background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; transition: all 0.15s;
+    }
+    .player-sel-card.selected .player-sel-check { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+    /* ── Team selector cards ── */
+    .team-selector { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .team-sel-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: var(--radius-sm);
+      border: 2px solid var(--border); background: var(--surface-2);
+      cursor: pointer; transition: all 0.15s; user-select: none;
+    }
+    .team-sel-card.selected { border-color: var(--brand); background: #ededff; }
+    .team-sel-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .team-sel-info { flex: 1; min-width: 0; }
+    .team-sel-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .team-sel-players { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .team-sel-badge {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid var(--border); background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; color: #fff; transition: all 0.15s;
+    }
+    .team-sel-card.selected .team-sel-badge { background: var(--brand); border-color: var(--brand); }
+
+    /* ── Selection counter ── */
+    .sel-count { font-size: 12px; color: var(--text-3); margin-top: 8px; }
+    .sel-count.ready { color: var(--success); font-weight: 700; }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px; font-weight: 700; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      display: block; margin-bottom: 8px;
+    }
+  </style>
 </head>
 <body>
 
@@ -28,95 +98,243 @@
   </div>
 
   <div class="card">
+
+    <!-- Game -->
     <div class="form-group">
       <label>Game</label>
       <select id="gameSelect"></select>
     </div>
+
+    <!-- Date -->
     <div class="form-group">
       <label>Date</label>
       <input type="date" id="sessionDate">
     </div>
-    <div class="form-group">
-      <label>Mode</label>
-      <select id="typeSelect">
-        <option value="Individual">Individual</option>
-        <option value="Team">Team</option>
-      </select>
+
+    <!-- Mode type pills -->
+    <span class="section-label">Mode</span>
+    <div class="type-row">
+      <div class="type-pill active" id="pillInd" onclick="selectType('Individual')">
+        <div class="type-pill-check" id="checkInd"></div>
+        <div>
+          <span class="type-pill-title">Individual</span>
+          <span class="type-pill-sub">Players compete solo</span>
+        </div>
+      </div>
+      <div class="type-pill" id="pillTeam" onclick="selectType('Team')">
+        <div class="type-pill-check" id="checkTeam"></div>
+        <div>
+          <span class="type-pill-title">Team</span>
+          <span class="type-pill-sub">Teams compete together</span>
+        </div>
+      </div>
     </div>
+
+    <!-- Participants area -->
     <div id="participantsArea"></div>
+
     <button class="submit-btn" id="createBtn">🎮 Start Session</button>
   </div>
 </div>
 
 <script>
   let games = [], allPlayers = [], allTeams = [];
+  let selectedType = 'Individual';
+  let selectedPlayerIds = new Set();
+  let selectedTeamIds   = [null, null]; // [teamA, teamB]
 
+  /* ════════════════════════════
+     TYPE PILLS
+  ════════════════════════════ */
+  function selectType(type) {
+    selectedType = type;
+    document.getElementById('pillInd').classList.toggle('active',  type === 'Individual');
+    document.getElementById('pillTeam').classList.toggle('active', type === 'Team');
+    selectedPlayerIds.clear();
+    selectedTeamIds = [null, null];
+    updateParticipantsForm();
+  }
+
+  /* ════════════════════════════
+     LOAD DATA
+  ════════════════════════════ */
   async function loadData() {
-    games     = await loadGames();
+    games      = await loadGames();
     allPlayers = await loadPlayers();
-    allTeams  = await loadTeams();
+    allTeams   = await loadTeams();
+
     const gameSelect = document.getElementById('gameSelect');
     gameSelect.innerHTML = games.map(g =>
-      `<option value="${g.GameID}" data-ind="${g.AllowsIndividual}" data-team="${g.AllowsTeam}" data-players="${g.TotalPlayers}">${escapeHtml(g.GameName)}</option>`
+      `<option value="${g.GameID}"
+         data-ind="${g.AllowsIndividual}"
+         data-team="${g.AllowsTeam}"
+         data-players="${g.TotalPlayers}">
+         ${escapeHtml(g.GameName)}
+       </option>`
     ).join('');
-    gameSelect.addEventListener('change', updateParticipantsForm);
-    document.getElementById('typeSelect').addEventListener('change', updateParticipantsForm);
+
+    gameSelect.addEventListener('change', () => {
+      selectedPlayerIds.clear();
+      selectedTeamIds = [null, null];
+      updateParticipantsForm();
+    });
+
     document.getElementById('sessionDate').value = new Date().toISOString().slice(0, 10);
     updateParticipantsForm();
   }
 
+  /* ════════════════════════════
+     PARTICIPANTS FORM
+  ════════════════════════════ */
   function updateParticipantsForm() {
-    const gameId = document.getElementById('gameSelect').value;
-    const game = games.find(g => g.GameID === gameId);
-    if (!game) return;
-    const type = document.getElementById('typeSelect').value;
+    const gameId  = document.getElementById('gameSelect').value;
+    const game    = games.find(g => g.GameID === gameId);
     const container = document.getElementById('participantsArea');
+    if (!game) { container.innerHTML = ''; return; }
 
-    if (type === 'Individual' && game.AllowsIndividual !== 'TRUE') {
+    // Validate mode vs game
+    if (selectedType === 'Individual' && game.AllowsIndividual !== 'TRUE') {
       container.innerHTML = `<div class="warn-box">⚠️ This game does not support Individual mode.</div>`;
       return;
     }
-    if (type === 'Team' && game.AllowsTeam !== 'TRUE') {
+    if (selectedType === 'Team' && game.AllowsTeam !== 'TRUE') {
       container.innerHTML = `<div class="warn-box">⚠️ This game does not support Team mode.</div>`;
       return;
     }
 
-    if (type === 'Individual') {
-      const needed = parseInt(game.TotalPlayers);
-      const active = allPlayers.filter(p => p.Status === 'Active');
-      container.innerHTML = `
-        <div class="form-group">
-          <label>Select exactly ${needed} players</label>
-          <div id="playerCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:8px"></div>
-          <div id="playerError" style="color:var(--danger);font-size:12px;margin-top:6px;display:none">
-            Please select exactly ${needed} players.
-          </div>
-        </div>`;
-      document.getElementById('playerCheckboxes').innerHTML = active.map(p => {
-        const icon = p.Gender === 'Male' ? '👨' : p.Gender === 'Female' ? '👩' : '🧑';
-        return `<label style="display:inline-flex;align-items:center;font-size:14px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer">
-          <input type="checkbox" value="${p.PlayerID}" style="width:auto;margin-right:6px;accent-color:var(--brand)"> ${icon} ${escapeHtml(p.PlayerName)}
-        </label>`;
-      }).join('');
+    if (selectedType === 'Individual') {
+      renderPlayerSelector(parseInt(game.TotalPlayers));
     } else {
-      const gameTeams = allTeams.filter(t => t.GameID === gameId && t.Status === 'Active');
-      if (gameTeams.length < 2) {
-        container.innerHTML = `<div class="warn-box">⚠️ Need at least 2 active teams for this game. <a href="teams.html" style="color:var(--brand);font-weight:700">Create teams →</a></div>`;
-      } else {
-        const opts = gameTeams.map(t => `<option value="${t.TeamID}">${escapeHtml(t.TeamName)}</option>`).join('');
-        container.innerHTML = `
-          <div class="form-group">
-            <label>Team A</label>
-            <select id="teamASelect"><option value="">Select team…</option>${opts}</select>
-          </div>
-          <div class="form-group">
-            <label>Team B</label>
-            <select id="teamBSelect"><option value="">Select team…</option>${opts}</select>
-          </div>`;
-      }
+      renderTeamSelector(gameId);
     }
   }
 
+  /* ── Player selector ── */
+  function renderPlayerSelector(needed) {
+    const active = allPlayers.filter(p => p.Status === 'Active');
+    const container = document.getElementById('participantsArea');
+
+    if (!active.length) {
+      container.innerHTML = `<div class="warn-box">⚠️ No active players. <a href="players-teams.html" style="color:var(--brand);font-weight:700">Add players →</a></div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <span class="section-label">Select exactly ${needed} players</span>
+      <div class="player-selector" id="playerGrid"></div>
+      <div class="sel-count" id="selCount">0 of ${needed} selected</div>`;
+
+    document.getElementById('playerGrid').innerHTML = active.map(p => {
+      const ic  = p.Icon || (p.Gender === 'Female' ? '👩' : '👨');
+      const bg  = p.BG   || '#f3f4f6';
+      const sel = selectedPlayerIds.has(p.PlayerID);
+      return `
+        <div class="player-sel-card${sel?' selected':''}"
+             onclick="togglePlayer(this,'${p.PlayerID}',${needed})">
+          <div class="player-sel-icon" style="background:${bg}">${ic}</div>
+          <span class="player-sel-name">${escapeHtml(p.PlayerName)}</span>
+          <div class="player-sel-check">${sel?'✓':''}</div>
+        </div>`;
+    }).join('');
+
+    updatePlayerCount(needed);
+  }
+
+  function togglePlayer(card, pid, needed) {
+    if (selectedPlayerIds.has(pid)) {
+      selectedPlayerIds.delete(pid);
+      card.classList.remove('selected');
+      card.querySelector('.player-sel-check').textContent = '';
+    } else {
+      if (selectedPlayerIds.size >= needed) {
+        showToast(`Select exactly ${needed} players`, 'error'); return;
+      }
+      selectedPlayerIds.add(pid);
+      card.classList.add('selected');
+      card.querySelector('.player-sel-check').textContent = '✓';
+    }
+    updatePlayerCount(needed);
+  }
+
+  function updatePlayerCount(needed) {
+    const el = document.getElementById('selCount');
+    if (!el) return;
+    const n = selectedPlayerIds.size;
+    el.textContent = `${n} of ${needed} selected`;
+    el.className = `sel-count${n === needed ? ' ready' : ''}`;
+  }
+
+  /* ── Team selector ── */
+  function renderTeamSelector(gameId) {
+    // Filter by GameID only — Status column was removed from Teams sheet
+    const gameTeams = allTeams.filter(t => t.GameID === gameId);
+    const container = document.getElementById('participantsArea');
+
+    if (gameTeams.length < 2) {
+      container.innerHTML = `<div class="warn-box">⚠️ Need at least 2 teams for this game.
+        <a href="players-teams.html" style="color:var(--brand);font-weight:700">Create teams →</a></div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <span class="section-label">Select 2 teams</span>
+      <div class="team-selector" id="teamGrid"></div>
+      <div class="sel-count" id="teamSelCount">0 of 2 selected</div>`;
+
+    document.getElementById('teamGrid').innerHTML = gameTeams.map(t => {
+      const ic  = t.Icon || '🏅';
+      const bg  = t.BG   || '#fef3c7';
+      // Resolve player names for subtitle
+      const playerNames = (t.PlayerIDs || '').split(',')
+        .map(pid => allPlayers.find(p => p.PlayerID === pid.trim())?.PlayerName || null)
+        .filter(Boolean).join(', ');
+      const idx = selectedTeamIds.indexOf(t.TeamID);
+      const sel = idx !== -1;
+      const label = idx === 0 ? 'A' : idx === 1 ? 'B' : '';
+      return `
+        <div class="team-sel-card${sel?' selected':''}"
+             onclick="toggleTeam(this,'${t.TeamID}')">
+          <div class="team-sel-icon" style="background:${bg}">${ic}</div>
+          <div class="team-sel-info">
+            <div class="team-sel-name">${escapeHtml(t.TeamName)}</div>
+            <div class="team-sel-players">${escapeHtml(playerNames)}</div>
+          </div>
+          <div class="team-sel-badge">${label}</div>
+        </div>`;
+    }).join('');
+
+    updateTeamCount();
+  }
+
+  function toggleTeam(card, tid) {
+    const idx = selectedTeamIds.indexOf(tid);
+    if (idx !== -1) {
+      // Deselect
+      selectedTeamIds[idx] = null;
+      card.classList.remove('selected');
+      card.querySelector('.team-sel-badge').textContent = '';
+    } else {
+      // Find first empty slot
+      const slot = selectedTeamIds.indexOf(null);
+      if (slot === -1) { showToast('Deselect a team first', 'error'); return; }
+      selectedTeamIds[slot] = tid;
+      card.classList.add('selected');
+      card.querySelector('.team-sel-badge').textContent = slot === 0 ? 'A' : 'B';
+    }
+    updateTeamCount();
+  }
+
+  function updateTeamCount() {
+    const el = document.getElementById('teamSelCount');
+    if (!el) return;
+    const n = selectedTeamIds.filter(Boolean).length;
+    el.textContent = `${n} of 2 selected`;
+    el.className = `sel-count${n === 2 ? ' ready' : ''}`;
+  }
+
+  /* ════════════════════════════
+     PAGE INIT
+  ════════════════════════════ */
   window.onload = async () => {
     await initPageAuth({
       onNeedLogin: () => { location.href = '../Home.html'; },
@@ -130,40 +348,35 @@
     document.getElementById('createBtn').onclick = async () => {
       const gameId = document.getElementById('gameSelect').value;
       const date   = document.getElementById('sessionDate').value;
-      const type   = document.getElementById('typeSelect').value;
       if (!gameId || !date) return showToast('Select a game and date', 'error');
 
       let participantIds = [];
-      if (type === 'Individual') {
-        const checked = Array.from(document.querySelectorAll('#playerCheckboxes input:checked')).map(cb => cb.value);
-        const game = games.find(g => g.GameID === gameId);
+      const game = games.find(g => g.GameID === gameId);
+
+      if (selectedType === 'Individual') {
         const needed = parseInt(game.TotalPlayers);
-        if (checked.length !== needed) {
-          document.getElementById('playerError').style.display = 'block';
-          return;
-        }
-        document.getElementById('playerError').style.display = 'none';
-        participantIds = checked;
+        if (selectedPlayerIds.size !== needed)
+          return showToast(`Select exactly ${needed} players`, 'error');
+        participantIds = Array.from(selectedPlayerIds);
       } else {
-        const a = document.getElementById('teamASelect')?.value;
-        const b = document.getElementById('teamBSelect')?.value;
-        if (!a || !b) return showToast('Select both teams', 'error');
-        if (a === b) return showToast('Teams must be different', 'error');
+        const [a, b] = selectedTeamIds;
+        if (!a || !b) return showToast('Select 2 teams', 'error');
         participantIds = [a, b];
       }
 
       const btn = document.getElementById('createBtn');
       btn.textContent = 'Creating…'; btn.disabled = true;
       try {
-        const sessionId = await addSession(gameId, date, type);
-        await addSessionParticipants(sessionId, participantIds, type);
+        const sessionId = await addSession(gameId, date, selectedType);
+        await addSessionParticipants(sessionId, participantIds, selectedType);
         showToast('Session created! Starting…');
-        setTimeout(() => { location.href = `record_round.html?session=${sessionId}`; }, 800);
+        setTimeout(() => { location.href = `record_round.html?session=${sessionId}`; }, 700);
       } catch(e) {
         showToast('Error creating session', 'error');
         btn.textContent = '🎮 Start Session'; btn.disabled = false;
       }
     };
+
     renderBottomNav('sessions');
   };
 </script>
