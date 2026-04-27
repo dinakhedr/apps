@@ -1,4 +1,4 @@
-// utils.js – Game Score Tracker (no CLIENT_ID here)
+// utils.js – Game Score Tracker
 
 function generateGameId() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
@@ -7,16 +7,62 @@ function generateGameId() {
   return id;
 }
 
+// ── Toast helper ──
+function showToast(msg, type = 'success') {
+  let t = document.getElementById('globalToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'globalToast';
+    t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── Bottom nav renderer ──
+function renderBottomNav(active) {
+  const tabs = [
+    { id: 'home',        icon: '🏠', label: 'Home',       href: 'Home.html' },
+    { id: 'sessions',    icon: '🎮', label: 'Sessions',   href: 'pages/sessions.html' },
+    { id: 'leaderboard', icon: '📊', label: 'Leaders',    href: 'pages/leaderboard.html' },
+    { id: 'players',     icon: '👥', label: 'Players',    href: 'pages/players.html' },
+  ];
+  // Resolve hrefs relative to current page
+  const isPage = window.location.pathname.includes('/pages/');
+  const nav = document.createElement('nav');
+  nav.className = 'bottom-nav';
+  const ul = document.createElement('ul');
+  ul.className = 'nav-tabs';
+  tabs.forEach(tab => {
+    const li = document.createElement('li');
+    const href = isPage
+      ? (tab.href.startsWith('pages/') ? tab.href.replace('pages/', '') : '../' + tab.href)
+      : tab.href;
+    li.innerHTML = `<button class="nav-tab${tab.id === active ? ' active' : ''}" onclick="location.href='${href}'">
+      <span class="nav-tab-icon">${tab.icon}</span>${tab.label}
+    </button>`;
+    ul.appendChild(li);
+  });
+  nav.appendChild(ul);
+  document.body.appendChild(nav);
+}
+
+// ── Sheet helpers ──
 async function getSheetData(sheetName) {
   if (!spreadsheetId) throw new Error('No spreadsheet connected');
-  const range = `${sheetName}!A:Z`;
-  const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range });
+  const res = await gapi.client.sheets.spreadsheets.values.get({
+    spreadsheetId, range: `${sheetName}!A:Z`
+  });
   const rows = res.result.values || [];
   if (rows.length < 2) return [];
   const headers = rows[0];
   return rows.slice(1).map(row => {
     let obj = {};
-    headers.forEach((h, i) => obj[h] = row[i]);
+    headers.forEach((h, i) => obj[h] = row[i] !== undefined ? row[i] : '');
     return obj;
   });
 }
@@ -33,8 +79,9 @@ async function appendRow(sheetName, rowValues) {
 
 async function updateCell(sheetName, rowIndex, colName, value) {
   if (!spreadsheetId) return;
-  const range = `${sheetName}!A:Z`;
-  const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range });
+  const res = await gapi.client.sheets.spreadsheets.values.get({
+    spreadsheetId, range: `${sheetName}!A:Z`
+  });
   const rows = res.result.values || [];
   if (rows.length < 2) return;
   const headers = rows[0];
@@ -50,41 +97,138 @@ async function updateCell(sheetName, rowIndex, colName, value) {
   });
 }
 
-// Data loaders
-async function loadPlayers() { return await getSheetData('Players'); }
-async function loadGames() { return await getSheetData('Games'); }
-async function loadTeams() { return await getSheetData('Teams'); }
-async function loadSessions() { return await getSheetData('Sessions'); }
-async function loadSessionParticipants() { return await getSheetData('SessionParticipants'); }
-async function loadRoundsIndividual() { return await getSheetData('Rounds_Individual'); }
-async function loadRoundsTeam() { return await getSheetData('Rounds_Team'); }
+// Update an entire row by matching an ID column value
+async function updateRowById(sheetName, idCol, idValue, updates) {
+  if (!spreadsheetId) return false;
+  const res = await gapi.client.sheets.spreadsheets.values.get({
+    spreadsheetId, range: `${sheetName}!A:Z`
+  });
+  const rows = res.result.values || [];
+  if (rows.length < 2) return false;
+  const headers = rows[0];
+  const idIdx = headers.indexOf(idCol);
+  if (idIdx === -1) return false;
+  let dataRowIndex = -1;
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][idIdx] === idValue) { dataRowIndex = i; break; }
+  }
+  if (dataRowIndex === -1) return false;
+  const sheetRow = dataRowIndex + 1; // 1-indexed, no +1 for header because rows includes header at index 0
+  for (const [col, val] of Object.entries(updates)) {
+    const colIdx = headers.indexOf(col);
+    if (colIdx === -1) continue;
+    const colLetter = String.fromCharCode(65 + colIdx);
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${sheetName}!${colLetter}${sheetRow + 1}`,
+      valueInputOption: 'RAW',
+      resource: { values: [[val]] }
+    });
+  }
+  return true;
+}
 
-// Add operations
+// Delete a row by matching an ID column value
+async function deleteRowById(sheetName, idCol, idValue) {
+  if (!spreadsheetId) return false;
+  try {
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId, range: `${sheetName}!A:Z`
+    });
+    const rows = res.result.values || [];
+    if (rows.length < 2) return false;
+    const headers = rows[0];
+    const idIdx = headers.indexOf(idCol);
+    if (idIdx === -1) return false;
+    let dataRowIndex = -1;
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i][idIdx] === idValue) { dataRowIndex = i; break; }
+    }
+    if (dataRowIndex === -1) return false;
+    // Get the sheet's numeric ID
+    const sheetMeta = await gapi.client.sheets.spreadsheets.get({
+      spreadsheetId, fields: 'sheets.properties'
+    });
+    const sheetObj = sheetMeta.result.sheets.find(s => s.properties.title === sheetName);
+    if (!sheetObj) return false;
+    const sheetId = sheetObj.properties.sheetId;
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      resource: {
+        requests: [{
+          deleteDimension: {
+            range: { sheetId, dimension: 'ROWS', startIndex: dataRowIndex, endIndex: dataRowIndex + 1 }
+          }
+        }]
+      }
+    });
+    return true;
+  } catch (e) { console.error('deleteRowById error:', e); return false; }
+}
+
+// ── Data loaders ──
+async function loadPlayers()             { return await getSheetData('Players'); }
+async function loadGames()               { return await getSheetData('Games'); }
+async function loadTeams()               { return await getSheetData('Teams'); }
+async function loadSessions()            { return await getSheetData('Sessions'); }
+async function loadSessionParticipants() { return await getSheetData('SessionParticipants'); }
+async function loadRoundsIndividual()    { return await getSheetData('Rounds_Individual'); }
+async function loadRoundsTeam()          { return await getSheetData('Rounds_Team'); }
+
+// ── Add operations ──
 async function addPlayer(name, gender) {
   const playerId = generateGameId();
-  const timestamp = new Date().toISOString();
-  await appendRow('Players', [timestamp, playerId, name, gender, 'Active']);
+  await appendRow('Players', [new Date().toISOString(), playerId, name, gender, 'Active']);
   return playerId;
+}
+
+async function editPlayer(playerId, name, gender) {
+  return await updateRowById('Players', 'PlayerID', playerId, { PlayerName: name, Gender: gender });
+}
+
+async function deletePlayer(playerId) {
+  return await deleteRowById('Players', 'PlayerID', playerId);
 }
 
 async function addGame(name, totalPlayers, allowsIndividual, allowsTeam, playersPerTeam) {
   const gameId = generateGameId();
-  const timestamp = new Date().toISOString();
-  await appendRow('Games', [timestamp, gameId, name, totalPlayers, allowsIndividual, allowsTeam, playersPerTeam || null]);
+  await appendRow('Games', [
+    new Date().toISOString(), gameId, name, totalPlayers,
+    allowsIndividual ? 'TRUE' : 'FALSE',
+    allowsTeam ? 'TRUE' : 'FALSE',
+    playersPerTeam || ''
+  ]);
   return gameId;
+}
+
+async function editGame(gameId, name, totalPlayers, allowsIndividual, allowsTeam, playersPerTeam) {
+  return await updateRowById('Games', 'GameID', gameId, {
+    GameName: name,
+    TotalPlayers: totalPlayers,
+    AllowsIndividual: allowsIndividual ? 'TRUE' : 'FALSE',
+    AllowsTeam: allowsTeam ? 'TRUE' : 'FALSE',
+    PlayersPerTeam: playersPerTeam || ''
+  });
+}
+
+async function deleteGame(gameId) {
+  return await deleteRowById('Games', 'GameID', gameId);
 }
 
 async function addTeam(gameId, teamName, playerIds) {
   const teamId = generateGameId();
-  const timestamp = new Date().toISOString();
-  await appendRow('Teams', [timestamp, teamId, teamName, playerIds.join(','), 'Active']);
+  // Teams sheet: TimeStamp, TeamID, TeamName, GameID, PlayerIDs, Status
+  await appendRow('Teams', [new Date().toISOString(), teamId, teamName, gameId, playerIds.join(','), 'Active']);
   return teamId;
+}
+
+async function deleteTeam(teamId) {
+  return await deleteRowById('Teams', 'TeamID', teamId);
 }
 
 async function addSession(gameId, date, type) {
   const sessionId = generateGameId();
-  const timestamp = new Date().toISOString();
-  await appendRow('Sessions', [timestamp, sessionId, gameId, date, type, 'Active', null]);
+  await appendRow('Sessions', [new Date().toISOString(), sessionId, gameId, date, type, 'Active', '']);
   return sessionId;
 }
 
@@ -97,20 +241,20 @@ async function addSessionParticipants(sessionId, participantIds, type) {
 
 async function addRoundIndividual(sessionId, roundNumber, players, points) {
   const roundId = generateGameId();
-  const timestamp = new Date().toISOString();
-  const row = [
-    timestamp, roundId, sessionId, roundNumber,
-    players[0] || null, players[1] || null, players[2] || null, players[3] || null,
+  await appendRow('Rounds_Individual', [
+    new Date().toISOString(), roundId, sessionId, roundNumber,
+    players[0] || '', players[1] || '', players[2] || '', players[3] || '',
     points[0] || 0, points[1] || 0, points[2] || 0, points[3] || 0,
-    null
-  ];
-  await appendRow('Rounds_Individual', row);
+    ''
+  ]);
 }
 
 async function addRoundTeam(sessionId, roundNumber, teamA, teamB, pointsA, pointsB) {
   const roundId = generateGameId();
-  const timestamp = new Date().toISOString();
-  await appendRow('Rounds_Team', [timestamp, roundId, sessionId, roundNumber, teamA, teamB, pointsA, pointsB, null]);
+  await appendRow('Rounds_Team', [
+    new Date().toISOString(), roundId, sessionId, roundNumber,
+    teamA, teamB, pointsA, pointsB, ''
+  ]);
 }
 
 async function closeSession(sessionId) {
@@ -118,46 +262,44 @@ async function closeSession(sessionId) {
   const session = sessions.find(s => s.SessionID === sessionId);
   if (!session) throw new Error('Session not found');
   const rowIndex = sessions.findIndex(s => s.SessionID === sessionId);
+  let totals = {};
   if (session.Type === 'Individual') {
     const rounds = await loadRoundsIndividual();
-    const sessionRounds = rounds.filter(r => r.SessionID === sessionId);
     const participants = (await loadSessionParticipants()).filter(p => p.SessionID === sessionId);
-    let totals = {};
     for (let p of participants) totals[p.ParticipantID] = 0;
-    for (let r of sessionRounds) {
-      for (let i=1; i<=4; i++) {
+    for (let r of rounds.filter(r => r.SessionID === sessionId)) {
+      for (let i = 1; i <= 4; i++) {
         let pid = r[`Player${i}_ID`];
         if (pid && totals[pid] !== undefined) totals[pid] += parseFloat(r[`Points${i}`] || 0);
       }
     }
-    let minScore = Math.min(...Object.values(totals));
-    let winners = Object.keys(totals).filter(pid => totals[pid] === minScore);
-    let winnerId = winners.length === 1 ? winners[0] : null;
-    await updateCell('Sessions', rowIndex, 'WinnerID', winnerId);
-    await updateCell('Sessions', rowIndex, 'Status', 'Closed');
   } else {
     const rounds = await loadRoundsTeam();
-    const sessionRounds = rounds.filter(r => r.SessionID === sessionId);
     const participants = (await loadSessionParticipants()).filter(p => p.SessionID === sessionId);
-    let totals = {};
     for (let p of participants) totals[p.ParticipantID] = 0;
-    for (let r of sessionRounds) {
+    for (let r of rounds.filter(r => r.SessionID === sessionId)) {
       totals[r.TeamA_ID] = (totals[r.TeamA_ID] || 0) + parseFloat(r.PointsA || 0);
       totals[r.TeamB_ID] = (totals[r.TeamB_ID] || 0) + parseFloat(r.PointsB || 0);
     }
-    let minScore = Math.min(...Object.values(totals));
-    let winners = Object.keys(totals).filter(tid => totals[tid] === minScore);
-    let winnerId = winners.length === 1 ? winners[0] : null;
-    await updateCell('Sessions', rowIndex, 'WinnerID', winnerId);
-    await updateCell('Sessions', rowIndex, 'Status', 'Closed');
   }
+  const minScore = Math.min(...Object.values(totals));
+  const winners = Object.keys(totals).filter(id => totals[id] === minScore);
+  const winnerId = winners.length === 1 ? winners[0] : '';
+  await updateCell('Sessions', rowIndex, 'WinnerID', winnerId);
+  await updateCell('Sessions', rowIndex, 'Status', 'Closed');
+  return { totals, winnerId };
 }
 
+// ── Helpers ──
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+  return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 }
 
-function formatMoney(amount) {
-  return `EGP ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch { return dateStr; }
 }

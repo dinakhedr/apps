@@ -7,10 +7,10 @@ const DISCOVERY_DOCS = [
   'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
 ];
 const FOLDER_NAME = 'Game Score Tracker';
-const FILE_NAME = 'Game Scores';
+const FILE_NAME   = 'Game Scores';
 
-let spreadsheetId = null;
-let currentUserEmail = null;
+let spreadsheetId      = null;
+let currentUserEmail   = null;
 let currentAccessToken = null;
 
 async function initGapiClient() {
@@ -33,10 +33,13 @@ function getUserEmailFromToken(token) {
 }
 
 function saveAccessToken(token) { sessionStorage.setItem('gapi_access_token', token); }
-function getSavedAccessToken() { return sessionStorage.getItem('gapi_access_token'); }
-function clearAccessToken() { sessionStorage.removeItem('gapi_access_token'); }
+function getSavedAccessToken()  { return sessionStorage.getItem('gapi_access_token'); }
+function clearAccessToken()     { sessionStorage.removeItem('gapi_access_token'); }
+
 function isIOSSafari() {
-  return /iP(hone|od|ad)/.test(navigator.userAgent) && /WebKit/.test(navigator.userAgent) && !/CriOS|FxiOS|OPiOS|mercury/.test(navigator.userAgent);
+  return /iP(hone|od|ad)/.test(navigator.userAgent) &&
+         /WebKit/.test(navigator.userAgent) &&
+         !/CriOS|FxiOS|OPiOS|mercury/.test(navigator.userAgent);
 }
 
 async function findExistingSpreadsheet() {
@@ -56,9 +59,16 @@ async function findExistingFolder() {
 }
 
 async function ensureGameTabs() {
-  const sheets = await gapi.client.sheets.spreadsheets.get({ spreadsheetId, fields: 'sheets.properties' });
+  const sheets = await gapi.client.sheets.spreadsheets.get({
+    spreadsheetId, fields: 'sheets.properties'
+  });
   const existingTabs = sheets.result.sheets.map(s => s.properties.title);
-  const requiredTabs = ['Players', 'Games', 'Teams', 'Sessions', 'SessionParticipants', 'Rounds_Individual', 'Rounds_Team'];
+
+  const requiredTabs = [
+    'Players', 'Games', 'Teams', 'Sessions',
+    'SessionParticipants', 'Rounds_Individual', 'Rounds_Team'
+  ];
+
   for (let tab of requiredTabs) {
     if (!existingTabs.includes(tab)) {
       await gapi.client.sheets.spreadsheets.batchUpdate({
@@ -67,17 +77,22 @@ async function ensureGameTabs() {
       });
     }
   }
+
+  // Note: Teams now includes GameID column
   const headersMap = {
-    Players: ['TimeStamp','PlayerID','PlayerName','Status'],
-    Games: ['TimeStamp','GameID','GameName','TotalPlayers','AllowsIndividual','AllowsTeam','PlayersPerTeam'],
-    Teams: ['TimeStamp','TeamID','TeamName','PlayerIDs','Status'],
-    Sessions: ['TimeStamp','SessionID','GameID','Date','Type','Status','WinnerID'],
+    Players:             ['TimeStamp','PlayerID','PlayerName','Gender','Status'],
+    Games:               ['TimeStamp','GameID','GameName','TotalPlayers','AllowsIndividual','AllowsTeam','PlayersPerTeam'],
+    Teams:               ['TimeStamp','TeamID','TeamName','GameID','PlayerIDs','Status'],
+    Sessions:            ['TimeStamp','SessionID','GameID','Date','Type','Status','WinnerID'],
     SessionParticipants: ['TimeStamp','SessionID','ParticipantID','ParticipantType'],
-    Rounds_Individual: ['TimeStamp','RoundID','SessionID','RoundNumber','Player1_ID','Player2_ID','Player3_ID','Player4_ID','Points1','Points2','Points3','Points4','WinnerID'],
-    Rounds_Team: ['TimeStamp','RoundID','SessionID','RoundNumber','TeamA_ID','TeamB_ID','PointsA','PointsB','WinnerTeamID']
+    Rounds_Individual:   ['TimeStamp','RoundID','SessionID','RoundNumber','Player1_ID','Player2_ID','Player3_ID','Player4_ID','Points1','Points2','Points3','Points4','WinnerID'],
+    Rounds_Team:         ['TimeStamp','RoundID','SessionID','RoundNumber','TeamA_ID','TeamB_ID','PointsA','PointsB','WinnerTeamID']
   };
+
   for (let [tab, headers] of Object.entries(headersMap)) {
-    const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `${tab}!A1:Z1` });
+    const res = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId, range: `${tab}!A1:Z1`
+    });
     if (!res.result.values || res.result.values.length === 0) {
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId, range: `${tab}!A1:Z1`, valueInputOption: 'RAW',
@@ -92,16 +107,23 @@ async function onAccessTokenGranted(tokenResponse) {
   currentAccessToken = tokenResponse.access_token;
   saveAccessToken(currentAccessToken);
   gapi.client.setToken({ access_token: currentAccessToken });
+
   let foundId = await findExistingSpreadsheet();
   if (!foundId) {
     let folderId = await findExistingFolder();
     if (!folderId) {
-      const folder = await gapi.client.drive.files.create({ resource: { name: FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }, fields: 'id' });
+      const folder = await gapi.client.drive.files.create({
+        resource: { name: FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }, fields: 'id'
+      });
       folderId = folder.result.id;
     }
-    const sheet = await gapi.client.drive.files.create({ resource: { name: FILE_NAME, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [folderId] }, fields: 'id' });
+    const sheet = await gapi.client.drive.files.create({
+      resource: { name: FILE_NAME, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [folderId] },
+      fields: 'id'
+    });
     foundId = sheet.result.id;
   }
+
   spreadsheetId = foundId;
   localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
   await ensureGameTabs();
@@ -122,6 +144,7 @@ async function initPageAuth(callbacks) {
   }
   const savedSheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
   if (savedSheetId) spreadsheetId = savedSheetId;
+
   await initGapiClient();
   const cachedToken = getSavedAccessToken();
   if (cachedToken) {
@@ -134,11 +157,18 @@ async function initPageAuth(callbacks) {
       return;
     } catch(e) { clearAccessToken(); }
   }
+
   const tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID, scope: SCOPES, callback: onAccessTokenGranted
+    client_id: CLIENT_ID, scope: SCOPES,
+    callback: async (tokenResponse) => {
+      await onAccessTokenGranted(tokenResponse);
+      if (callbacks.onReady) callbacks.onReady(spreadsheetId, currentUserEmail, currentAccessToken);
+    }
   });
+
   if (isIOSSafari()) {
     if (callbacks.onNeedTap) callbacks.onNeedTap(() => tokenClient.requestAccessToken());
+    else tokenClient.requestAccessToken();
   } else {
     tokenClient.requestAccessToken();
   }
