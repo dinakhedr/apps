@@ -82,7 +82,7 @@ async function ensureGameTabs() {
   const headersMap = {
     Players:             ['TimeStamp','PlayerID','PlayerName','Gender','Status','Icon','BG'],
     Games:               ['TimeStamp','GameID','GameName','TotalPlayers','AllowsIndividual','AllowsTeam','PlayersPerTeam'],
-    Teams:               ['TimeStamp','TeamID','TeamName','GameID','PlayerIDs','Status'],
+    Teams:               ['TimeStamp','TeamID','TeamName','GameID','PlayerIDs','Icon','BG'],
     Sessions:            ['TimeStamp','SessionID','GameID','Date','Type','Status','WinnerID'],
     SessionParticipants: ['TimeStamp','SessionID','ParticipantID','ParticipantType'],
     Rounds_Individual:   ['TimeStamp','RoundID','SessionID','RoundNumber','Player1_ID','Player2_ID','Player3_ID','Player4_ID','Points1','Points2','Points3','Points4','WinnerID'],

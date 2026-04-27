@@ -225,11 +225,19 @@ async function deleteGame(gameId) {
   return await deleteRowById('Games', 'GameID', gameId);
 }
 
-async function addTeam(gameId, teamName, playerIds) {
+async function addTeam(gameId, teamName, playerIds, icon, bg) {
   const teamId = generateGameId();
-  // Teams sheet: TimeStamp, TeamID, TeamName, GameID, PlayerIDs, Status
-  await appendRow('Teams', [new Date().toISOString(), teamId, teamName, gameId, playerIds.join(','), 'Active']);
+  // Teams sheet: TimeStamp, TeamID, TeamName, GameID, PlayerIDs, Icon, BG
+  await appendRow('Teams', [new Date().toISOString(), teamId, teamName, gameId, playerIds.join(','), icon||'🏅', bg||'#fef3c7']);
   return teamId;
+}
+
+async function editTeam(teamId, teamName, icon, bg) {
+  return await updateRowById('Teams', 'TeamID', teamId, {
+    TeamName: teamName,
+    Icon: icon || '🏅',
+    BG: bg || '#fef3c7'
+  });
 }
 
 async function deleteTeam(teamId) {
