@@ -215,6 +215,34 @@
   }
   .budget-settings-btn:hover { border-color: var(--brand); color: var(--brand); }
 
+  /* Overall budget progress bar container */
+  .overall-budget-item {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .overall-budget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .overall-budget-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .overall-percent {
+    font-size: 10px;
+    color: var(--text-2);
+    margin-top: 5px;
+  }
+
   /* ── Recent activity section header ── */
   .expenses-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   .expenses-header h3 { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
@@ -271,6 +299,12 @@
   /* ── Edit modal grid ── */
   .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .modal-grid .full { grid-column: 1 / -1; }
+  
+  /* Responsive tweaks for overall budget */
+  @media (max-width: 390px) {
+    .overall-budget-header { flex-direction: column; align-items: flex-start; }
+    .overall-budget-title { font-size: 12px; }
+  }
   </style>
 </head>
 <body>
@@ -819,39 +853,65 @@ function openActivityActionSheet(id, type = 'expense') {
   
   sheet.classList.add('open');
 }
-// ── Budget overview ───────────────────────────────────────
+// ── Budget overview with overall progress bar ───────────────────────────────────────
 function updateBudgetOverview() {
   const card = document.getElementById('budgetCard');
+  // Build budgetMap from both CATEGORIES (with budget property) and budgets object
   const budgetMap = {};
   CATEGORIES.forEach(c => { if (c.budget > 0) budgetMap[c.value] = c.budget; });
   Object.keys(budgets).forEach(k => { if (!budgetMap[k] && budgets[k] > 0) budgetMap[k] = budgets[k]; });
 
   const cats = Object.keys(budgetMap);
   if (!cats.length) { card.style.display = 'none'; return; }
-
-  // Build spent map — index by both display name and original name
-  const spent = {};
-  expenses.filter(e => isInCurrentMonth(e.date)).forEach(e => {
-    const meta = getCategoryMeta(e.category);
-    const key  = meta ? meta.value : e.category;
-    spent[key] = (spent[key] || 0) + e.amount;
-    // also index by raw name in case key differs
-    if (e.category !== key) spent[e.category] = (spent[e.category] || 0) + e.amount;
-  });
-
   card.style.display = 'block';
+
+  // === OVERALL BUDGET PROGRESS ===
+  let totalBudgetLimit = 0;
+  let totalBudgetedSpent = 0;
+  const budgetedCatSet = new Set(cats);
+  cats.forEach(cat => { totalBudgetLimit += budgetMap[cat]; });
+  const currentMonthExpenses = expenses.filter(e => isInCurrentMonth(e.date));
+  totalBudgetedSpent = currentMonthExpenses
+    .filter(e => budgetedCatSet.has(e.category))
+    .reduce((sum, e) => sum + e.amount, 0);
+  
+  let overallPercent = totalBudgetLimit > 0 ? Math.min((totalBudgetedSpent / totalBudgetLimit) * 100, 100).toFixed(0) : 0;
+  let overallStatus = 'ok';
+  if (totalBudgetedSpent >= totalBudgetLimit) overallStatus = 'over';
+  else if (overallPercent >= 80) overallStatus = 'warning';
+  
+  let overallHtml = '';
+  if (totalBudgetLimit > 0) {
+    overallHtml = `
+      <div class="overall-budget-item">
+        <div class="overall-budget-header">
+          <div class="overall-budget-title">
+            📊 Total Budgeted Categories
+            <span class="budget-badge ${overallStatus}">${overallStatus === 'over' ? 'Over budget' : (overallStatus === 'warning' ? 'Near limit' : 'On track')}</span>
+          </div>
+          <div class="budget-nums"><b>${formatMoney(totalBudgetedSpent)}</b> of ${formatMoney(totalBudgetLimit)}</div>
+        </div>
+        <div class="budget-bar-wrap">
+          <div class="budget-bar ${overallStatus}" style="width: ${overallPercent}%;"></div>
+        </div>
+        <div class="overall-percent">${overallPercent}% utilized</div>
+      </div>
+    `;
+  }
+
+  // Build individual category rows (only those with spent >0 to keep clean)
   const rows = cats.map(cat => {
-    const use = spent[cat] || 0;
-    if (use === 0) return ''; // hide zero-spend rows
-    const limit  = budgetMap[cat];
-    const pct    = Math.min((use / limit) * 100, 100).toFixed(0);
+    const use = currentMonthExpenses.filter(e => e.category === cat).reduce((s, e) => s + e.amount, 0);
+    if (use === 0) return ''; // skip zero-spend rows
+    const limit = budgetMap[cat];
+    const pct = Math.min((use / limit) * 100, 100).toFixed(0);
     const status = use >= limit ? 'over' : use >= limit * 0.8 ? 'warning' : 'ok';
-    const label  = use >= limit ? 'Over budget!' : use >= limit * 0.8 ? 'Near limit' : 'On track';
+    const label = use >= limit ? 'Over budget!' : use >= limit * 0.8 ? 'Near limit' : 'On track';
     return `
       <div class="budget-row">
-        <div>
+        <div style="flex:1">
           <div class="budget-cat">
-            <div class="cat-icon" style="background:${getCategoryColor(cat)};width:30px;height:30px;font-size:15px;border-radius:9px">${getCategoryIcon(cat)}</div>
+            <div class="cat-icon" style="background:${getCategoryColor(cat)};width:30px;height:30px;font-size:15px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;">${getCategoryIcon(cat)}</div>
             ${cat}
             <span class="budget-badge ${status}">${label}</span>
           </div>
@@ -859,12 +919,13 @@ function updateBudgetOverview() {
             <div class="budget-bar ${status}" style="width:${pct}%"></div>
           </div>
         </div>
-        <div class="budget-nums"><b>EGP ${use.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</b><br>of ${limit.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</div>
+        <div class="budget-nums"><b>${formatMoney(use)}</b><br>of ${formatMoney(limit)}</div>
       </div>`;
   }).filter(Boolean).join('');
 
-  if (!rows) { card.style.display = 'none'; return; }
-  document.getElementById('budgetList').innerHTML = rows;
+  // Combine overall bar + individual rows
+  const finalHtml = overallHtml + (rows ? rows : '<div class="empty-state" style="padding:12px 0;font-size:12px;">No expenses yet for budgeted categories this month.</div>');
+  document.getElementById('budgetList').innerHTML = finalHtml;
 }
 
 // ── Render all ────────────────────────────────────────────
