@@ -886,7 +886,6 @@ if (totalBudgetLimit > 0) {
     <div class="budget-row" style="border-bottom: none; margin-bottom: 12px;">
       <div style="flex:1">
         <div class="budget-cat">
-          <div class="cat-icon" style="background:#e0e7ff; width:30px; height:30px; font-size:15px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center;">📊</div>
           Total Budget
           <span class="budget-badge ${overallStatus}">${overallStatus === 'over' ? 'Over budget' : (overallStatus === 'warning' ? 'Near limit' : 'On track')}</span>
         </div>
@@ -895,22 +894,30 @@ if (totalBudgetLimit > 0) {
         </div>
         <div class="overall-percent" style="font-size:10px; color:var(--text-2); margin-top:4px;">${overallPercent}% utilized</div>
       </div>
-      <div class="budget-nums">
-        <b>${formatMoney(totalBudgetedSpent)}</b><br>of ${formatMoney(totalBudgetLimit)}
+      <div class="budget-nums" style="text-align:right;">
+        <b style="color:var(--text);font-size:13px;">${formatMoney(totalBudgetedSpent)}</b><br>
+        <span style="font-size:11px;color:var(--text-3);">of ${formatMoney(totalBudgetLimit)}</span>
       </div>
     </div>
+    <div style="border-top:1px solid var(--border);margin-bottom:4px;"></div>
   `;
 }
 
-  // Build individual category rows (only those with spent >0 to keep clean)
-  const rows = cats.map(cat => {
+  // Build individual category rows sorted by status: over → warning → ok
+  const statusOrder = { over: 0, warning: 1, ok: 2 };
+  const catRows = cats.map(cat => {
     const use = currentMonthExpenses.filter(e => e.category === cat).reduce((s, e) => s + e.amount, 0);
-    if (use === 0) return ''; // skip zero-spend rows
+    if (use === 0) return null;
     const limit = budgetMap[cat];
     const pct = Math.min((use / limit) * 100, 100).toFixed(0);
     const status = use >= limit ? 'over' : use >= limit * 0.8 ? 'warning' : 'ok';
     const label = use >= limit ? 'Over budget!' : use >= limit * 0.8 ? 'Near limit' : 'On track';
-    return `
+    return { cat, use, limit, pct, status, label };
+  }).filter(Boolean);
+
+  catRows.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+
+  const rows = catRows.map(({ cat, use, limit, pct, status, label }) => `
       <div class="budget-row">
         <div style="flex:1">
           <div class="budget-cat">
@@ -918,16 +925,18 @@ if (totalBudgetLimit > 0) {
             ${cat}
             <span class="budget-badge ${status}">${label}</span>
           </div>
-          <div class="budget-bar-wrap" style="margin-top:6px">
+          <div class="budget-bar-wrap" style="margin-top:6px;width:65%">
             <div class="budget-bar ${status}" style="width:${pct}%"></div>
           </div>
         </div>
-        <div class="budget-nums"><b>${formatMoney(use)}</b><br>of ${formatMoney(limit)}</div>
-      </div>`;
-  }).filter(Boolean).join('');
+        <div class="budget-nums" style="text-align:right;">
+          <b style="color:var(--text);font-size:13px;">${formatMoney(use)}</b><br>
+          <span style="font-size:11px;color:var(--text-3);">of ${formatMoney(limit)}</span>
+        </div>
+      </div>`).join('');
 
   // Combine overall bar + individual rows
-  const finalHtml = overallHtml + (rows ? rows : '<div class="empty-state" style="padding:12px 0;font-size:12px;">No expenses yet for budgeted categories this month.</div>');
+  const finalHtml = overallHtml + (rows || '<div class="empty-state" style="padding:12px 0;font-size:12px;">No expenses yet for budgeted categories this month.</div>');
   document.getElementById('budgetList').innerHTML = finalHtml;
 }
 
