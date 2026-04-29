@@ -883,19 +883,22 @@ function updateBudgetOverview() {
   let overallHtml = '';
   if (totalBudgetLimit > 0) {
     overallHtml = `
-      <div class="overall-budget-item">
-        <div class="overall-budget-header">
-          <div class="overall-budget-title">
-            📊 Total Budgeted Categories
-            <span class="budget-badge ${overallStatus}">${overallStatus === 'over' ? 'Over budget' : (overallStatus === 'warning' ? 'Near limit' : 'On track')}</span>
-          </div>
-          <div class="budget-nums"><b>${formatMoney(totalBudgetedSpent)}</b> of ${formatMoney(totalBudgetLimit)}</div>
-        </div>
-        <div class="budget-bar-wrap">
-          <div class="budget-bar ${overallStatus}" style="width: ${overallPercent}%;"></div>
-        </div>
-        <div class="overall-percent">${overallPercent}% utilized</div>
-      </div>
+<div class="budget-row" style="border-bottom: none; margin-bottom: 12px;">
+  <div style="flex:1">
+    <div class="budget-cat">
+      <div class="cat-icon" style="background:#e0e7ff; width:30px; height:30px; font-size:15px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center;">📊</div>
+      Total Budget
+      <span class="budget-badge ${overallStatus}">${overallStatus === 'over' ? 'Over budget' : (overallStatus === 'warning' ? 'Near limit' : 'On track')}</span>
+    </div>
+    <div class="budget-bar-wrap" style="margin-top:6px">
+      <div class="budget-bar ${overallStatus}" style="width: ${overallPercent}%;"></div>
+    </div>
+  </div>
+  <div class="budget-nums">
+    <b>${formatMoney(totalBudgetedSpent)}</b><br>of ${formatMoney(totalBudgetLimit)}
+  </div>
+  <div class="overall-percent" style="font-size:10px; color:var(--text-2); margin-top:4px;">${overallPercent}% utilized</div>
+</div>
     `;
   }
 
