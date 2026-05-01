@@ -846,7 +846,22 @@ function renderInstRow(inst, showPayButton, isPaidThisMonth = false, showMenu = 
     actionColInner = `<span class="badge-completed">✅ Done</span>`;
   }
 
-  // For All Plans tab: show total amount above monthly amount
+  // ---- AMOUNTS COLUMN: hidden completely for This Month tab ----
+  if (tab === 'current') {
+    // Return row without the amounts column (inst-amounts div)
+    return `
+      <div class="inst-row">
+        <div class="bank-logo"><img src="${bank.logo}" alt="${bank.name}" onerror="this.style.display='none';this.parentElement.innerText='🏦'"></div>
+        <div class="inst-info">
+          <div class="inst-name">${escapeHtml(inst.itemName)}${status === 'completed' ? ' <span class="badge-completed">✅ Done</span>' : ''}</div>
+          ${metaHtml}
+          <div class="inst-progress"><div class="inst-progress-bar ${progressClass}" style="width:${progress}%"></div></div>
+        </div>
+        <div class="inst-action">${actionColInner}</div>
+      </div>`;
+  }
+
+  // For Upcoming and All tabs: keep original amounts column
   const amountsHtml = showMenu ? `
     <div class="inst-total-amount">${totalAmountFormatted}</div>
     <div class="inst-amount">${formatMoney(inst.monthlyAmount)}/mo</div>` : `
