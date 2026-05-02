@@ -14,9 +14,9 @@ let currentUserEmail   = null;
 let currentAccessToken = null;
 
 /* ── Helpers ── */
-function saveAccessToken(t)  { try { sessionStorage.setItem('gapi_access_token', t); } catch(e){} }
+function saveAccessToken(t)   { try { sessionStorage.setItem('gapi_access_token', t); } catch(e){} }
 function getSavedAccessToken(){ try { return sessionStorage.getItem('gapi_access_token'); } catch(e){ return null; } }
-function clearAccessToken()  { try { sessionStorage.removeItem('gapi_access_token'); } catch(e){} }
+function clearAccessToken()   { try { sessionStorage.removeItem('gapi_access_token'); } catch(e){} }
 
 function isIOSSafari() {
   return /iP(hone|od|ad)/.test(navigator.userAgent) &&
@@ -49,7 +49,6 @@ function waitForGlobal(check, timeout = 8000) {
 
 /* ── Init gapi client ── */
 async function initGapiClient() {
-  // Wait for gapi to be available (may not be loaded yet on slow connections)
   await waitForGlobal(() => typeof gapi !== 'undefined', 10000);
   await new Promise((resolve, reject) => {
     if (gapi.client?.drive) { resolve(); return; }
@@ -75,10 +74,10 @@ async function findExistingFolder() {
   return res.result.files?.[0]?.id || null;
 }
 
-/* ── ensureGameTabs: only runs once per session, batched ── */
-let tabsEnsured = false;
+/* ── ensureGameTabs: persists across page navigations via sessionStorage ── */
 async function ensureGameTabs() {
-  if (tabsEnsured) return;  // skip on subsequent page navigations within same session
+  // Use sessionStorage so this only runs ONCE per browser session, not once per page
+  if (sessionStorage.getItem('tabsEnsured') === '1') return;
 
   const sheetsRes = await gapi.client.sheets.spreadsheets.get({
     spreadsheetId, fields: 'sheets.properties'
@@ -96,7 +95,7 @@ async function ensureGameTabs() {
     Rounds_Team:         ['TimeStamp','RoundID','SessionID','RoundNumber','TeamA_ID','TeamB_ID','PointsA','PointsB','WinnerTeamID']
   };
 
-  // Add missing sheets in one batch request
+  // Add all missing sheets in one batch request
   const missingTabs = requiredTabs.filter(t => !existingTabs.includes(t));
   if (missingTabs.length) {
     await gapi.client.sheets.spreadsheets.batchUpdate({
@@ -105,7 +104,6 @@ async function ensureGameTabs() {
     });
   }
 
-  // Check + write headers — only for tabs that existed already (new ones have no rows yet)
   // Batch-read all header rows at once
   const ranges = requiredTabs.map(t => `${t}!A1:Z1`);
   const batchRes = await gapi.client.sheets.spreadsheets.values.batchGet({
@@ -113,9 +111,9 @@ async function ensureGameTabs() {
   });
   const valueRanges = batchRes.result.valueRanges || [];
 
-  // Write missing headers one by one (can't batch-write different ranges easily)
+  // Write headers only for tabs that don't have them yet
   for (let i = 0; i < requiredTabs.length; i++) {
-    const tab = requiredTabs[i];
+    const tab  = requiredTabs[i];
     const vals = valueRanges[i]?.values;
     if (!vals || vals.length === 0) {
       await gapi.client.sheets.spreadsheets.values.update({
@@ -125,7 +123,7 @@ async function ensureGameTabs() {
     }
   }
 
-  tabsEnsured = true;
+  sessionStorage.setItem('tabsEnsured', '1');
 }
 
 /* ── Token granted ── */
@@ -158,7 +156,6 @@ async function onAccessTokenGranted(tokenResponse) {
 
 /* ── Show tap-to-continue overlay for iOS ── */
 function showIOSTapOverlay(onTap) {
-  // Remove any existing overlay
   const existing = document.getElementById('iosTapOverlay');
   if (existing) existing.remove();
 
@@ -189,14 +186,12 @@ function showIOSTapOverlay(onTap) {
     onTap();
   });
 
-  // Also hide the loading overlay if present
   const lo = document.getElementById('loadingOverlay');
   if (lo) lo.style.display = 'none';
 }
 
 /* ── Main auth entry point ── */
 async function initPageAuth(callbacks) {
-  // Wrap everything in a try-catch so errors never leave loading stuck
   try {
     const token = localStorage.getItem('google_token');
     if (!token) {
@@ -214,7 +209,6 @@ async function initPageAuth(callbacks) {
     const savedSheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
     if (savedSheetId) spreadsheetId = savedSheetId;
 
-    // Wait for google identity services to load
     await waitForGlobal(() => typeof google !== 'undefined' && google.accounts, 10000);
     await initGapiClient();
 
@@ -250,7 +244,6 @@ async function initPageAuth(callbacks) {
     });
 
     if (isIOSSafari()) {
-      // iOS Safari blocks popups — show a tap overlay instead
       showIOSTapOverlay(() => tokenClient.requestAccessToken({ prompt: '' }));
     } else {
       tokenClient.requestAccessToken({ prompt: '' });
@@ -258,7 +251,6 @@ async function initPageAuth(callbacks) {
 
   } catch(e) {
     console.error('initPageAuth error:', e);
-    // Never leave the user stuck — show login if anything goes wrong
     const lo = document.getElementById('loadingOverlay');
     if (lo) lo.style.display = 'none';
     if (callbacks.onNeedLogin) callbacks.onNeedLogin();

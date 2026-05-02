@@ -26,12 +26,11 @@ function showToast(msg, type = 'success') {
 // ── Bottom nav renderer ──
 function renderBottomNav(active) {
   const tabs = [
-    { id: 'home',        icon: '🏠', label: 'Home',       href: 'Home.html' },
-    { id: 'sessions',    icon: '🎮', label: 'Sessions',   href: 'pages/sessions.html' },
-    { id: 'leaderboard', icon: '📊', label: 'Leaders',    href: 'pages/leaderboard.html' },
-    { id: 'players',     icon: '👥', label: 'Players',    href: 'pages/players-teams.html' },
+    { id: 'home',        icon: '🏠', label: 'Home',     href: 'Home.html' },
+    { id: 'sessions',    icon: '🎮', label: 'Sessions', href: 'pages/sessions.html' },
+    { id: 'leaderboard', icon: '📊', label: 'Leaders',  href: 'pages/leaderboard.html' },
+    { id: 'players',     icon: '👥', label: 'Players',  href: 'pages/players-teams.html' },
   ];
-  // Resolve hrefs relative to current page
   const isPage = window.location.pathname.includes('/pages/');
   const nav = document.createElement('nav');
   nav.className = 'bottom-nav';
@@ -51,20 +50,83 @@ function renderBottomNav(active) {
   document.body.appendChild(nav);
 }
 
-// ── Sheet helpers ──
+/* ══════════════════════════════════════════════════════
+   IN-MEMORY CACHE
+   TTL: 30s for reads. Invalidated on any write to that tab.
+══════════════════════════════════════════════════════ */
+const _cache = {};
+const CACHE_TTL = 30000; // 30 seconds
+
+function _cacheGet(key) {
+  const entry = _cache[key];
+  if (!entry) return null;
+  if (Date.now() - entry.ts > CACHE_TTL) { delete _cache[key]; return null; }
+  return entry.data;
+}
+function _cacheSet(key, data) {
+  _cache[key] = { data, ts: Date.now() };
+}
+function _cacheInvalidate(...keys) {
+  keys.forEach(k => delete _cache[k]);
+}
+
+/* ══════════════════════════════════════════════════════
+   SHEET HELPERS
+══════════════════════════════════════════════════════ */
 async function getSheetData(sheetName) {
   if (!spreadsheetId) throw new Error('No spreadsheet connected');
+  const cached = _cacheGet(sheetName);
+  if (cached) return cached;
+
   const res = await gapi.client.sheets.spreadsheets.values.get({
     spreadsheetId, range: `${sheetName}!A:Z`
   });
   const rows = res.result.values || [];
-  if (rows.length < 2) return [];
+  if (rows.length < 2) { _cacheSet(sheetName, []); return []; }
   const headers = rows[0];
-  return rows.slice(1).map(row => {
-    let obj = {};
+  const data = rows.slice(1).map(row => {
+    const obj = {};
     headers.forEach((h, i) => obj[h] = row[i] !== undefined ? row[i] : '');
     return obj;
   });
+  _cacheSet(sheetName, data);
+  return data;
+}
+
+// Fetch multiple sheets in a single API call
+async function batchGetSheets(sheetNames) {
+  if (!spreadsheetId) throw new Error('No spreadsheet connected');
+
+  // Check which ones are already cached
+  const result = {};
+  const missing = sheetNames.filter(name => {
+    const cached = _cacheGet(name);
+    if (cached !== null) { result[name] = cached; return false; }
+    return true;
+  });
+
+  if (!missing.length) return result;
+
+  const ranges = missing.map(name => `${name}!A:Z`);
+  const res = await gapi.client.sheets.spreadsheets.values.batchGet({
+    spreadsheetId, ranges
+  });
+  const valueRanges = res.result.valueRanges || [];
+
+  missing.forEach((name, i) => {
+    const rows = valueRanges[i]?.values || [];
+    if (rows.length < 2) { result[name] = []; _cacheSet(name, []); return; }
+    const headers = rows[0];
+    const data = rows.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((h, j) => obj[h] = row[j] !== undefined ? row[j] : '');
+      return obj;
+    });
+    result[name] = data;
+    _cacheSet(name, data);
+  });
+
+  return result;
 }
 
 async function appendRow(sheetName, rowValues) {
@@ -75,29 +137,36 @@ async function appendRow(sheetName, rowValues) {
     valueInputOption: 'RAW',
     resource: { values: [rowValues] }
   });
+  _cacheInvalidate(sheetName);
 }
 
-async function updateCell(sheetName, rowIndex, colName, value) {
+// Update multiple cells in a single batchUpdate (replaces sequential updateCell calls)
+async function batchUpdateCells(sheetName, rowIndex, updates) {
   if (!spreadsheetId) return;
   const res = await gapi.client.sheets.spreadsheets.values.get({
-    spreadsheetId, range: `${sheetName}!A:Z`
+    spreadsheetId, range: `${sheetName}!A1:Z1`
   });
-  const rows = res.result.values || [];
-  if (rows.length < 2) return;
-  const headers = rows[0];
-  const colIndex = headers.indexOf(colName);
-  if (colIndex === -1) return;
-  const sheetRow = rowIndex + 2;
-  const colLetter = String.fromCharCode(65 + colIndex);
-  await gapi.client.sheets.spreadsheets.values.update({
+  const headers = res.result.values?.[0] || [];
+  const sheetRow = rowIndex + 2; // 0-based data index → 1-based sheet row (skip header)
+
+  const data = Object.entries(updates)
+    .map(([col, val]) => {
+      const colIndex = headers.indexOf(col);
+      if (colIndex === -1) return null;
+      const colLetter = String.fromCharCode(65 + colIndex);
+      return { range: `${sheetName}!${colLetter}${sheetRow}`, values: [[val]] };
+    })
+    .filter(Boolean);
+
+  if (!data.length) return;
+  await gapi.client.sheets.spreadsheets.values.batchUpdate({
     spreadsheetId,
-    range: `${sheetName}!${colLetter}${sheetRow}`,
-    valueInputOption: 'RAW',
-    resource: { values: [[value]] }
+    resource: { valueInputOption: 'RAW', data }
   });
+  _cacheInvalidate(sheetName);
 }
 
-// Update an entire row by matching an ID column value
+// Update an entire row by matching an ID column value — uses batchUpdate for all fields at once
 async function updateRowById(sheetName, idCol, idValue, updates) {
   if (!spreadsheetId) return false;
   const res = await gapi.client.sheets.spreadsheets.values.get({
@@ -109,26 +178,28 @@ async function updateRowById(sheetName, idCol, idValue, updates) {
   const idIdx = headers.indexOf(idCol);
   if (idIdx === -1) return false;
 
-  let sheetRow = -1;  // 1‑based row number in Sheets
+  let sheetRow = -1;
   for (let i = 1; i < rows.length; i++) {
-    if (rows[i][idIdx] === idValue) {
-      sheetRow = i + 1;   // rows array is 0‑based → add 1 to get sheet row
-      break;
-    }
+    if (rows[i][idIdx] === idValue) { sheetRow = i + 1; break; }
   }
   if (sheetRow === -1) return false;
 
-  for (const [col, val] of Object.entries(updates)) {
-    const colIdx = headers.indexOf(col);
-    if (colIdx === -1) continue;
-    const colLetter = String.fromCharCode(65 + colIdx);
-    await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: `${sheetName}!${colLetter}${sheetRow}`,   // exactly the right row
-      valueInputOption: 'RAW',
-      resource: { values: [[val]] }
-    });
-  }
+  // Build all updates as one batchUpdate instead of one call per field
+  const data = Object.entries(updates)
+    .map(([col, val]) => {
+      const colIdx = headers.indexOf(col);
+      if (colIdx === -1) return null;
+      const colLetter = String.fromCharCode(65 + colIdx);
+      return { range: `${sheetName}!${colLetter}${sheetRow}`, values: [[val]] };
+    })
+    .filter(Boolean);
+
+  if (!data.length) return false;
+  await gapi.client.sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId,
+    resource: { valueInputOption: 'RAW', data }
+  });
+  _cacheInvalidate(sheetName);
   return true;
 }
 
@@ -149,7 +220,6 @@ async function deleteRowById(sheetName, idCol, idValue) {
       if (rows[i][idIdx] === idValue) { dataRowIndex = i; break; }
     }
     if (dataRowIndex === -1) return false;
-    // Get the sheet's numeric ID
     const sheetMeta = await gapi.client.sheets.spreadsheets.get({
       spreadsheetId, fields: 'sheets.properties'
     });
@@ -166,11 +236,14 @@ async function deleteRowById(sheetName, idCol, idValue) {
         }]
       }
     });
+    _cacheInvalidate(sheetName);
     return true;
   } catch (e) { console.error('deleteRowById error:', e); return false; }
 }
 
-// ── Data loaders ──
+/* ══════════════════════════════════════════════════════
+   DATA LOADERS — all use cache via getSheetData
+══════════════════════════════════════════════════════ */
 async function loadPlayers()             { return await getSheetData('Players'); }
 async function loadGames()               { return await getSheetData('Games'); }
 async function loadTeams()               { return await getSheetData('Teams'); }
@@ -179,7 +252,10 @@ async function loadSessionParticipants() { return await getSheetData('SessionPar
 async function loadRoundsIndividual()    { return await getSheetData('Rounds_Individual'); }
 async function loadRoundsTeam()          { return await getSheetData('Rounds_Team'); }
 
-// ── Add operations ──
+/* ══════════════════════════════════════════════════════
+   WRITE OPERATIONS
+   Each invalidates its cache key automatically via appendRow / updateRowById.
+══════════════════════════════════════════════════════ */
 async function addPlayer(name, gender, status, icon, bg) {
   const playerId = generateGameId();
   await appendRow('Players', [new Date().toISOString(), playerId, name, gender, status, icon||'🧑', bg||'#f3f4f6']);
@@ -188,11 +264,8 @@ async function addPlayer(name, gender, status, icon, bg) {
 
 async function editPlayer(playerId, name, gender, status, icon, bg) {
   return await updateRowById('Players', 'PlayerID', playerId, {
-    PlayerName: name,
-    Gender: gender,
-    Status: status,
-    Icon: icon || '🧑',
-    BG: bg || '#f3f4f6'
+    PlayerName: name, Gender: gender, Status: status,
+    Icon: icon || '🧑', BG: bg || '#f3f4f6'
   });
 }
 
@@ -213,8 +286,7 @@ async function addGame(name, totalPlayers, allowsIndividual, allowsTeam, players
 
 async function editGame(gameId, name, totalPlayers, allowsIndividual, allowsTeam, playersPerTeam) {
   return await updateRowById('Games', 'GameID', gameId, {
-    GameName: name,
-    TotalPlayers: totalPlayers,
+    GameName: name, TotalPlayers: totalPlayers,
     AllowsIndividual: allowsIndividual ? 'TRUE' : 'FALSE',
     AllowsTeam: allowsTeam ? 'TRUE' : 'FALSE',
     PlayersPerTeam: playersPerTeam || ''
@@ -227,16 +299,13 @@ async function deleteGame(gameId) {
 
 async function addTeam(gameId, teamName, playerIds, icon, bg) {
   const teamId = generateGameId();
-  // Teams sheet: TimeStamp, TeamID, TeamName, GameID, PlayerIDs, Icon, BG
   await appendRow('Teams', [new Date().toISOString(), teamId, teamName, gameId, playerIds.join(','), icon||'🏅', bg||'#fef3c7']);
   return teamId;
 }
 
 async function editTeam(teamId, teamName, icon, bg) {
   return await updateRowById('Teams', 'TeamID', teamId, {
-    TeamName: teamName,
-    Icon:     icon || '🏅',
-    BG:       bg   || '#fef3c7'
+    TeamName: teamName, Icon: icon || '🏅', BG: bg || '#fef3c7'
   });
 }
 
@@ -252,10 +321,8 @@ async function addSession(gameId, date, type) {
 
 async function addSessionParticipants(sessionId, participantIds, type) {
   const participantType = type === 'Individual' ? 'Player' : 'Team';
-  // Store as single row with comma-separated IDs
   await appendRow('SessionParticipants', [
-    new Date().toISOString(), sessionId,
-    participantIds.join(','), participantType
+    new Date().toISOString(), sessionId, participantIds.join(','), participantType
   ]);
 }
 
@@ -263,9 +330,8 @@ async function addRoundIndividual(sessionId, roundNumber, players, points) {
   const roundId = generateGameId();
   await appendRow('Rounds_Individual', [
     new Date().toISOString(), roundId, sessionId, roundNumber,
-    players[0] || '', players[1] || '', players[2] || '', players[3] || '',
-    points[0] || 0, points[1] || 0, points[2] || 0, points[3] || 0,
-    ''
+    players[0]||'', players[1]||'', players[2]||'', players[3]||'',
+    points[0]||0, points[1]||0, points[2]||0, points[3]||0, ''
   ]);
 }
 
@@ -277,45 +343,58 @@ async function addRoundTeam(sessionId, roundNumber, teamA, teamB, pointsA, point
   ]);
 }
 
+// closeSession: single batchUpdate for Status + WinnerID, no redundant sheet reads
 async function closeSession(sessionId) {
-  const sessions = await loadSessions();
+  // Fetch what we need in parallel
+  const [sessions, participants] = await Promise.all([
+    loadSessions(),
+    loadSessionParticipants()
+  ]);
+
   const session = sessions.find(s => s.SessionID === sessionId);
   if (!session) throw new Error('Session not found');
   const rowIndex = sessions.findIndex(s => s.SessionID === sessionId);
-  let totals = {};
+
+  const partRow = participants.find(p => p.SessionID === sessionId);
+  const participantIds = partRow
+    ? partRow.ParticipantID.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+
+  const totals = {};
+  participantIds.forEach(id => totals[id] = 0);
+
   if (session.Type === 'Individual') {
     const rounds = await loadRoundsIndividual();
-    const partRows = (await loadSessionParticipants()).filter(p => p.SessionID === sessionId);
-    const participantIds = partRows.flatMap(p => p.ParticipantID.split(',').map(s => s.trim()).filter(Boolean));
-    for (let pid of participantIds) totals[pid] = 0;
-    for (let r of rounds.filter(r => r.SessionID === sessionId)) {
+    rounds.filter(r => r.SessionID === sessionId).forEach(r => {
       for (let i = 1; i <= 4; i++) {
-        let pid = r[`Player${i}_ID`];
+        const pid = r[`Player${i}_ID`];
         if (pid && totals[pid] !== undefined) totals[pid] += parseFloat(r[`Points${i}`] || 0);
       }
-    }
+    });
   } else {
     const rounds = await loadRoundsTeam();
-    const partRows = (await loadSessionParticipants()).filter(p => p.SessionID === sessionId);
-    const participantIds2 = partRows.flatMap(p => p.ParticipantID.split(',').map(s => s.trim()).filter(Boolean));
-    for (let pid of participantIds2) totals[pid] = 0;
-    for (let r of rounds.filter(r => r.SessionID === sessionId)) {
-      totals[r.TeamA_ID] = (totals[r.TeamA_ID] || 0) + parseFloat(r.PointsA || 0);
-      totals[r.TeamB_ID] = (totals[r.TeamB_ID] || 0) + parseFloat(r.PointsB || 0);
-    }
+    rounds.filter(r => r.SessionID === sessionId).forEach(r => {
+      if (totals[r.TeamA_ID] !== undefined) totals[r.TeamA_ID] += parseFloat(r.PointsA || 0);
+      if (totals[r.TeamB_ID] !== undefined) totals[r.TeamB_ID] += parseFloat(r.PointsB || 0);
+    });
   }
+
   const minScore = Math.min(...Object.values(totals));
-  const winners = Object.keys(totals).filter(id => totals[id] === minScore);
+  const winners  = Object.keys(totals).filter(id => totals[id] === minScore);
   const winnerId = winners.length === 1 ? winners[0] : '';
-  await updateCell('Sessions', rowIndex, 'WinnerID', winnerId);
-  await updateCell('Sessions', rowIndex, 'Status', 'Closed');
+
+  // Single batchUpdate for both Status and WinnerID
+  await batchUpdateCells('Sessions', rowIndex, { Status: 'Closed', WinnerID: winnerId });
+
   return { totals, winnerId };
 }
 
-// ── Helpers ──
+/* ══════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════ */
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+  return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
 
 function formatDate(dateStr) {
