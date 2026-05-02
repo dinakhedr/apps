@@ -9,6 +9,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
   <title>Games</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="../assets/styles.css">
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
@@ -58,7 +59,6 @@
       </div>
     </div>
 
-    <!-- Team sub-section -->
     <div class="mode-sub" id="addTeamSub">
       <span class="sub-label">Players per Team</span>
       <div class="sub-row">
@@ -128,7 +128,6 @@
 </div>
 
 <script>
-  /* ─── state ─── */
   let selectedGame = null;
   const addState  = { ind: false, team: false };
   const editState = { ind: false, team: false };
@@ -143,11 +142,10 @@
   }
 
   function applyPillState(prefix) {
-    const state  = prefix === 'add' ? addState : editState;
+    const state    = prefix === 'add' ? addState : editState;
     const pillInd  = document.getElementById(`${prefix}IndPill`);
     const pillTeam = document.getElementById(`${prefix}TeamPill`);
     const subTeam  = document.getElementById(`${prefix}TeamSub`);
-
     pillInd .classList.toggle('active', state.ind);
     pillTeam.classList.toggle('active', state.team);
     subTeam .classList.toggle('open',   state.team);
@@ -165,18 +163,18 @@
   ════════════════════════════ */
   const gameIcon = name => {
     const n = (name || '').toLowerCase();
-    if (n.includes('backgammon'))                              return '🎲';
-    if (n.includes('chess'))                                   return '♟️';
+    if (n.includes('backgammon'))                                    return '🎲';
+    if (n.includes('chess'))                                         return '♟️';
     if (n.includes('screw')||n.includes('card')||n.includes('uno')) return '🃏';
-    if (n.includes('pool')||n.includes('billiard'))            return '🎱';
-    if (n.includes('dart'))                                    return '🎯';
-    if (n.includes('ping')||n.includes('table'))               return '🏓';
-    if (n.includes('domino'))                                  return '🁣';
+    if (n.includes('pool')||n.includes('billiard'))                  return '🎱';
+    if (n.includes('dart'))                                          return '🎯';
+    if (n.includes('ping')||n.includes('table'))                     return '🏓';
+    if (n.includes('domino'))                                        return '🁣';
     return '🎮';
   };
 
   async function loadGamesList() {
-    const games = await loadGames();
+    const games = await loadGames(); // Uses cache if available
     const el = document.getElementById('gamesList');
     if (!games.length) {
       el.innerHTML = `<div class="empty-state"><span class="empty-icon">🎮</span>
@@ -238,8 +236,6 @@
 
     const btn = document.getElementById('editSaveBtn');
     btn.textContent = 'Saving…'; btn.disabled = true;
-
-    // Close modal immediately — don't wait for API
     closeEditModal();
 
     try {

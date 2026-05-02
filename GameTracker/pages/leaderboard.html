@@ -9,63 +9,12 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
   <title>Leaderboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="../assets/styles.css">
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
-  <style>
-    /* ── Rank row ── */
-    .rank-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 0; border-bottom: 1px solid var(--border);
-    }
-    .rank-row:last-child { border-bottom: none; }
-
-    /* Number badge */
-    .rank-badge {
-      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 800;
-      background: var(--surface-2); color: var(--text-2);
-    }
-    .rank-badge.r1 { background: #fef3c7; color: #92400e; }
-    .rank-badge.r2 { background: #f1f5f9; color: #475569; }
-    .rank-badge.r3 { background: #ffedd5; color: #9a3412; }
-
-    /* Player icon pip */
-    .rank-pip {
-      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center; font-size: 18px;
-    }
-
-    .rank-name { flex: 1; font-weight: 700; font-size: 14px; color: var(--text); min-width: 0; }
-    .rank-pts  {
-      font-family: 'Sora', sans-serif; font-weight: 800; font-size: 15px;
-      color: var(--brand); flex-shrink: 0;
-    }
-    .rank-pts.winner { color: var(--success); }
-
-    /* ── Mode section divider inside a card ── */
-    .mode-section { margin-bottom: 20px; }
-    .mode-section:last-child { margin-bottom: 0; }
-    .mode-section-title {
-      font-size: 11px; font-weight: 700; color: var(--text-2);
-      text-transform: uppercase; letter-spacing: 0.06em;
-      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
-    }
-    .mode-divider {
-      border: none; border-top: 1px solid var(--border); margin: 18px 0;
-    }
-
-    /* ── Filter card ── */
-    .filter-card {
-      background: var(--surface); border-radius: var(--radius-lg);
-      padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--shadow);
-    }
-    .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .filter-row .form-group { margin-bottom: 0; }
-  </style>
 </head>
 <body>
 
@@ -75,7 +24,6 @@
 
 <div class="container" id="mainApp" style="display:none">
 
-  <!-- Header: back-btn LEFT, title CENTER -->
   <div class="header" style="justify-content:flex-start; gap:14px">
     <button class="back-btn" onclick="history.back()">←</button>
     <h1>📊 Leaderboard</h1>
@@ -100,7 +48,7 @@
 
 <script>
   /* ════════════════════════════
-     LOAD LEADERBOARD
+     LOAD LEADERBOARD — single batchGetSheets for all data
   ════════════════════════════ */
   async function loadLeaderboard() {
     const gameId = document.getElementById('gameSelect').value;
@@ -112,10 +60,12 @@
 
     const [year, monthNum] = month.split('-');
 
-    const [sessions, players, teams, roundsInd, roundsTeam] = await Promise.all([
-      loadSessions(), loadPlayers(), loadTeams(),
-      loadRoundsIndividual(), loadRoundsTeam()
+    // All 5 sheets in one API call
+    const sheets = await batchGetSheets([
+      'Sessions', 'Players', 'Teams', 'Rounds_Individual', 'Rounds_Team'
     ]);
+    const { Sessions: sessions, Players: players, Teams: teams,
+            Rounds_Individual: roundsInd, Rounds_Team: roundsTeam } = sheets;
 
     const closedSessions = sessions.filter(s =>
       s.GameID === gameId &&
@@ -162,7 +112,6 @@
     const teamBoard = Object.entries(teamScores)
       .map(([id, pts]) => {
         const t = teams.find(tm => tm.TeamID === id);
-        // Build player name list from team PlayerIDs
         const memberNames = (t?.PlayerIDs || '').split(',')
           .map(pid => players.find(p => p.PlayerID === pid.trim())?.PlayerName || null)
           .filter(Boolean).join(' · ');
@@ -199,7 +148,6 @@
         </div>`;
     }
 
-    // One card per game — sections inside for each mode
     let html = '<div class="card">';
 
     if (playerBoard.length) {
@@ -208,11 +156,7 @@
         ${playerBoard.map(renderPlayerRow).join('')}
       </div>`;
     }
-
-    if (playerBoard.length && teamBoard.length) {
-      html += `<hr class="mode-divider">`;
-    }
-
+    if (playerBoard.length && teamBoard.length) html += `<hr class="mode-divider">`;
     if (teamBoard.length) {
       html += `<div class="mode-section">
         <div class="mode-section-title">🏆 Team</div>

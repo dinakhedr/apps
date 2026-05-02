@@ -9,81 +9,12 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
   <title>New Session</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="../assets/styles.css">
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
-  <style>
-    /* ── Mode pill selector (reused from games) ── */
-    .type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-    .type-pill {
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 14px; border-radius: var(--radius-sm);
-      border: 2px solid var(--border); background: var(--surface-2);
-      cursor: pointer; transition: all 0.18s; user-select: none;
-    }
-    .type-pill.active { border-color: var(--brand); background: #ededff; box-shadow: 0 0 0 3px rgba(91,94,244,0.10); }
-    .type-pill-check {
-      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-      border: 2px solid var(--border); background: var(--surface); transition: all 0.18s;
-    }
-    .type-pill.active .type-pill-check { background: var(--brand); border-color: var(--brand); }
-    .type-pill.active .type-pill-check::before { content: '✓'; display: flex; align-items: center; justify-content: center; height: 100%; font-size: 12px; font-weight: 900; color: #fff; }
-    .type-pill-title { font-size: 14px; font-weight: 700; color: var(--text); display: block; }
-    .type-pill-sub   { font-size: 11px; color: var(--text-3); }
-
-    /* ── Player selector grid ── */
-    .player-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px; }
-    .player-sel-card {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: var(--radius-sm);
-      border: 2px solid var(--border); background: var(--surface-2);
-      cursor: pointer; transition: all 0.15s; user-select: none;
-    }
-    .player-sel-card.selected { border-color: var(--brand); background: #ededff; }
-    .player-sel-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-    .player-sel-name { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .player-sel-check {
-      width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
-      border: 2px solid var(--border); background: var(--surface);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 800; transition: all 0.15s;
-    }
-    .player-sel-card.selected .player-sel-check { background: var(--brand); border-color: var(--brand); color: #fff; }
-
-    /* ── Team selector cards ── */
-    .team-selector { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-    .team-sel-card {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px; border-radius: var(--radius-sm);
-      border: 2px solid var(--border); background: var(--surface-2);
-      cursor: pointer; transition: all 0.15s; user-select: none;
-    }
-    .team-sel-card.selected { border-color: var(--brand); background: #ededff; }
-    .team-sel-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-    .team-sel-info { flex: 1; min-width: 0; }
-    .team-sel-name { font-size: 14px; font-weight: 700; color: var(--text); }
-    .team-sel-players { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-    .team-sel-badge {
-      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-      border: 2px solid var(--border); background: var(--surface);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 800; color: #fff; transition: all 0.15s;
-    }
-    .team-sel-card.selected .team-sel-badge { background: var(--brand); border-color: var(--brand); }
-
-    /* ── Selection counter ── */
-    .sel-count { font-size: 12px; color: var(--text-3); margin-top: 8px; }
-    .sel-count.ready { color: var(--success); font-weight: 700; }
-
-    /* ── Section label ── */
-    .section-label {
-      font-size: 11px; font-weight: 700; color: var(--text-2);
-      text-transform: uppercase; letter-spacing: 0.05em;
-      display: block; margin-bottom: 8px;
-    }
-  </style>
 </head>
 <body>
 
@@ -141,7 +72,7 @@
   let games = [], allPlayers = [], allTeams = [];
   let selectedType = 'Individual';
   let selectedPlayerIds = new Set();
-  let selectedTeamIds   = [null, null]; // [teamA, teamB]
+  let selectedTeamIds   = [null, null];
 
   /* ════════════════════════════
      TYPE PILLS
@@ -156,12 +87,13 @@
   }
 
   /* ════════════════════════════
-     LOAD DATA
+     LOAD DATA — single batch call
   ════════════════════════════ */
   async function loadData() {
-    games      = await loadGames();
-    allPlayers = await loadPlayers();
-    allTeams   = await loadTeams();
+    const sheets = await batchGetSheets(['Games', 'Players', 'Teams']);
+    games      = sheets.Games;
+    allPlayers = sheets.Players;
+    allTeams   = sheets.Teams;
 
     const gameSelect = document.getElementById('gameSelect');
     gameSelect.innerHTML = games.map(g =>
@@ -192,7 +124,6 @@
     const container = document.getElementById('participantsArea');
     if (!game) { container.innerHTML = ''; return; }
 
-    // Validate mode vs game
     if (selectedType === 'Individual' && game.AllowsIndividual !== 'TRUE') {
       container.innerHTML = `<div class="warn-box">⚠️ This game does not support Individual mode.</div>`;
       return;
@@ -202,11 +133,8 @@
       return;
     }
 
-    if (selectedType === 'Individual') {
-      renderPlayerSelector(parseInt(game.TotalPlayers));
-    } else {
-      renderTeamSelector(gameId);
-    }
+    if (selectedType === 'Individual') renderPlayerSelector(parseInt(game.TotalPlayers));
+    else                               renderTeamSelector(gameId);
   }
 
   /* ── Player selector ── */
@@ -266,7 +194,6 @@
 
   /* ── Team selector ── */
   function renderTeamSelector(gameId) {
-    // Filter by GameID only — Status column was removed from Teams sheet
     const gameTeams = allTeams.filter(t => t.GameID === gameId);
     const container = document.getElementById('participantsArea');
 
@@ -284,7 +211,6 @@
     document.getElementById('teamGrid').innerHTML = gameTeams.map(t => {
       const ic  = t.Icon || '🏅';
       const bg  = t.BG   || '#fef3c7';
-      // Resolve player names for subtitle
       const playerNames = (t.PlayerIDs || '').split(',')
         .map(pid => allPlayers.find(p => p.PlayerID === pid.trim())?.PlayerName || null)
         .filter(Boolean).join(', ');
@@ -309,12 +235,10 @@
   function toggleTeam(card, tid) {
     const idx = selectedTeamIds.indexOf(tid);
     if (idx !== -1) {
-      // Deselect
       selectedTeamIds[idx] = null;
       card.classList.remove('selected');
       card.querySelector('.team-sel-badge').textContent = '';
     } else {
-      // Find first empty slot
       const slot = selectedTeamIds.indexOf(null);
       if (slot === -1) { showToast('Deselect a team first', 'error'); return; }
       selectedTeamIds[slot] = tid;

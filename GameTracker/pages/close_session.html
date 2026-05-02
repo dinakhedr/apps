@@ -9,6 +9,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
   <title>Close Session</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="../assets/styles.css">
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
@@ -41,55 +42,70 @@
 </div>
 
 <script>
-  let games = [], allPlayers = [], allTeams = [];
+  // All data loaded once and reused — no re-fetching on dropdown change
+  let _games = [], _allPlayers = [], _allTeams = [];
+  let _sessions = [], _participants = [], _roundsInd = [], _roundsTeam = [];
+  let _activeSessions = [];
 
   async function loadActiveSessions() {
-    games = await loadGames();
-    allPlayers = await loadPlayers();
-    allTeams = await loadTeams();
-    const sessions = await loadSessions();
-    const active = sessions.filter(s => s.Status === 'Active');
-    const gameMap = Object.fromEntries(games.map(g => [g.GameID, g.GameName]));
+    // Single batchGetSheets for everything needed across all views
+    const sheets = await batchGetSheets([
+      'Games', 'Players', 'Teams', 'Sessions',
+      'SessionParticipants', 'Rounds_Individual', 'Rounds_Team'
+    ]);
+    _games        = sheets.Games;
+    _allPlayers   = sheets.Players;
+    _allTeams     = sheets.Teams;
+    _sessions     = sheets.Sessions;
+    _participants = sheets.SessionParticipants;
+    _roundsInd    = sheets.Rounds_Individual;
+    _roundsTeam   = sheets.Rounds_Team;
+
+    _activeSessions = _sessions.filter(s => s.Status === 'Active');
+    const gameMap = Object.fromEntries(_games.map(g => [g.GameID, g.GameName]));
     const sel = document.getElementById('sessionSelect');
 
-    if (!active.length) {
+    if (!_activeSessions.length) {
       document.getElementById('sessionPickerWrap').style.display = 'none';
       document.getElementById('noSessions').style.display = 'block';
       return;
     }
 
-    sel.innerHTML = active.map(s =>
+    sel.innerHTML = _activeSessions.map(s =>
       `<option value="${s.SessionID}">${escapeHtml(gameMap[s.GameID] || 'Unknown')} · ${s.Type} · ${formatDate(s.Date)}</option>`
     ).join('');
     sel.addEventListener('change', showSummary);
-    await showSummary();
+    showSummary(); // No await needed — uses pre-loaded data
   }
 
-  async function showSummary() {
-    const sessionId = document.getElementById('sessionSelect').value;
+  // Uses only already-loaded data — no API calls
+  function showSummary() {
+    const sessionId  = document.getElementById('sessionSelect').value;
     if (!sessionId) return;
     const summaryDiv = document.getElementById('summary');
-    summaryDiv.innerHTML = '<div style="text-align:center;padding:16px"><div class="spinner"></div></div>';
 
-    const sessions = await loadSessions();
-    const session = sessions.find(s => s.SessionID === sessionId);
-    const participants = (await loadSessionParticipants()).filter(p => p.SessionID === sessionId);
+    const session = _sessions.find(s => s.SessionID === sessionId);
+    const partRow = _participants.find(p => p.SessionID === sessionId);
+    const participantIds = partRow
+      ? partRow.ParticipantID.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+
     let totals = {};
+    participantIds.forEach(id => totals[id] = 0);
 
     if (session.Type === 'Individual') {
-      const rounds = (await loadRoundsIndividual()).filter(r => r.SessionID === sessionId);
-      for (let p of participants) totals[p.ParticipantID] = 0;
-      for (let r of rounds) {
+      const rounds = _roundsInd.filter(r => r.SessionID === sessionId);
+      rounds.forEach(r => {
         for (let i = 1; i <= 4; i++) {
           const pid = r[`Player${i}_ID`];
           if (pid && totals[pid] !== undefined) totals[pid] += parseFloat(r[`Points${i}`] || 0);
         }
-      }
+      });
       const sorted = Object.entries(totals).sort((a, b) => a[1] - b[1]);
       const minPts = sorted[0]?.[1] ?? 0;
       summaryDiv.innerHTML = `<div class="card-title" style="margin-bottom:12px">Current Scores</div>` +
         sorted.map(([pid, pts]) => {
-          const name = allPlayers.find(p => p.PlayerID === pid)?.PlayerName || pid;
+          const name = _allPlayers.find(p => p.PlayerID === pid)?.PlayerName || pid;
           const isLeading = pts === minPts;
           return `<div class="expense-item" style="cursor:default">
             <div class="cat-icon" style="background:${isLeading ? '#d1fae5' : '#f5f5fa'}">${isLeading ? '🥇' : '▪️'}</div>
@@ -98,17 +114,16 @@
           </div>`;
         }).join('');
     } else {
-      const rounds = (await loadRoundsTeam()).filter(r => r.SessionID === sessionId);
-      for (let p of participants) totals[p.ParticipantID] = 0;
-      for (let r of rounds) {
-        totals[r.TeamA_ID] = (totals[r.TeamA_ID] || 0) + parseFloat(r.PointsA || 0);
-        totals[r.TeamB_ID] = (totals[r.TeamB_ID] || 0) + parseFloat(r.PointsB || 0);
-      }
+      const rounds = _roundsTeam.filter(r => r.SessionID === sessionId);
+      rounds.forEach(r => {
+        if (totals[r.TeamA_ID] !== undefined) totals[r.TeamA_ID] += parseFloat(r.PointsA || 0);
+        if (totals[r.TeamB_ID] !== undefined) totals[r.TeamB_ID] += parseFloat(r.PointsB || 0);
+      });
       const sorted = Object.entries(totals).sort((a, b) => a[1] - b[1]);
       const minPts = sorted[0]?.[1] ?? 0;
       summaryDiv.innerHTML = `<div class="card-title" style="margin-bottom:12px">Current Scores</div>` +
         sorted.map(([tid, pts]) => {
-          const name = allTeams.find(t => t.TeamID === tid)?.TeamName || tid;
+          const name = _allTeams.find(t => t.TeamID === tid)?.TeamName || tid;
           const isLeading = pts === minPts;
           return `<div class="expense-item" style="cursor:default">
             <div class="cat-icon" style="background:${isLeading ? '#d1fae5' : '#f5f5fa'}">${isLeading ? '🥇' : '🅱️'}</div>

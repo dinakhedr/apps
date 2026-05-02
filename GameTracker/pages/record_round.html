@@ -9,176 +9,12 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
   <title>Record Round</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="../assets/styles.css">
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
-  <style>
-
-    /* ── Session info banner ── */
-    .session-banner {
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: var(--radius-md);
-      padding: 14px 18px;
-      margin-bottom: 18px;
-      display: flex; align-items: center; gap: 14px;
-    }
-    .session-banner-icon {
-      width: 46px; height: 46px; border-radius: 13px;
-      background: rgba(255,255,255,0.2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; flex-shrink: 0;
-    }
-    .session-banner-game {
-      font-family: 'Sora', sans-serif; font-size: 16px;
-      font-weight: 800; color: #fff;
-    }
-    .session-banner-meta { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
-
-    /* ── Round number pill ── */
-    .round-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: var(--brand-grad); color: #fff;
-      border-radius: 30px; padding: 4px 14px 4px 10px;
-      font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 800;
-      margin-bottom: 18px; box-shadow: 0 2px 10px rgba(91,94,244,0.28);
-    }
-    .round-pill-num { font-size: 20px; font-weight: 800; }
-
-    /* ── Individual score inputs ── */
-    .player-score-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 0; border-bottom: 1px solid var(--border);
-    }
-    .player-score-row:last-child { border-bottom: none; }
-    .player-score-icon {
-      width: 44px; height: 44px; border-radius: 13px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; flex-shrink: 0;
-    }
-    .player-score-name {
-      flex: 1; font-weight: 700; font-size: 14px; color: var(--text);
-      min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .player-score-input {
-      width: 80px !important; text-align: center;
-      font-family: 'Sora', sans-serif; font-size: 18px !important;
-      font-weight: 800; padding: 8px 10px !important;
-      border-radius: var(--radius-sm); flex-shrink: 0;
-    }
-
-    /* ── Team vs layout ── */
-    .team-vs-grid {
-      display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px;
-      align-items: center; margin-bottom: 4px;
-    }
-    .team-vs-card {
-      display: flex; flex-direction: column; align-items: center;
-      gap: 8px; padding: 16px 10px;
-      background: var(--surface-2); border-radius: var(--radius-md);
-      border: 2px solid var(--border); transition: border-color 0.15s;
-    }
-    .team-vs-card:focus-within { border-color: var(--brand); }
-    .team-vs-badge {
-      width: 48px; height: 48px; border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 26px; font-weight: 900;
-    }
-    .team-vs-name {
-      font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 700;
-      color: var(--text); text-align: center;
-      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .team-vs-input {
-      width: 100% !important; text-align: center;
-      font-family: 'Sora', sans-serif; font-size: 28px !important;
-      font-weight: 900; padding: 10px 8px !important;
-      border-radius: var(--radius-sm);
-      color: var(--brand);
-    }
-    .vs-divider {
-      font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 800;
-      color: var(--text-3); text-align: center;
-    }
-
-    /* ── Scoreboard table ── */
-    .score-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .score-table {
-      width: 100%; border-collapse: collapse;
-      font-size: 13px; font-family: 'DM Sans', sans-serif;
-    }
-    .score-table thead th {
-      padding: 8px 10px; text-align: center;
-      font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 700;
-      color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em;
-      border-bottom: 2px solid var(--border); white-space: nowrap;
-    }
-    .score-table thead th:first-child { text-align: left; width: 42px; }
-    .score-table tbody td {
-      padding: 9px 10px; text-align: center;
-      border-bottom: 1px solid var(--border); color: var(--text);
-    }
-    .score-table tbody tr:last-child td { border-bottom: none; }
-    .score-table tbody td:first-child {
-      font-family: 'Sora', sans-serif; font-weight: 800;
-      font-size: 12px; color: var(--text-3); text-align: left;
-    }
-    .score-table tbody td .pts {
-      font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px;
-    }
-    /* winner column highlight */
-    .score-table td.win { color: var(--success); }
-    .score-table td.win .pts { color: var(--success); }
-
-    /* ── Totals footer row ── */
-    .score-table tfoot td {
-      padding: 10px 10px; text-align: center;
-      background: var(--surface-2); border-top: 2px solid var(--border);
-      font-family: 'Sora', sans-serif; font-weight: 800; font-size: 14px;
-      color: var(--text);
-    }
-    .score-table tfoot td:first-child { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); }
-    .score-table tfoot .total-win { color: var(--success); }
-    .score-table tfoot .total-lose { color: var(--danger); }
-
-    /* ── Column header with player icon ── */
-    .col-player-header {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-    }
-    .col-player-pip {
-      width: 26px; height: 26px; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center; font-size: 14px;
-    }
-    .col-player-pip-name { font-size: 10px; font-weight: 700; color: var(--text-2); white-space: nowrap; }
-
-    /* ── Session picker ── */
-    .session-picker-card { text-align: center; }
-
-    /* ── Delete round button ── */
-    .del-round-btn {
-      background: none; border: none; color: var(--text-3);
-      font-size: 14px; cursor: pointer; padding: 2px 4px;
-      border-radius: 6px; transition: background 0.12s, color 0.12s;
-    }
-    .del-round-btn:hover { background: #fee2e2; color: var(--danger); }
-
-    /* ── End session button ── */
-    .end-session-btn {
-      width: 100%; padding: 15px;
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-      color: #fff; border: none; border-radius: var(--radius-sm);
-      font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 800;
-      cursor: pointer; letter-spacing: -0.3px;
-      box-shadow: 0 4px 18px rgba(239,68,68,0.35);
-      transition: opacity 0.15s, transform 0.12s;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .end-session-btn:hover  { opacity: 0.92; }
-    .end-session-btn:active { transform: scale(0.97); }
-    .end-session-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-  </style>
 </head>
 <body>
 
@@ -249,9 +85,9 @@
      SESSION PICKER
   ════════════════════════════════════════ */
   async function showSessionPicker() {
-    const sessions = await loadSessions();
+    // Fetch both in parallel
+    const { Sessions: sessions, Games: games } = await batchGetSheets(['Sessions', 'Games']);
     const active   = sessions.filter(s => s.Status === 'Active');
-    const games    = await loadGames();
     const gameMap  = Object.fromEntries(games.map(g => [g.GameID, g.GameName]));
     const sel      = document.getElementById('sessionPickerSelect');
     if (!active.length) {
@@ -265,27 +101,29 @@
     }
     document.getElementById('sessionPickerCard').style.display = 'block';
   }
+
   function goToSession() {
     const id = document.getElementById('sessionPickerSelect').value;
     if (id) location.href = `record_round.html?session=${id}`;
   }
 
   /* ════════════════════════════════════════
-     LOAD SESSION
+     LOAD SESSION — single batchGet for all required data
   ════════════════════════════════════════ */
   async function loadSessionData() {
-    const sessions = await loadSessions();
-    session = sessions.find(s => s.SessionID === sessionId);
+    // One API call for all 5 sheets we need
+    const sheets = await batchGetSheets([
+      'Sessions', 'Players', 'Teams', 'Games', 'SessionParticipants'
+    ]);
+
+    session    = sheets.Sessions.find(s => s.SessionID === sessionId);
     if (!session) { showToast('Session not found', 'error'); return; }
 
-    allPlayers = await loadPlayers();
-    allTeams   = await loadTeams();
-    const games = await loadGames();
-    const game  = games.find(g => g.GameID === session.GameID);
+    allPlayers = sheets.Players;
+    allTeams   = sheets.Teams;
+    const game = sheets.Games.find(g => g.GameID === session.GameID);
 
-    const allParts = await loadSessionParticipants();
-    // Participants stored as one row with comma-separated IDs — expand to array of objects
-    const partRow = allParts.find(p => p.SessionID === sessionId);
+    const partRow = sheets.SessionParticipants.find(p => p.SessionID === sessionId);
     participants = partRow
       ? partRow.ParticipantID.split(',').map(id => ({
           SessionID: sessionId,
@@ -321,17 +159,12 @@
   }
 
   /* ════════════════════════════════════════
-     FETCH + RENDER EVERYTHING
+     FETCH + RENDER (only rounds sheet needed here)
   ════════════════════════════════════════ */
   async function fetchAndRender() {
-    if (session.Type === 'Individual') {
-      const all = await loadRoundsIndividual();
-      currentRounds = all.filter(r => r.SessionID === sessionId);
-    } else {
-      const all = await loadRoundsTeam();
-      currentRounds = all.filter(r => r.SessionID === sessionId);
-    }
-    // Sort ascending by round number
+    const sheetName = session.Type === 'Individual' ? 'Rounds_Individual' : 'Rounds_Team';
+    const all = await getSheetData(sheetName);
+    currentRounds = all.filter(r => r.SessionID === sessionId);
     currentRounds.sort((a,b) => parseInt(a.RoundNumber) - parseInt(b.RoundNumber));
 
     document.getElementById('roundNumLabel').textContent = currentRounds.length + 1;
@@ -358,7 +191,6 @@
           </div>`;
       }).join('');
     } else {
-      // Team mode — big A/B cards
       const tA = allTeams.find(t => t.TeamID === participants[0]?.ParticipantID);
       const tB = allTeams.find(t => t.TeamID === participants[1]?.ParticipantID);
       const icA = tA?.Icon || '🏅'; const bgA = tA?.BG || '#dbeafe';
@@ -383,7 +215,7 @@
   }
 
   /* ════════════════════════════════════════
-     SCOREBOARD  (replaces "previous rounds")
+     SCOREBOARD
   ════════════════════════════════════════ */
   function renderScoreboard() {
     const card = document.getElementById('scoreboardCard');
@@ -391,22 +223,14 @@
     card.style.display = 'block';
     document.getElementById('endSessionWrap').style.display = 'block';
 
-    if (session.Type === 'Individual') {
-      renderIndividualScoreboard();
-    } else {
-      renderTeamScoreboard();
-    }
+    if (session.Type === 'Individual') renderIndividualScoreboard();
+    else                               renderTeamScoreboard();
   }
 
-  /* ── Individual scoreboard ──
-     Columns: Round | P1 | P2 | P3 | P4
-     Rows: each round
-     Footer: totals */
   function renderIndividualScoreboard() {
     const playerIds = participants.map(p => p.ParticipantID);
     const players   = playerIds.map(pid => allPlayers.find(p => p.PlayerID === pid));
 
-    // Compute totals
     const totals = {};
     playerIds.forEach(pid => totals[pid] = 0);
     currentRounds.forEach(r => {
@@ -418,7 +242,6 @@
     });
     const minTotal = Math.min(...Object.values(totals));
 
-    // Header
     const headCells = playerIds.map((pid, i) => {
       const pl = players[i];
       const ic = pl?.Icon || '🧑';
@@ -431,18 +254,14 @@
         </div>
       </th>`;
     }).join('');
-    document.getElementById('scoreHead').innerHTML =
-      `<tr><th>#</th>${headCells}</tr>`;
+    document.getElementById('scoreHead').innerHTML = `<tr><th>#</th>${headCells}</tr>`;
 
-    // Body rows
     document.getElementById('scoreBody').innerHTML = currentRounds.map(r => {
       const cells = playerIds.map(pid => {
-        // find which slot this player is in
         let pts = '';
         for (let i = 1; i <= 4; i++) {
           if (r[`Player${i}_ID`] === pid) { pts = r[`Points${i}`]; break; }
         }
-        // lowest in this round = winner
         const roundPts = playerIds.map(p2 => {
           for (let i = 1; i <= 4; i++) {
             if (r[`Player${i}_ID`] === p2) return parseFloat(r[`Points${i}`] || 0);
@@ -457,19 +276,14 @@
       return `<tr><td>R${r.RoundNumber}</td>${cells}</tr>`;
     }).join('');
 
-    // Footer totals
     const footCells = playerIds.map(pid => {
-      const total   = totals[pid];
-      const isWin   = total === minTotal;
+      const total = totals[pid];
+      const isWin = total === minTotal;
       return `<td class="${isWin?'total-win':'total-lose'}">${total}</td>`;
     }).join('');
-    document.getElementById('scoreFoot').innerHTML =
-      `<tr><td>Total</td>${footCells}</tr>`;
+    document.getElementById('scoreFoot').innerHTML = `<tr><td>Total</td>${footCells}</tr>`;
   }
 
-  /* ── Team scoreboard ──
-     Columns: Round | Team A | Team B
-     Winner of round = lower score (highlighted green) */
   function renderTeamScoreboard() {
     const tA = allTeams.find(t => t.TeamID === participants[0]?.ParticipantID);
     const tB = allTeams.find(t => t.TeamID === participants[1]?.ParticipantID);
@@ -478,14 +292,12 @@
     const nmA = tA?.TeamName || 'Team A';
     const nmB = tB?.TeamName || 'Team B';
 
-    // Totals
     let totA = 0, totB = 0;
     currentRounds.forEach(r => {
       totA += parseFloat(r.PointsA || 0);
       totB += parseFloat(r.PointsB || 0);
     });
 
-    // Header
     document.getElementById('scoreHead').innerHTML = `
       <tr>
         <th>#</th>
@@ -499,7 +311,6 @@
         </div></th>
       </tr>`;
 
-    // Body rows
     document.getElementById('scoreBody').innerHTML = currentRounds.map(r => {
       const pA = parseFloat(r.PointsA || 0);
       const pB = parseFloat(r.PointsB || 0);
@@ -511,7 +322,6 @@
       </tr>`;
     }).join('');
 
-    // Footer
     const winA = totA < totB, winB = totB < totA;
     document.getElementById('scoreFoot').innerHTML = `
       <tr>
@@ -530,8 +340,7 @@
     btn.textContent = 'Closing…'; btn.disabled = true;
     try {
       const result = await closeSession(sessionId);
-      // Resolve winner name
-      let winnerLabel = 'It\'s a tie!';
+      let winnerLabel = "It's a tie!";
       if (result.winnerId) {
         if (session.Type === 'Individual') {
           const p = allPlayers.find(pl => pl.PlayerID === result.winnerId);
@@ -541,7 +350,6 @@
           winnerLabel = t ? `🏆 ${t.TeamName} wins!` : '🏆 Winner found!';
         }
       }
-      // Show result banner then redirect home
       btn.textContent = winnerLabel;
       btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
       btn.style.boxShadow  = '0 4px 18px rgba(16,185,129,0.35)';

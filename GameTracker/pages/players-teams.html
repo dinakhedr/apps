@@ -10,6 +10,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
   <title>Players & Teams</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="../assets/styles.css">
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
@@ -60,24 +61,6 @@
     .entity-preview-icon { width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; transition:background 0.2s; flex-shrink:0; }
     .entity-preview-name { font-weight:700; font-size:15px; color:var(--text); }
     .entity-preview-sub  { font-size:11px; color:var(--text-3); margin-top:2px; }
-
-    /* ── Gender pills ── */
-    .gender-row { display:flex; gap:10px; }
-    .gender-pill {
-      display:flex; align-items:center; gap:8px;
-      padding:10px 14px; border-radius:var(--radius-sm);
-      border:2px solid var(--border); background:var(--surface-2);
-      cursor:pointer; transition:all 0.18s; user-select:none; flex:1;
-    }
-    .gender-pill.active { border-color:var(--brand); background:#ededff; box-shadow:0 0 0 3px rgba(91,94,244,0.10); }
-    .gender-pill-check {
-      width:18px; height:18px; border-radius:50%; flex-shrink:0;
-      border:2px solid var(--border); background:var(--surface); transition:all 0.18s;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .gender-pill.active .gender-pill-check { background:var(--brand); border-color:var(--brand); }
-    .gender-pill.active .gender-pill-check::before { content:'✓'; font-size:11px; font-weight:900; color:#fff; line-height:1; }
-    .gender-pill-label { font-size:13px; font-weight:700; color:var(--text); }
 
     /* ── Player selector cards ── */
     .player-selector { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:8px; }
@@ -388,10 +371,8 @@ let neededPlayers = 2;
 let selectedPlayerIds = new Set();
 let editingPlayer = null, editingTeam = null;
 
-// Gender state
 const genderState = { add: 'Male', edit: 'Male' };
 
-// Picker state
 let addPIcon = PLAYER_ICONS[2],  addPColor = COLOR_OPTIONS[0];
 let editPIcon = PLAYER_ICONS[2], editPColor = COLOR_OPTIONS[0];
 let addTIcon = TEAM_ICONS[0],    addTColor = COLOR_OPTIONS[3];
@@ -428,8 +409,8 @@ function selectGender(prefix, value) {
     const label = pill.querySelector('.gender-pill-label').textContent.trim();
     pill.classList.toggle('active', label === value);
   });
-  if (prefix === 'add')  updateAddPlayerPreview();
-  else                   updateEditPlayerPreview();
+  if (prefix === 'add') updateAddPlayerPreview();
+  else                  updateEditPlayerPreview();
 }
 
 /* ═══════════════════════
@@ -467,10 +448,10 @@ function updateAddPlayerPreview() {
   const gender = genderState.add;
   const active = document.getElementById('addStatusToggle').checked;
   document.getElementById('addStatusLabel').textContent = active ? 'Active' : 'Inactive';
-  document.getElementById('addPreviewIcon').textContent  = addPIcon;
-  document.getElementById('addPreviewIcon').style.background = addPColor.bg;
-  document.getElementById('addPreviewName').textContent  = name;
-  document.getElementById('addPreviewSub').textContent   = `${gender} · ${active?'Active':'Inactive'}`;
+  document.getElementById('addPreviewIcon').textContent       = addPIcon;
+  document.getElementById('addPreviewIcon').style.background  = addPColor.bg;
+  document.getElementById('addPreviewName').textContent       = name;
+  document.getElementById('addPreviewSub').textContent        = `${gender} · ${active?'Active':'Inactive'}`;
   syncTogglePreview('addPlayerPickerPreview', addPIcon, addPColor);
 }
 
@@ -488,11 +469,11 @@ function updateEditPlayerPreview() {
   const name   = document.getElementById('editPlayerName').value.trim() || 'Player Name';
   const gender = genderState.edit;
   const active = document.getElementById('editStatusToggle').checked;
-  document.getElementById('editStatusLabel').textContent = active ? 'Active' : 'Inactive';
-  document.getElementById('editPreviewIcon').textContent  = editPIcon;
+  document.getElementById('editStatusLabel').textContent      = active ? 'Active' : 'Inactive';
+  document.getElementById('editPreviewIcon').textContent      = editPIcon;
   document.getElementById('editPreviewIcon').style.background = editPColor.bg;
-  document.getElementById('editPreviewName').textContent  = name;
-  document.getElementById('editPreviewSub').textContent   = `${gender} · ${active?'Active':'Inactive'}`;
+  document.getElementById('editPreviewName').textContent      = name;
+  document.getElementById('editPreviewSub').textContent       = `${gender} · ${active?'Active':'Inactive'}`;
   syncTogglePreview('editPlayerPickerPreview', editPIcon, editPColor);
 }
 
@@ -511,10 +492,10 @@ function updateAddTeamPreview() {
   const sub  = selectedPlayerIds.size
     ? Array.from(selectedPlayerIds).map(id => allPlayers.find(p=>p.PlayerID===id)?.PlayerName||'?').join(' · ')
     : 'No players selected';
-  document.getElementById('teamPreviewIcon').textContent  = addTIcon;
+  document.getElementById('teamPreviewIcon').textContent      = addTIcon;
   document.getElementById('teamPreviewIcon').style.background = addTColor.bg;
-  document.getElementById('teamPreviewName').textContent  = name;
-  document.getElementById('teamPreviewSub').textContent   = sub;
+  document.getElementById('teamPreviewName').textContent      = name;
+  document.getElementById('teamPreviewSub').textContent       = sub;
   syncTogglePreview('addTeamPickerPreview', addTIcon, addTColor);
 }
 
@@ -530,9 +511,9 @@ function selectEditTIcon(ic) { editTIcon=ic;  buildEditTeamPickers(); updateEdit
 function selectEditTColor(i) { editTColor=COLOR_OPTIONS[i]; buildEditTeamPickers(); updateEditTeamPreview(); }
 function updateEditTeamPreview() {
   const name = document.getElementById('editTeamName').value.trim() || 'Team Name';
-  document.getElementById('editTeamPreviewIcon').textContent  = editTIcon;
+  document.getElementById('editTeamPreviewIcon').textContent      = editTIcon;
   document.getElementById('editTeamPreviewIcon').style.background = editTColor.bg;
-  document.getElementById('editTeamPreviewName').textContent  = name;
+  document.getElementById('editTeamPreviewName').textContent      = name;
   syncTogglePreview('editTeamPickerPreview', editTIcon, editTColor);
 }
 
@@ -579,9 +560,7 @@ function openEditPlayer(encoded) {
   document.getElementById('editStatusToggle').checked = (p.Status !== 'Inactive');
   editPIcon  = PLAYER_ICONS.includes(p.Icon) ? p.Icon : PLAYER_ICONS[2];
   editPColor = COLOR_OPTIONS.find(c=>c.bg===p.BG) || COLOR_OPTIONS[0];
-  // Set gender pill
   selectGender('edit', p.Gender === 'Female' ? 'Female' : 'Male');
-  // Reset picker closed
   document.getElementById('editPlayerPicker').classList.remove('open');
   document.getElementById('editPlayerPickerToggle').classList.remove('open');
   buildEditPlayerPickers();
@@ -621,7 +600,7 @@ async function confirmDeletePlayer(id, name) {
    TEAMS
 ═══════════════════════ */
 async function loadTeamsData() {
-  allGames = await loadGames();
+  // allGames already loaded in initial batchGet — just use it
   const teamGames = allGames.filter(g => g.AllowsTeam === 'TRUE');
   const sel = document.getElementById('gameSelect');
   sel.innerHTML = '<option value="">Select a game…</option>' +
@@ -789,7 +768,7 @@ async function confirmDeleteTeam(id, name) {
 }
 
 /* ═══════════════════════
-   PAGE INIT
+   PAGE INIT — single batchGet for all startup data
 ═══════════════════════ */
 window.onload = async () => {
   await initPageAuth({
@@ -797,6 +776,11 @@ window.onload = async () => {
     onReady: async () => {
       document.getElementById('loadingOverlay').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
+
+      // Load players + games in one call
+      const sheets = await batchGetSheets(['Players', 'Games']);
+      allPlayers = sheets.Players;
+      allGames   = sheets.Games;
 
       buildAddPlayerPickers(); updateAddPlayerPreview();
 
@@ -807,7 +791,9 @@ window.onload = async () => {
       document.getElementById('teamName').addEventListener('input', updateAddTeamPreview);
       document.getElementById('editTeamName').addEventListener('input', updateEditTeamPreview);
 
+      // Render players list (already in cache from batchGet above)
       await loadPlayersList();
+      // Setup teams tab (uses allGames already loaded)
       await loadTeamsData();
     }
   });
