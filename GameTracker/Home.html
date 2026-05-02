@@ -10,6 +10,8 @@
   <link rel="apple-touch-icon" sizes="180x180" href="images/icon.png">
   <link rel="icon" type="image/png" href="images/icon.png">
   <title>🎲 Score Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="assets/styles.css">
   <script src="assets/utils.js"></script>
   <script src="assets/auth.js"></script>
@@ -71,9 +73,9 @@
 
 <script>
   async function loadActiveSessions() {
-    const sessions = await loadSessions();
-    const active = sessions.filter(s => s.Status === 'Active');
-    const games = await loadGames();
+    // Both sheets in one API call — Games used to resolve names
+    const { Sessions: sessions, Games: games } = await batchGetSheets(['Sessions', 'Games']);
+    const active  = sessions.filter(s => s.Status === 'Active');
     const gameMap = Object.fromEntries(games.map(g => [g.GameID, g.GameName]));
 
     if (!active.length) {
@@ -101,7 +103,7 @@
   async function closeAndReload(sessionId) {
     if (!confirm('Close this session? Winner = lowest total points.')) return;
     try {
-      const result = await closeSession(sessionId);
+      await closeSession(sessionId);
       showToast('Session closed! 🏆');
       await loadActiveSessions();
     } catch(e) {
@@ -112,7 +114,7 @@
   function handleLogout() {
     if (!confirm('Sign out?')) return;
     localStorage.removeItem('google_token');
-    sessionStorage.removeItem('gapi_access_token');
+    sessionStorage.clear();
     location.reload();
   }
 
