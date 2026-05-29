@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Routine · Health Tracker</title>
   <link rel="manifest" href="../manifest.json">
-  <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
-  <link rel="icon" type="image/png" href="../images/icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../images/icon-180.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="../images/icon-180.png">
+  <link rel="shortcut icon" href="../images/icon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/styles.css">
   <script src="../assets/config.js"></script>
   <script src="../assets/utils.js"></script>
@@ -16,6 +20,254 @@
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    body {
+      background: #F7F6F3;
+      padding-top: 0;
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      background: #fff;
+      border-bottom: 0.5px solid rgba(0,0,0,0.08);
+      padding: calc(44px + env(safe-area-inset-top, 0px)) 16px 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .page-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .page-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-title {
+      font-family: 'Lato', sans-serif;
+      font-size: 19px;
+      font-weight: 900;
+      color: #1A1A18;
+      letter-spacing: -0.3px;
+    }
+    .page-actions {
+      display: flex;
+      gap: 7px;
+    }
+
+    /* ── Body ── */
+    .page-body {
+      padding: 12px 14px;
+      padding-bottom: calc(var(--nav-h) + 20px + env(safe-area-inset-bottom, 0px));
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ── Section label ── */
+    .sec-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: #A8A89E;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 4px 0 7px;
+    }
+
+    /* ── Routine section card ── */
+    .routine-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 0.5px solid rgba(0,0,0,0.07);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .routine-card-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 13px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    }
+    .routine-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #1A1A18;
+    }
+    .phase-icon-badge {
+      width: 27px;
+      height: 27px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .phase-icon-badge.morning { background: #FFF3E0; }
+    .phase-icon-badge.evening { background: #EDE7F6; }
+
+    .phase-add-btn {
+      background: #3D7C5E;
+      border: none;
+      border-radius: 20px;
+      color: #fff;
+      font-family: 'Lato', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .phase-add-btn:active { opacity: 0.85; transform: scale(0.97); }
+
+    /* ── Assignment item ── */
+    .asgn-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 13px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .asgn-item:last-child { border-bottom: none; }
+    .asgn-item.item-inactive { opacity: 0.4; filter: grayscale(0.3); }
+
+    .drag-handle {
+      color: #C8C8C0;
+      font-size: 16px;
+      cursor: grab;
+      flex-shrink: 0;
+      user-select: none;
+      padding: 2px 0;
+    }
+    .drag-handle:active { cursor: grabbing; }
+
+    .step-num-badge {
+      min-width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      flex-shrink: 0;
+      padding: 0 4px;
+    }
+    .step-num-badge.morning { background: #3D7C5E; color: #fff; }
+    .step-num-badge.evening { background: #534AB7; color: #fff; }
+
+    .asgn-info { flex: 1; min-width: 0; }
+    .asgn-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1A1A18;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .asgn-meta {
+      font-size: 11px;
+      color: #A8A89E;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .asgn-brand { color: #3D7C5E; font-weight: 700; }
+    .asgn-days-pill {
+      font-size: 10px;
+      background: #F2F0EB;
+      color: #888780;
+      border-radius: 20px;
+      padding: 1px 6px;
+      border: 0.5px solid rgba(0,0,0,0.08);
+    }
+    .inactive-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: #A8A89E;
+      background: #F2F0EB;
+      border: 0.5px solid rgba(0,0,0,0.08);
+      border-radius: 6px;
+      padding: 1px 6px;
+    }
+
+    .item-more-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      border: none;
+      background: none;
+      color: #C8C8C0;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .item-more-btn:active { background: #F2F0EB; }
+
+    /* ── Products card ── */
+    .products-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 0.5px solid rgba(0,0,0,0.07);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .products-card-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 13px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    }
+    .products-card-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: #1A1A18;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 13px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .brand-row:last-child { border-bottom: none; }
+    .brand-row:active { background: #F7F6F3; }
+
+    .brand-logo-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #F7F6F3;
+      border: 0.5px solid rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .brand-logo-box img { width: 70%; height: auto; object-fit: contain; }
+    .brand-row-name { flex: 1; font-size: 13px; font-weight: 700; color: #1A1A18; }
+    .brand-row-count { font-size: 11px; color: #A8A89E; font-weight: 700; margin-right: 2px; }
+    .brand-row-arrow { font-size: 14px; color: #C8C8C0; }
+  </style>
 </head>
 <body>
 
@@ -23,50 +275,70 @@
   <div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>
 </div>
 
-<div class="container">
-  <div class="header">
-    <h1>🧴 Routine</h1>
-    <div class="header-actions">
+<!-- Page header -->
+<div class="page-header">
+  <div class="page-header-row">
+    <div class="page-header-left">
+      <button class="hdr-icon-btn" onclick="window.location.href='Home.html'" title="Back">←</button>
+      <span class="page-title">🧴 Routine</span>
+    </div>
+    <div class="page-actions">
       <button class="hdr-icon-btn" id="syncBtn" title="Sync">↻</button>
-      <button class="hdr-icon-btn" onclick="logout()">⏻</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
     </div>
   </div>
+</div>
+
+<!-- Page body -->
+<div class="page-body">
 
   <!-- My Routine Steps -->
-  <div class="card">
-    <div class="card-header-flex">
-      <div class="card-title" style="margin-bottom:0">📌 My Routine Steps</div>
-      <button class="add-product-card-btn" id="addStepBtn">➕ Add Step</button>
-    </div>
+  <div class="sec-lbl">My Routine Steps</div>
 
-    <div id="morningAssignments" class="assignment-phase-container" style="margin-top:16px">
-      <div class="assignment-phase-title">🌅 Morning</div>
-      <div id="morningList" class="assignment-list"></div>
+  <!-- Morning card -->
+  <div class="routine-card">
+    <div class="routine-card-hdr">
+      <div class="routine-card-title">
+        <div class="phase-icon-badge morning">🌅</div>
+        Morning
+      </div>
+      <button class="phase-add-btn" id="addMorningStepBtn">+ Add Step</button>
     </div>
-    <div id="eveningAssignments" class="assignment-phase-container">
-      <div class="assignment-phase-title">🌙 Evening</div>
-      <div id="eveningList" class="assignment-list"></div>
+    <div id="morningList" class="assignment-list"></div>
+  </div>
+
+  <!-- Evening card -->
+  <div class="routine-card">
+    <div class="routine-card-hdr">
+      <div class="routine-card-title">
+        <div class="phase-icon-badge evening">🌙</div>
+        Evening
+      </div>
+      <button class="phase-add-btn" style="background:#534AB7;" id="addEveningStepBtn">+ Add Step</button>
     </div>
+    <div id="eveningList" class="assignment-list"></div>
   </div>
 
   <!-- All Products -->
-  <div class="products-management-card">
-    <div class="card-header-flex">
-      <h3 class="card-title-text">🧴 All Products</h3>
-      <button class="add-product-card-btn" id="addProductBtn">➕ Add Product</button>
+  <div class="sec-lbl" style="margin-top:6px;">All Products</div>
+  <div class="products-card">
+    <div class="products-card-hdr">
+      <span class="products-card-title">Products</span>
+      <button class="phase-add-btn" id="addProductBtn">+ Add Product</button>
     </div>
     <div id="productsContainer"></div>
   </div>
+
 </div>
 
 <div id="bottomNavMount"></div>
 <div class="toast" id="toast"></div>
 
-<!-- Product Modal -->
+<!-- ── Product Modal ── -->
 <div class="modal-backdrop" id="productModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="productModalTitle">➕ Add Product</div>
+    <div class="modal-title" id="productModalTitle">Add Product</div>
     <input type="hidden" id="editProductId">
     <div class="form-group">
       <label>Product Name *</label>
@@ -95,11 +367,11 @@
   </div>
 </div>
 
-<!-- Assignment Modal -->
+<!-- ── Assignment Modal ── -->
 <div class="modal-backdrop" id="assignmentModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="assignmentModalTitle">➕ Add Routine Step</div>
+    <div class="modal-title" id="assignmentModalTitle">Add Routine Step</div>
     <input type="hidden" id="editAssignmentId">
     <div class="brand-filter-row">
       <label>Filter by Brand</label>
@@ -139,7 +411,7 @@
   </div>
 </div>
 
-<!-- Brand Products Modal -->
+<!-- ── Brand Products Modal ── -->
 <div class="modal-backdrop" id="brandModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -151,7 +423,7 @@
   </div>
 </div>
 
-<!-- Action Sheet -->
+<!-- ── Action Sheet ── -->
 <div class="sheet-backdrop" id="actionSheet">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -163,11 +435,14 @@
 
 <script>
 // ── State ──────────────────────────────────────────────────
-let spreadsheetId = null, currentUserEmail = null;
-let products = [], assignments = [];
+let spreadsheetId     = null;
+let currentUserEmail  = null;
+let products          = [];
+let assignments       = [];
 let actionSheetTarget = null;
-let sortableMorning = null, sortableEvening = null;
-let currentBrandId = null;
+let sortableMorning   = null;
+let sortableEvening   = null;
+let currentBrandId    = null;
 
 // ── Local cache ────────────────────────────────────────────
 function saveLocal() {
@@ -177,15 +452,15 @@ function saveLocal() {
 }
 function loadLocal() {
   if (!currentUserEmail) return;
-  const p = localStorage.getItem(`products_${currentUserEmail}`);    if (p) products     = JSON.parse(p);
-  const a = localStorage.getItem(`assignments_${currentUserEmail}`); if (a) assignments  = JSON.parse(a);
+  const p = localStorage.getItem(`products_${currentUserEmail}`);    if (p) products    = JSON.parse(p);
+  const a = localStorage.getItem(`assignments_${currentUserEmail}`); if (a) assignments = JSON.parse(a);
 }
 
 // ── Sheet loaders ──────────────────────────────────────────
 async function loadProducts() {
   const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `'${PRODUCTS_SHEET}'!A2:E` });
   products = (res.result.values||[]).map(r => ({
-    productId:r[0]||'', brandId:r[1]||'', product:r[2]||'', useFor:r[3]||'', status:r[4]||'Active'
+    productId: r[0]||'', brandId: r[1]||'', product: r[2]||'', useFor: r[3]||'', status: r[4]||'Active'
   })).filter(p => p.productId);
   saveLocal();
 }
@@ -193,7 +468,8 @@ async function loadProducts() {
 async function loadAssignments() {
   const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `'${ROUTINE_SHEET}'!A2:E` });
   assignments = (res.result.values||[]).map(r => ({
-    assignmentId:r[0]||'', productId:r[1]||'', phase:r[2]||'', step:Math.round(Number(r[3]))||0,
+    assignmentId: r[0]||'', productId: r[1]||'', phase: r[2]||'',
+    step: Math.round(Number(r[3]))||0,
     days: r[4] || 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday'
   })).filter(a => a.assignmentId);
   saveLocal();
@@ -203,8 +479,8 @@ async function saveProductsToSheet() {
   await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `'${PRODUCTS_SHEET}'!A2:E` });
   if (products.length) {
     await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId, range: `'${PRODUCTS_SHEET}'!A2`, valueInputOption:'RAW',
-      resource: { values: products.map(p => [p.productId,p.brandId,p.product,p.useFor,p.status]) }
+      spreadsheetId, range: `'${PRODUCTS_SHEET}'!A2`, valueInputOption: 'RAW',
+      resource: { values: products.map(p => [p.productId, p.brandId, p.product, p.useFor, p.status]) }
     });
   }
   saveLocal();
@@ -214,59 +490,85 @@ async function saveAssignmentsToSheet() {
   await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `'${ROUTINE_SHEET}'!A2:E` });
   if (assignments.length) {
     await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId, range: `'${ROUTINE_SHEET}'!A2`, valueInputOption:'RAW',
-      resource: { values: assignments.map(a => [a.assignmentId,a.productId,a.phase,a.step,a.days]) }
+      spreadsheetId, range: `'${ROUTINE_SHEET}'!A2`, valueInputOption: 'RAW',
+      resource: { values: assignments.map(a => [a.assignmentId, a.productId, a.phase, a.step, a.days]) }
     });
   }
   saveLocal();
 }
 
+// ── Renumber helper ────────────────────────────────────────
+function renumberPhase(phase) {
+  assignments
+    .filter(a => a.phase === phase)
+    .sort((x, y) => x.step - y.step)
+    .forEach((a, i) => { a.step = i + 1; });
+}
+
 // ── Render assignment list ─────────────────────────────────
 function renderAssignments() {
   const productMap = new Map(products.map(p => [p.productId, p]));
-  const morning = assignments.filter(a => a.phase==='Morning').sort((x,y) => x.step-y.step);
-  const evening = assignments.filter(a => a.phase==='Evening').sort((x,y) => x.step-y.step);
+  const morning    = assignments.filter(a => a.phase === 'Morning').sort((x,y) => x.step - y.step);
+  const evening    = assignments.filter(a => a.phase === 'Evening').sort((x,y) => x.step - y.step);
 
-  function buildList(arr, containerId) {
+  function buildList(arr, containerId, phase) {
     const el = document.getElementById(containerId);
-    if (!arr.length) { el.innerHTML = '<div class="empty-state-small">No steps yet</div>'; return; }
+    if (!arr.length) {
+      el.innerHTML = '<div class="empty-state-small">No steps yet — tap Add Step to begin</div>';
+      return;
+    }
+    const phaseClass = phase === 'Morning' ? 'morning' : 'evening';
     el.innerHTML = arr.map(a => {
-      const p = productMap.get(a.productId);
+      const p        = productMap.get(a.productId);
       const inactive = p && p.status === 'Inactive';
-      return `<div class="assignment-item-new${inactive?' item-inactive':''}" data-id="${a.assignmentId}">
-        <div class="drag-handle">☰</div>
-        <div class="step-badge">${a.step}</div>
-        <div class="assignment-details">
-          <div class="assignment-product">${escapeHtml(p ? p.product : '—')}${inactive?'<span class="inactive-badge" style="margin-left:6px">Inactive</span>':''}</div>
-          <div class="assignment-brand">${escapeHtml(getBrandNameFromId(p ? p.brandId : ''))}</div>
-          <div class="assignment-days">📅 ${formatDays(a.days)}</div>
-        </div>
-        <button class="more-btn" data-action-type="assignment" data-action-id="${a.assignmentId}">⋮</button>
-      </div>`;
+      return `
+        <div class="asgn-item${inactive ? ' item-inactive' : ''}" data-id="${a.assignmentId}">
+          <span class="drag-handle">⠿</span>
+          <div class="step-num-badge ${phaseClass}">${a.step}</div>
+          <div class="asgn-info">
+            <div class="asgn-name">
+              ${escapeHtml(p ? p.product : '—')}
+              ${inactive ? '<span class="inactive-badge">Inactive</span>' : ''}
+            </div>
+            <div class="asgn-meta">
+              <span class="asgn-brand">${escapeHtml(getBrandNameFromId(p ? p.brandId : ''))}</span>
+              <span class="asgn-days-pill">${formatDays(a.days)}</span>
+            </div>
+          </div>
+          <button class="item-more-btn" data-action-type="assignment" data-action-id="${a.assignmentId}">⋮</button>
+        </div>`;
     }).join('');
   }
 
-  buildList(morning, 'morningList');
-  buildList(evening, 'eveningList');
+  buildList(morning, 'morningList', 'Morning');
+  buildList(evening, 'eveningList', 'Evening');
 
-  // Re-init sortable
+  // Re-init drag-to-reorder
   if (sortableMorning) sortableMorning.destroy();
   if (sortableEvening) sortableEvening.destroy();
   sortableMorning = new Sortable(document.getElementById('morningList'), {
-    group: { name:'routine', pull:true, put:true }, animation:200, handle:'.drag-handle', onEnd: handleReorder
+    group: { name: 'routine', pull: true, put: true },
+    animation: 200, handle: '.drag-handle', onEnd: handleReorder
   });
   sortableEvening = new Sortable(document.getElementById('eveningList'), {
-    group: { name:'routine', pull:true, put:true }, animation:200, handle:'.drag-handle', onEnd: handleReorder
+    group: { name: 'routine', pull: true, put: true },
+    animation: 200, handle: '.drag-handle', onEnd: handleReorder
   });
 }
 
 async function handleReorder() {
-  const morningIds = [...document.querySelectorAll('#morningList .assignment-item-new')].map(el => el.dataset.id);
-  const eveningIds = [...document.querySelectorAll('#eveningList .assignment-item-new')].map(el => el.dataset.id);
-  const newAssignments = [];
-  morningIds.forEach((id,i) => { const ex = assignments.find(a => a.assignmentId===id); if(ex) newAssignments.push({...ex,phase:'Morning',step:i+1}); });
-  eveningIds.forEach((id,i) => { const ex = assignments.find(a => a.assignmentId===id); if(ex) newAssignments.push({...ex,phase:'Evening',step:i+1}); });
-  assignments = newAssignments;
+  const morningIds = [...document.querySelectorAll('#morningList .asgn-item')].map(el => el.dataset.id);
+  const eveningIds = [...document.querySelectorAll('#eveningList .asgn-item')].map(el => el.dataset.id);
+  const reordered  = [];
+  morningIds.forEach((id,i) => {
+    const ex = assignments.find(a => a.assignmentId === id);
+    if (ex) reordered.push({ ...ex, phase: 'Morning', step: i + 1 });
+  });
+  eveningIds.forEach((id,i) => {
+    const ex = assignments.find(a => a.assignmentId === id);
+    if (ex) reordered.push({ ...ex, phase: 'Evening', step: i + 1 });
+  });
+  assignments = reordered;
   await saveAssignmentsToSheet();
   showToast('✅ Order updated');
   renderAssignments();
@@ -274,39 +576,49 @@ async function handleReorder() {
 
 // ── Render products card ───────────────────────────────────
 function renderProducts() {
-  const el = document.getElementById('productsContainer');
-  const brands = [...new Set(products.map(p => p.brandId))].sort((a,b) => getBrandNameFromId(a).localeCompare(getBrandNameFromId(b)));
-  if (!brands.length) { el.innerHTML = '<div class="empty-state">✨ No products yet. Tap "Add Product" to start.</div>'; return; }
+  const el     = document.getElementById('productsContainer');
+  const brands = [...new Set(products.map(p => p.brandId))]
+    .sort((a,b) => getBrandNameFromId(a).localeCompare(getBrandNameFromId(b)));
+
+  if (!brands.length) {
+    el.innerHTML = '<div class="empty-state">No products yet — tap Add Product to start</div>';
+    return;
+  }
+
   el.innerHTML = brands.map(brandId => {
-    const brand = BRANDS.find(b => b.id===brandId) || { name:brandId, logo:null };
+    const brand    = BRANDS.find(b => b.id === brandId) || { name: brandId, logo: null };
     const logoHtml = brand.logo
       ? `<img src="../logos/${brand.logo}" alt="${escapeHtml(brand.name)}">`
       : '🧴';
-    const count = products.filter(p => p.brandId===brandId).length;
-    return `<div class="brand-list-item" data-brand="${brandId}">
-      <div class="brand-list-logo">${logoHtml}</div>
-      <div class="brand-list-name">${escapeHtml(brand.name)}</div>
-      <div style="font-size:11px;color:var(--text-3);margin-right:4px">${count}</div>
-      <div class="brand-list-arrow">→</div>
-    </div>`;
+    const count = products.filter(p => p.brandId === brandId).length;
+    return `
+      <div class="brand-row" data-brand="${brandId}">
+        <div class="brand-logo-box">${logoHtml}</div>
+        <div class="brand-row-name">${escapeHtml(brand.name)}</div>
+        <div class="brand-row-count">${count}</div>
+        <div class="brand-row-arrow">›</div>
+      </div>`;
   }).join('');
 }
 
 function openBrandModal(brandId) {
   currentBrandId = brandId;
-  const brand = BRANDS.find(b => b.id===brandId) || { name:brandId };
+  const brand = BRANDS.find(b => b.id === brandId) || { name: brandId };
   document.getElementById('brandModalTitle').textContent = brand.name;
-  const brandProducts = products.filter(p => p.brandId===brandId);
+  const brandProducts = products.filter(p => p.brandId === brandId);
   document.getElementById('brandProductsList').innerHTML = brandProducts.map(p => {
-    const statusClass = p.status==='Active' ? 'active' : 'inactive';
-    return `<div class="product-modal-item">
-      <div class="product-modal-info">
-        <div class="product-modal-name">${escapeHtml(p.product)}</div>
-        <div class="product-modal-meta">${escapeHtml(p.useFor||'')}</div>
-      </div>
-      <div class="status-toggle ${statusClass}" data-toggle-product="${p.productId}"><div class="status-toggle-knob"></div></div>
-      <button class="more-btn" data-action-type="product" data-action-id="${p.productId}">⋮</button>
-    </div>`;
+    const statusClass = p.status === 'Active' ? 'active' : 'inactive';
+    return `
+      <div class="product-modal-item">
+        <div class="product-modal-info">
+          <div class="product-modal-name">${escapeHtml(p.product)}</div>
+          <div class="product-modal-meta">${escapeHtml(p.useFor || '')}</div>
+        </div>
+        <div class="status-toggle ${statusClass}" data-toggle-product="${p.productId}">
+          <div class="status-toggle-knob"></div>
+        </div>
+        <button class="item-more-btn" data-action-type="product" data-action-id="${p.productId}">⋮</button>
+      </div>`;
   }).join('');
   openModal('brandModal');
 }
@@ -314,32 +626,34 @@ function openBrandModal(brandId) {
 // ── Product modal ──────────────────────────────────────────
 function openProductModal(id = null) {
   const isEdit = !!id;
-  document.getElementById('productModalTitle').textContent = isEdit ? '✏️ Edit Product' : '➕ Add Product';
+  document.getElementById('productModalTitle').textContent = isEdit ? 'Edit Product' : 'Add Product';
   document.getElementById('editProductId').value = id || '';
 
   const brandSelect = document.getElementById('productBrand');
   brandSelect.innerHTML = BRANDS.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
 
   const updatePreview = () => {
-    const brand = BRANDS.find(b => b.id===brandSelect.value);
+    const brand   = BRANDS.find(b => b.id === brandSelect.value);
     const preview = document.getElementById('productBrandPreview');
-    preview.innerHTML = brand?.logo ? `<img src="../logos/${brand.logo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : '🧴';
+    preview.innerHTML = brand?.logo
+      ? `<img src="../logos/${brand.logo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      : '🧴';
   };
   brandSelect.onchange = updatePreview;
 
   if (isEdit) {
-    const p = products.find(p => p.productId===id);
+    const p = products.find(p => p.productId === id);
     if (p) {
       document.getElementById('productName').value = p.product;
       brandSelect.value = p.brandId;
       renderUseForCheckboxes(p.useFor);
-      setStatusToggle('productStatusToggle','productStatusInput', p.status);
+      setStatusToggle('productStatusToggle', 'productStatusInput', p.status);
     }
   } else {
     document.getElementById('productName').value = '';
     brandSelect.value = BRANDS[0].id;
     renderUseForCheckboxes('');
-    setStatusToggle('productStatusToggle','productStatusInput','Active');
+    setStatusToggle('productStatusToggle', 'productStatusInput', 'Active');
   }
   updatePreview();
   openModal('productModal');
@@ -354,9 +668,12 @@ async function saveProduct() {
   if (!productName) { showToast('Product name required', 'error'); return; }
   const isNew = !id;
   const newId = id || generateProductId();
-  const obj = { productId:newId, brandId, product:productName, useFor, status };
+  const obj   = { productId: newId, brandId, product: productName, useFor, status };
   if (isNew) products.push(obj);
-  else { const i = products.findIndex(p => p.productId===newId); if(i!==-1) products[i]=obj; }
+  else {
+    const i = products.findIndex(p => p.productId === newId);
+    if (i !== -1) products[i] = obj;
+  }
   closeModal('productModal');
   await saveProductsToSheet();
   renderProducts();
@@ -366,9 +683,9 @@ async function saveProduct() {
 
 // ── Toggle product status inline ───────────────────────────
 async function toggleProductStatus(productId) {
-  const p = products.find(p => p.productId===productId);
+  const p = products.find(p => p.productId === productId);
   if (!p) return;
-  p.status = p.status==='Active' ? 'Inactive' : 'Active';
+  p.status = p.status === 'Active' ? 'Inactive' : 'Active';
   await saveProductsToSheet();
   renderProducts();
   if (currentBrandId) openBrandModal(currentBrandId);
@@ -377,40 +694,41 @@ async function toggleProductStatus(productId) {
 }
 
 // ── Assignment modal ───────────────────────────────────────
-function openAssignmentModal(id = null) {
+function openAssignmentModal(id = null, defaultPhase = 'Morning') {
   const isEdit = !!id;
-  document.getElementById('assignmentModalTitle').textContent = isEdit ? '✏️ Edit Step' : '➕ Add Routine Step';
+  document.getElementById('assignmentModalTitle').textContent = isEdit ? 'Edit Step' : 'Add Routine Step';
   document.getElementById('editAssignmentId').value = id || '';
 
-  const brandFilter   = document.getElementById('assignmentBrandFilter');
+  const brandFilter = document.getElementById('assignmentBrandFilter');
   brandFilter.innerHTML = '<option value="">All Brands</option>' +
     BRANDS.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
 
   const refreshProducts = () => {
-    const sel = document.getElementById('assignmentProductId');
-    let filtered = products.filter(p => p.status==='Active');
-    if (brandFilter.value) filtered = filtered.filter(p => p.brandId===brandFilter.value);
-    sel.innerHTML = filtered.map(p => `<option value="${p.productId}">${escapeHtml(p.product)}</option>`).join('');
+    const sel      = document.getElementById('assignmentProductId');
+    let filtered   = products.filter(p => p.status === 'Active');
+    if (brandFilter.value) filtered = filtered.filter(p => p.brandId === brandFilter.value);
+    sel.innerHTML  = filtered.map(p => `<option value="${p.productId}">${escapeHtml(p.product)}</option>`).join('');
   };
   brandFilter.onchange = refreshProducts;
 
   if (isEdit) {
-    const a = assignments.find(a => a.assignmentId===id);
+    const a = assignments.find(a => a.assignmentId === id);
     if (a) {
-      const p = products.find(p => p.productId===a.productId);
+      const p = products.find(p => p.productId === a.productId);
       if (p) brandFilter.value = p.brandId;
       refreshProducts();
       document.getElementById('assignmentProductId').value = a.productId;
-      document.getElementById('assignmentPhase').value = a.phase;
-      document.getElementById('assignmentStep').value  = a.step;
+      document.getElementById('assignmentPhase').value     = a.phase;
+      document.getElementById('assignmentStep').value      = a.step;
       renderDayCheckboxes('daysCheckboxes', a.days);
     }
   } else {
     refreshProducts();
-    document.getElementById('assignmentPhase').value = 'Morning';
-    const maxStep = assignments.filter(a => a.phase==='Morning').reduce((m,a) => Math.max(m,a.step), 0);
+    document.getElementById('assignmentPhase').value = defaultPhase;
+    const maxStep = assignments.filter(a => a.phase === defaultPhase)
+      .reduce((m, a) => Math.max(m, a.step), 0);
     document.getElementById('assignmentStep').value = maxStep + 1;
-    renderDayCheckboxes('daysCheckboxes','Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday');
+    renderDayCheckboxes('daysCheckboxes', 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday');
   }
   openModal('assignmentModal');
 }
@@ -426,13 +744,16 @@ async function saveAssignment() {
 
   const isNew = !id;
   const newId = id || generateAssignmentId();
-  const obj = { assignmentId:newId, productId, phase, step, days };
+  const obj   = { assignmentId: newId, productId, phase, step, days };
   if (isNew) assignments.push(obj);
-  else { const i = assignments.findIndex(a => a.assignmentId===newId); if(i!==-1) assignments[i]=obj; }
+  else {
+    const i = assignments.findIndex(a => a.assignmentId === newId);
+    if (i !== -1) assignments[i] = obj;
+  }
 
-  // Renumber steps for this phase
-  const phaseSteps = assignments.filter(a => a.phase===phase).sort((x,y) => x.step-y.step);
-  phaseSteps.forEach((a,i) => { a.step = i+1; });
+  // Renumber both phases cleanly
+  renumberPhase('Morning');
+  renumberPhase('Evening');
 
   closeModal('assignmentModal');
   await saveAssignmentsToSheet();
@@ -444,12 +765,15 @@ async function saveAssignment() {
 function openActionSheet(type, id) {
   actionSheetTarget = { type, id };
   let title = '';
-  if (type==='product') {
-    const p = products.find(p => p.productId===id);
-    title = p ? p.product : 'Product';
+  if (type === 'product') {
+    const p = products.find(p => p.productId === id);
+    title   = p ? p.product : 'Product';
   } else {
-    const a = assignments.find(a => a.assignmentId===id);
-    if (a) { const p = products.find(p => p.productId===a.productId); title = p ? `${p.product} · ${a.phase} step ${a.step}` : 'Step'; }
+    const a = assignments.find(a => a.assignmentId === id);
+    if (a) {
+      const p = products.find(p => p.productId === a.productId);
+      title   = p ? `${p.product} · ${a.phase} step ${a.step}` : 'Step';
+    }
   }
   document.getElementById('sheetTitle').textContent = title;
   openModal('actionSheet');
@@ -459,23 +783,31 @@ async function sheetEdit() {
   if (!actionSheetTarget) return;
   const { type, id } = actionSheetTarget;
   closeModal('actionSheet');
-  if (type==='product') openProductModal(id); else openAssignmentModal(id);
+  if (type === 'product') openProductModal(id);
+  else openAssignmentModal(id);
 }
 
 async function sheetDelete() {
   if (!actionSheetTarget) return;
   const { type, id } = actionSheetTarget;
   closeModal('actionSheet');
-  if (type==='product') {
-    if (assignments.some(a => a.productId===id) && !confirm('This product has routine steps. Delete anyway?')) return;
-    assignments = assignments.filter(a => a.productId!==id);
-    products    = products.filter(p => p.productId!==id);
+
+  if (type === 'product') {
+    if (assignments.some(a => a.productId === id) &&
+        !confirm('This product has routine steps. Delete anyway?')) return;
+    assignments = assignments.filter(a => a.productId !== id);
+    products    = products.filter(p => p.productId !== id);
+    renumberPhase('Morning');
+    renumberPhase('Evening');
     await saveProductsToSheet();
     await saveAssignmentsToSheet();
-    renderProducts(); renderAssignments();
+    renderProducts();
+    renderAssignments();
     showToast('🗑️ Product deleted');
   } else {
-    assignments = assignments.filter(a => a.assignmentId!==id);
+    assignments = assignments.filter(a => a.assignmentId !== id);
+    renumberPhase('Morning');
+    renumberPhase('Evening');
     await saveAssignmentsToSheet();
     renderAssignments();
     showToast('🗑️ Step deleted');
@@ -487,16 +819,20 @@ async function syncAll() {
   const btn = document.getElementById('syncBtn');
   btn.classList.add('spinning');
   try {
-    await loadProducts(); await loadAssignments();
-    renderProducts(); renderAssignments();
+    await loadProducts();
+    await loadAssignments();
+    renderProducts();
+    renderAssignments();
     showToast('✅ Synced');
-  } catch(e) { showToast('❌ Sync failed','error'); }
+  } catch(e) {
+    showToast('❌ Sync failed', 'error');
+  }
   btn.classList.remove('spinning');
 }
 
 async function ensureSheets() {
   try {
-    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
+    const meta     = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
     const existing = meta.result.sheets.map(s => s.properties.title);
     for (const [name, headers] of [
       [PRODUCTS_SHEET,    ['ProductID','BrandID','Product','Use For','Status']],
@@ -504,15 +840,24 @@ async function ensureSheets() {
       [ROUTINE_LOG_SHEET, ['Date','ProductID','Phase','Step','Product','Timestamp','Notes']]
     ]) {
       if (!existing.includes(name)) {
-        await gapi.client.sheets.spreadsheets.batchUpdate({ spreadsheetId, resource: { requests:[{ addSheet:{properties:{title:name}} }] } });
-        await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId, range:`'${name}'!A1:${String.fromCharCode(64+headers.length)}1`, valueInputOption:'RAW', resource:{values:[headers]} });
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+          spreadsheetId,
+          resource: { requests: [{ addSheet: { properties: { title: name } } }] }
+        });
+        await gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `'${name}'!A1:${String.fromCharCode(64 + headers.length)}1`,
+          valueInputOption: 'RAW',
+          resource: { values: [headers] }
+        });
       }
     }
   } catch(e) { console.warn(e); }
 }
 
-// ── Wire events & init ─────────────────────────────────────
-document.getElementById('addStepBtn').addEventListener('click', () => openAssignmentModal());
+// ── Wire events ────────────────────────────────────────────
+document.getElementById('addMorningStepBtn').addEventListener('click', () => openAssignmentModal(null, 'Morning'));
+document.getElementById('addEveningStepBtn').addEventListener('click', () => openAssignmentModal(null, 'Evening'));
 document.getElementById('addProductBtn').addEventListener('click', () => openProductModal());
 document.getElementById('cancelProductBtn').addEventListener('click', () => closeModal('productModal'));
 document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
@@ -523,60 +868,76 @@ document.getElementById('syncBtn').addEventListener('click', syncAll);
 document.getElementById('sheetEditBtn').addEventListener('click', sheetEdit);
 document.getElementById('sheetDeleteBtn').addEventListener('click', sheetDelete);
 
-// Status toggle
+// Product status toggle in modal
 document.getElementById('productStatusToggle').addEventListener('click', () => {
-  const toggle = document.getElementById('productStatusToggle');
-  const input  = document.getElementById('productStatusInput');
+  const toggle  = document.getElementById('productStatusToggle');
+  const input   = document.getElementById('productStatusInput');
   const isActive = toggle.classList.contains('active');
   toggle.classList.toggle('active', !isActive);
   toggle.classList.toggle('inactive', isActive);
   input.value = isActive ? 'Inactive' : 'Active';
 });
 
-// Delegated click handlers
+// Delegated clicks
 document.addEventListener('click', e => {
-  // Brand list row
+  // Brand row
   const brandRow = e.target.closest('[data-brand]');
-  if (brandRow && !e.target.closest('.more-btn') && !e.target.closest('.status-toggle')) {
+  if (brandRow && !e.target.closest('.item-more-btn') && !e.target.closest('.status-toggle')) {
     openBrandModal(brandRow.dataset.brand); return;
   }
-  // Inline product status toggle
+  // Inline product status toggle (inside brand modal)
   const toggleEl = e.target.closest('[data-toggle-product]');
   if (toggleEl) { toggleProductStatus(toggleEl.dataset.toggleProduct); return; }
-  // More (⋮) buttons
+  // ⋮ more buttons
   const moreBtn = e.target.closest('[data-action-type]');
-  if (moreBtn && moreBtn.classList.contains('more-btn')) {
+  if (moreBtn && moreBtn.classList.contains('item-more-btn')) {
     e.stopPropagation();
     openActionSheet(moreBtn.dataset.actionType, moreBtn.dataset.actionId);
   }
 });
 
-// Close modals on backdrop click
+// Close modals on backdrop tap
 ['productModal','assignmentModal','brandModal'].forEach(id => {
-  document.getElementById(id).addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(id); });
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal(id);
+  });
 });
-document.getElementById('actionSheet').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal('actionSheet'); });
+document.getElementById('actionSheet').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal('actionSheet');
+});
 
 renderBottomNav('routine');
 
+// ── Init ───────────────────────────────────────────────────
 async function initPage() {
   const timeout = setTimeout(() => {
     document.getElementById('loadingOverlay').style.display = 'none';
     showToast('⚠️ Connection slow. Please refresh.', 'error');
   }, 8000);
+
   try {
     await initPageAuth({
       onLoadLocal: (email, sheetId) => {
-        currentUserEmail = email; spreadsheetId = sheetId;
-        if (!spreadsheetId) { showToast('⚠️ No sheet found. Redirecting…','error'); setTimeout(()=>window.location.href='Home.html',2000); return; }
-        loadLocal(); renderProducts(); renderAssignments();
+        currentUserEmail = email;
+        spreadsheetId    = sheetId;
+        if (!spreadsheetId) {
+          showToast('⚠️ No sheet found. Redirecting…', 'error');
+          setTimeout(() => window.location.href = 'Home.html', 2000);
+          return;
+        }
+        loadLocal();
+        renderProducts();
+        renderAssignments();
       },
       onReady: async (sheetId, email) => {
         clearTimeout(timeout);
-        spreadsheetId = sheetId; currentUserEmail = email;
+        spreadsheetId    = sheetId;
+        currentUserEmail = email;
         await ensureSheets();
-        await loadProducts(); await loadAssignments();
-        renderProducts(); renderAssignments();
+        await loadProducts();
+        await loadAssignments();
+        renderProducts();
+        renderAssignments();
         document.getElementById('loadingOverlay').style.display = 'none';
       }
     });
@@ -584,8 +945,8 @@ async function initPage() {
     console.error(err);
     clearTimeout(timeout);
     document.getElementById('loadingOverlay').style.display = 'none';
-    showToast('❌ Failed to load. Please sign in again.','error');
-    setTimeout(()=>window.location.href='Home.html',2000);
+    showToast('❌ Failed to load. Please sign in again.', 'error');
+    setTimeout(() => window.location.href = 'Home.html', 2000);
   }
 }
 
