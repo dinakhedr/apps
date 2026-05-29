@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Supplements · Health Tracker</title>
   <link rel="manifest" href="../manifest.json">
-  <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
-  <link rel="icon" type="image/png" href="../images/icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../images/icon-180.png">
+  <link rel="icon" type="image/png" sizes="180x180" href="../images/icon-180.png">
+  <link rel="shortcut icon" href="../images/icon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/styles.css">
   <script src="../assets/config.js"></script>
   <script src="../assets/utils.js"></script>
@@ -16,6 +20,283 @@
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    body {
+      background: #F7F6F3;
+      padding-top: 0;
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      background: #fff;
+      border-bottom: 0.5px solid rgba(0,0,0,0.08);
+      padding: calc(44px + env(safe-area-inset-top, 0px)) 16px 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .page-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .page-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-title {
+      font-family: 'Lato', sans-serif;
+      font-size: 19px;
+      font-weight: 900;
+      color: #1A1A18;
+      letter-spacing: -0.3px;
+    }
+    .page-actions { display: flex; gap: 7px; }
+
+    /* ── Body ── */
+    .page-body {
+      padding: 12px 14px;
+      padding-bottom: calc(var(--nav-h) + 20px + env(safe-area-inset-bottom, 0px));
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ── Section label ── */
+    .sec-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: #A8A89E;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 4px 0 7px;
+    }
+
+    /* ── Schedule outer card ── */
+    .schedule-outer-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 0.5px solid rgba(0,0,0,0.07);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .schedule-outer-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 13px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    }
+    .schedule-outer-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #1A1A18;
+    }
+    .supp-icon-badge {
+      width: 27px;
+      height: 27px;
+      border-radius: 8px;
+      background: #FAEEDA;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .add-btn {
+      background: #C2761A;
+      border: none;
+      border-radius: 20px;
+      color: #fff;
+      font-family: 'Lato', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .add-btn:active { opacity: 0.85; transform: scale(0.97); }
+    .add-btn.green { background: #3D7C5E; }
+
+    /* ── Time slot group inside schedule ── */
+    .time-slot-group { border-bottom: 0.5px solid rgba(0,0,0,0.05); }
+    .time-slot-group:last-child { border-bottom: none; }
+
+    .time-slot-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px 6px;
+      background: #F7F6F3;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .time-slot-badge {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: #FAEEDA;
+      color: #633806;
+      white-space: nowrap;
+    }
+    .time-slot-line {
+      flex: 1;
+      height: 0.5px;
+      background: rgba(0,0,0,0.08);
+    }
+
+    /* ── Schedule item ── */
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 13px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .schedule-item:last-child { border-bottom: none; }
+    .schedule-item.item-inactive { opacity: 0.4; filter: grayscale(0.3); }
+
+    .drag-handle {
+      color: #C8C8C0;
+      font-size: 16px;
+      cursor: grab;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .drag-handle:active { cursor: grabbing; }
+
+    .schedule-info { flex: 1; min-width: 0; }
+    .schedule-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1A1A18;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .schedule-meta {
+      font-size: 11px;
+      color: #A8A89E;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .schedule-use-for {
+      color: #C2761A;
+      font-weight: 700;
+    }
+    .schedule-days-pill {
+      font-size: 10px;
+      background: #F2F0EB;
+      color: #888780;
+      border-radius: 20px;
+      padding: 1px 6px;
+      border: 0.5px solid rgba(0,0,0,0.08);
+    }
+    .schedule-notes-pill {
+      font-size: 10px;
+      background: #EAF3DE;
+      color: #27500A;
+      border-radius: 20px;
+      padding: 1px 7px;
+      border: 0.5px solid rgba(61,124,94,0.2);
+    }
+    .inactive-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: #A8A89E;
+      background: #F2F0EB;
+      border: 0.5px solid rgba(0,0,0,0.08);
+      border-radius: 6px;
+      padding: 1px 6px;
+    }
+
+    .item-more-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      border: none;
+      background: none;
+      color: #C8C8C0;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .item-more-btn:active { background: #F2F0EB; }
+
+    /* ── Supplements list card ── */
+    .supplements-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 0.5px solid rgba(0,0,0,0.07);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .supplements-card-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 13px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    }
+    .supplements-card-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: #1A1A18;
+    }
+
+    .supp-list-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 13px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .supp-list-item:last-child { border-bottom: none; }
+
+    .supp-list-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #FAEEDA;
+      border: 0.5px solid rgba(194,118,26,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .supp-list-info { flex: 1; min-width: 0; }
+    .supp-list-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1A1A18;
+    }
+    .supp-list-meta {
+      font-size: 11px;
+      color: #A8A89E;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .supp-list-item.item-inactive .supp-list-name { opacity: 0.4; }
+    .supp-list-item.item-inactive .supp-list-meta { opacity: 0.4; }
+  </style>
 </head>
 <body>
 
@@ -23,42 +304,56 @@
   <div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>
 </div>
 
-<div class="container">
-  <div class="header">
-    <h1>💊 Supplements</h1>
-    <div class="header-actions">
+<!-- Page header -->
+<div class="page-header">
+  <div class="page-header-row">
+    <div class="page-header-left">
+      <button class="hdr-icon-btn" onclick="window.location.href='Home.html'" title="Back">←</button>
+      <span class="page-title">💊 Supplements</span>
+    </div>
+    <div class="page-actions">
       <button class="hdr-icon-btn" id="syncBtn" title="Sync">↻</button>
-      <button class="hdr-icon-btn" onclick="logout()">⏻</button>
+      <button class="hdr-icon-btn danger" onclick="logout()" title="Logout">⏻</button>
     </div>
   </div>
+</div>
 
-  <!-- Schedule -->
-  <div class="card">
-    <div class="card-header-flex">
-      <div class="card-title" style="margin-bottom:0">📌 My Schedule</div>
-      <button class="add-product-card-btn" id="addScheduleBtn">➕ Add Schedule</button>
+<!-- Page body -->
+<div class="page-body">
+
+  <!-- My Schedule -->
+  <div class="sec-lbl">My Schedule</div>
+  <div class="schedule-outer-card">
+    <div class="schedule-outer-hdr">
+      <div class="schedule-outer-title">
+        <div class="supp-icon-badge">💊</div>
+        Schedule
+      </div>
+      <button class="add-btn" id="addScheduleBtn">+ Add Schedule</button>
     </div>
-    <div id="scheduleContainer" style="margin-top:16px"></div>
+    <div id="scheduleContainer"></div>
   </div>
 
   <!-- All Supplements -->
-  <div class="products-management-card">
-    <div class="card-header-flex">
-      <h3 class="card-title-text">💊 All Supplements</h3>
-      <button class="add-product-card-btn" id="addSupplementBtn">➕ Add Supplement</button>
+  <div class="sec-lbl" style="margin-top:6px;">All Supplements</div>
+  <div class="supplements-card">
+    <div class="supplements-card-hdr">
+      <span class="supplements-card-title">Supplements</span>
+      <button class="add-btn green" id="addSupplementBtn">+ Add Supplement</button>
     </div>
     <div id="supplementsContainer"></div>
   </div>
+
 </div>
 
 <div id="bottomNavMount"></div>
 <div class="toast" id="toast"></div>
 
-<!-- Supplement Modal -->
+<!-- ── Supplement Modal ── -->
 <div class="modal-backdrop" id="supplementModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="suppModalTitle">➕ Add Supplement</div>
+    <div class="modal-title" id="suppModalTitle">Add Supplement</div>
     <input type="hidden" id="editSupplementId">
     <div class="form-group">
       <label>Supplement Name *</label>
@@ -80,11 +375,11 @@
   </div>
 </div>
 
-<!-- Assignment (Schedule) Modal -->
+<!-- ── Schedule Modal ── -->
 <div class="modal-backdrop" id="assignmentModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="assignmentModalTitle">➕ Add Schedule</div>
+    <div class="modal-title" id="assignmentModalTitle">Add Schedule</div>
     <input type="hidden" id="editAssignmentId">
     <div class="form-group">
       <label>Supplement *</label>
@@ -94,10 +389,14 @@
       <label>Time *</label>
       <input type="text" id="assignmentTimeSlot" list="timeOptions" placeholder="e.g. 9:00 AM">
       <datalist id="timeOptions">
+        <option>Morning</option>
         <option>8:00 AM</option><option>9:00 AM</option><option>10:00 AM</option>
         <option>12:00 PM</option><option>1:00 PM</option><option>2:00 PM</option>
-        <option>4:00 PM</option><option>6:00 PM</option><option>8:00 PM</option>
-        <option>10:00 PM</option><option>Bedtime</option>
+        <option>Afternoon</option>
+        <option>4:00 PM</option><option>6:00 PM</option>
+        <option>Evening</option>
+        <option>8:00 PM</option><option>10:00 PM</option>
+        <option>Bedtime</option>
       </datalist>
     </div>
     <div class="form-group">
@@ -121,7 +420,7 @@
   </div>
 </div>
 
-<!-- Action Sheet -->
+<!-- ── Action Sheet ── -->
 <div class="sheet-backdrop" id="actionSheet">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -133,10 +432,12 @@
 
 <script>
 // ── State ──────────────────────────────────────────────────
-let spreadsheetId = null, currentUserEmail = null;
-let supplements = [], supplementAssignments = [];
-let actionSheetTarget = null;
-let sortableInstances = {};
+let spreadsheetId          = null;
+let currentUserEmail       = null;
+let supplements            = [];
+let supplementAssignments  = [];
+let actionSheetTarget      = null;
+let sortableInstances      = {};
 
 // ── Local cache ────────────────────────────────────────────
 function saveLocal() {
@@ -146,45 +447,46 @@ function saveLocal() {
 }
 function loadLocal() {
   if (!currentUserEmail) return;
-  const s  = localStorage.getItem(`supplements_${currentUserEmail}`);     if(s)  supplements           = JSON.parse(s);
-  const sa = localStorage.getItem(`suppAssignments_${currentUserEmail}`); if(sa) supplementAssignments = JSON.parse(sa);
+  const s  = localStorage.getItem(`supplements_${currentUserEmail}`);     if (s)  supplements           = JSON.parse(s);
+  const sa = localStorage.getItem(`suppAssignments_${currentUserEmail}`); if (sa) supplementAssignments = JSON.parse(sa);
 }
 
 // ── Sheet loaders ──────────────────────────────────────────
 async function loadSupplements() {
-  const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range:`'${SUPPLEMENTS_SHEET}'!A2:D` });
+  const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `'${SUPPLEMENTS_SHEET}'!A2:D` });
   supplements = (res.result.values||[]).map(r => ({
-    supplementId:r[0]||'', name:r[1]||'', useFor:r[2]||'', status:r[3]||'Active'
+    supplementId: r[0]||'', name: r[1]||'', useFor: r[2]||'', status: r[3]||'Active'
   })).filter(s => s.supplementId);
   saveLocal();
 }
 
 async function loadAssignments() {
-  const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range:`'${SUPPLEMENT_ROUTINE_SHEET}'!A2:E` });
+  const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: `'${SUPPLEMENT_ROUTINE_SHEET}'!A2:E` });
   supplementAssignments = (res.result.values||[]).map(r => ({
-    assignmentId:r[0]||'', supplementId:r[1]||'', timeSlot:r[2]||'',
-    days: r[3] || 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday', notes:r[4]||''
+    assignmentId: r[0]||'', supplementId: r[1]||'', timeSlot: r[2]||'',
+    days: r[3] || 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
+    notes: r[4]||''
   })).filter(a => a.assignmentId);
   saveLocal();
 }
 
 async function saveSupplementsToSheet() {
-  await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range:`'${SUPPLEMENTS_SHEET}'!A2:D` });
+  await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `'${SUPPLEMENTS_SHEET}'!A2:D` });
   if (supplements.length) {
     await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId, range:`'${SUPPLEMENTS_SHEET}'!A2`, valueInputOption:'RAW',
-      resource:{ values: supplements.map(s => [s.supplementId,s.name,s.useFor,s.status]) }
+      spreadsheetId, range: `'${SUPPLEMENTS_SHEET}'!A2`, valueInputOption: 'RAW',
+      resource: { values: supplements.map(s => [s.supplementId, s.name, s.useFor, s.status]) }
     });
   }
   saveLocal();
 }
 
 async function saveAssignmentsToSheet() {
-  await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range:`'${SUPPLEMENT_ROUTINE_SHEET}'!A2:E` });
+  await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `'${SUPPLEMENT_ROUTINE_SHEET}'!A2:E` });
   if (supplementAssignments.length) {
     await gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId, range:`'${SUPPLEMENT_ROUTINE_SHEET}'!A2`, valueInputOption:'RAW',
-      resource:{ values: supplementAssignments.map(a => [a.assignmentId,a.supplementId,a.timeSlot,a.days,a.notes]) }
+      spreadsheetId, range: `'${SUPPLEMENT_ROUTINE_SHEET}'!A2`, valueInputOption: 'RAW',
+      resource: { values: supplementAssignments.map(a => [a.assignmentId, a.supplementId, a.timeSlot, a.days, a.notes]) }
     });
   }
   saveLocal();
@@ -192,41 +494,57 @@ async function saveAssignmentsToSheet() {
 
 // ── Render schedule ────────────────────────────────────────
 function renderSchedule() {
-  const el = document.getElementById('scheduleContainer');
+  const el      = document.getElementById('scheduleContainer');
   const suppMap = new Map(supplements.map(s => [s.supplementId, s]));
-  const valid = supplementAssignments.filter(a => suppMap.has(a.supplementId));
+  const valid   = supplementAssignments.filter(a => suppMap.has(a.supplementId));
 
   if (!valid.length) {
-    el.innerHTML = '<div class="empty-state-small">No schedule yet. Tap "Add Schedule" to start.</div>';
+    el.innerHTML = '<div class="empty-state-small">No schedule yet — tap Add Schedule to begin</div>';
     return;
   }
 
+  // Group by time slot, sorted by time value
   const groups = {};
-  valid.forEach(a => { if (!groups[a.timeSlot]) groups[a.timeSlot] = []; groups[a.timeSlot].push(a); });
+  valid.forEach(a => {
+    if (!groups[a.timeSlot]) groups[a.timeSlot] = [];
+    groups[a.timeSlot].push(a);
+  });
 
-  let html = '';
-  for (const slot of Object.keys(groups).sort((a,b) => getTimeValue(a)-getTimeValue(b))) {
-    html += `<div class="assignment-phase-container">
-      <div class="assignment-phase-title">🕒 ${escapeHtml(slot)}</div>
-      <div class="assignment-list" data-slot="${escapeHtml(slot)}">`;
-    for (const a of groups[slot]) {
-      const s = suppMap.get(a.supplementId);
-      if (!s) continue;
-      const inactive = s.status === 'Inactive';
-      html += `<div class="assignment-item-supp${inactive?' item-inactive':''}" data-id="${a.assignmentId}">
-        <div class="drag-handle">☰</div>
-        <div class="time-badge">${escapeHtml(a.timeSlot)}</div>
-        <div class="assignment-details-supp">
-          <div class="assignment-product-supp">${escapeHtml(s.name)}${inactive?'<span class="inactive-badge" style="margin-left:6px">Inactive</span>':''}</div>
-          ${s.useFor ? `<div class="assignment-use-for-supp">${escapeHtml(s.useFor)}</div>` : ''}
-          <div class="assignment-days-supp">📅 ${formatDays(a.days)}</div>
-          ${a.notes ? `<div class="assignment-days-supp">📝 ${escapeHtml(a.notes)}</div>` : ''}
-        </div>
-        <button class="more-btn" data-action-type="assignment" data-action-id="${a.assignmentId}">⋮</button>
-      </div>`;
-    }
-    html += `</div></div>`;
-  }
+  const html = Object.keys(groups)
+    .sort((a, b) => getTimeValue(a) - getTimeValue(b))
+    .map(slot => {
+      const items = groups[slot].map(a => {
+        const s        = suppMap.get(a.supplementId);
+        if (!s) return '';
+        const inactive = s.status === 'Inactive';
+        return `
+          <div class="schedule-item${inactive ? ' item-inactive' : ''}" data-id="${a.assignmentId}">
+            <span class="drag-handle">⠿</span>
+            <div class="schedule-info">
+              <div class="schedule-name">
+                ${escapeHtml(s.name)}
+                ${inactive ? '<span class="inactive-badge">Inactive</span>' : ''}
+              </div>
+              <div class="schedule-meta">
+                ${s.useFor ? `<span class="schedule-use-for">${escapeHtml(s.useFor.split(',')[0])}</span>` : ''}
+                <span class="schedule-days-pill">${formatDays(a.days)}</span>
+                ${a.notes ? `<span class="schedule-notes-pill">📝 ${escapeHtml(a.notes)}</span>` : ''}
+              </div>
+            </div>
+            <button class="item-more-btn" data-action-type="assignment" data-action-id="${a.assignmentId}">⋮</button>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="time-slot-group">
+          <div class="time-slot-header">
+            <span class="time-slot-badge">🕒 ${escapeHtml(slot)}</span>
+            <div class="time-slot-line"></div>
+          </div>
+          <div class="assignment-list" data-slot="${escapeHtml(slot)}">${items}</div>
+        </div>`;
+    }).join('');
+
   el.innerHTML = html;
   initSortable();
 }
@@ -234,21 +552,23 @@ function renderSchedule() {
 function initSortable() {
   Object.values(sortableInstances).forEach(s => s.destroy());
   sortableInstances = {};
-  document.querySelectorAll('.assignment-list').forEach(list => {
+  document.querySelectorAll('#scheduleContainer .assignment-list').forEach(list => {
     const slot = list.dataset.slot;
     sortableInstances[slot] = new Sortable(list, {
-      group:{ name:'suppSchedule', pull:true, put:true }, animation:200,
-      handle:'.drag-handle', onEnd: handleReorder
+      group: { name: 'suppSchedule', pull: true, put: true },
+      animation: 200,
+      handle: '.drag-handle',
+      onEnd: handleReorder
     });
   });
 }
 
 async function handleReorder() {
   const newAssignments = [];
-  document.querySelectorAll('.assignment-list').forEach(list => {
+  document.querySelectorAll('#scheduleContainer .assignment-list').forEach(list => {
     const newSlot = list.dataset.slot;
-    list.querySelectorAll('.assignment-item-supp').forEach(el => {
-      const existing = supplementAssignments.find(a => a.assignmentId===el.dataset.id);
+    list.querySelectorAll('.schedule-item').forEach(el => {
+      const existing = supplementAssignments.find(a => a.assignmentId === el.dataset.id);
       if (existing) newAssignments.push({ ...existing, timeSlot: newSlot });
     });
   });
@@ -262,48 +582,54 @@ async function handleReorder() {
 function renderSupplements() {
   const el = document.getElementById('supplementsContainer');
   if (!supplements.length) {
-    el.innerHTML = '<div class="empty-state">✨ No supplements yet. Tap "Add Supplement" to start.</div>';
+    el.innerHTML = '<div class="empty-state">No supplements yet — tap Add Supplement to start</div>';
     return;
   }
-  const sorted = [...supplements].sort((a,b) => a.name.localeCompare(b.name));
+  const sorted = [...supplements].sort((a, b) => a.name.localeCompare(b.name));
   el.innerHTML = sorted.map(s => {
-    const statusClass = s.status==='Active' ? 'active' : 'inactive';
-    return `<div class="supplement-list-item">
-      <div class="supplement-info${s.status==='Inactive'?' item-inactive':''}">
-        <div class="supplement-name">${escapeHtml(s.name)}</div>
-        ${s.useFor ? `<div class="supplement-meta">${escapeHtml(s.useFor)}</div>` : ''}
-      </div>
-      <div class="status-toggle ${statusClass}" data-toggle-supp="${s.supplementId}"><div class="status-toggle-knob"></div></div>
-      <button class="more-btn" data-action-type="supplement" data-action-id="${s.supplementId}">⋮</button>
-    </div>`;
+    const statusClass = s.status === 'Active' ? 'active' : 'inactive';
+    const inactive    = s.status === 'Inactive';
+    return `
+      <div class="supp-list-item${inactive ? ' item-inactive' : ''}">
+        <div class="supp-list-icon">💊</div>
+        <div class="supp-list-info">
+          <div class="supp-list-name">${escapeHtml(s.name)}</div>
+          ${s.useFor ? `<div class="supp-list-meta">${escapeHtml(s.useFor)}</div>` : ''}
+        </div>
+        <div class="status-toggle ${statusClass}" data-toggle-supp="${s.supplementId}">
+          <div class="status-toggle-knob"></div>
+        </div>
+        <button class="item-more-btn" data-action-type="supplement" data-action-id="${s.supplementId}">⋮</button>
+      </div>`;
   }).join('');
 }
 
 async function toggleSupplementStatus(id) {
-  const s = supplements.find(s => s.supplementId===id);
+  const s = supplements.find(s => s.supplementId === id);
   if (!s) return;
-  s.status = s.status==='Active' ? 'Inactive' : 'Active';
+  s.status = s.status === 'Active' ? 'Inactive' : 'Active';
   await saveSupplementsToSheet();
-  renderSupplements(); renderSchedule();
+  renderSupplements();
+  renderSchedule();
   showToast(`Supplement ${s.status.toLowerCase()}`);
 }
 
 // ── Supplement modal ───────────────────────────────────────
 function openSupplementModal(id = null) {
   const isEdit = !!id;
-  document.getElementById('suppModalTitle').textContent = isEdit ? '✏️ Edit Supplement' : '➕ Add Supplement';
+  document.getElementById('suppModalTitle').textContent = isEdit ? 'Edit Supplement' : 'Add Supplement';
   document.getElementById('editSupplementId').value = id || '';
   if (isEdit) {
-    const s = supplements.find(s => s.supplementId===id);
+    const s = supplements.find(s => s.supplementId === id);
     if (s) {
       document.getElementById('suppName').value = s.name;
-      renderUseForCheckboxesGeneric('useForCheckboxes', USE_FOR_OPTIONS_SUPP, s.useFor||'');
-      setStatusToggle('suppStatusToggle','suppStatusInput', s.status);
+      renderUseForCheckboxesGeneric('useForCheckboxes', USE_FOR_OPTIONS_SUPP, s.useFor || '');
+      setStatusToggle('suppStatusToggle', 'suppStatusInput', s.status);
     }
   } else {
     document.getElementById('suppName').value = '';
     renderUseForCheckboxesGeneric('useForCheckboxes', USE_FOR_OPTIONS_SUPP, '');
-    setStatusToggle('suppStatusToggle','suppStatusInput','Active');
+    setStatusToggle('suppStatusToggle', 'suppStatusInput', 'Active');
   }
   openModal('supplementModal');
 }
@@ -316,24 +642,33 @@ async function saveSupplement() {
   if (!name) { showToast('Name required', 'error'); return; }
   const isNew = !id;
   const newId = id || generateSupplementId();
-  const obj = { supplementId:newId, name, useFor, status };
+  const obj   = { supplementId: newId, name, useFor, status };
   if (isNew) supplements.push(obj);
-  else { const i = supplements.findIndex(s => s.supplementId===newId); if(i!==-1) supplements[i]=obj; }
+  else {
+    const i = supplements.findIndex(s => s.supplementId === newId);
+    if (i !== -1) supplements[i] = obj;
+  }
   closeModal('supplementModal');
   await saveSupplementsToSheet();
-  renderSupplements(); renderSchedule();
+  renderSupplements();
+  renderSchedule();
   showToast(isNew ? '✅ Supplement added' : '✅ Updated');
 }
 
-// ── Assignment (schedule) modal ────────────────────────────
+// ── Schedule modal ─────────────────────────────────────────
 function openAssignmentModal(id = null) {
   const isEdit = !!id;
-  document.getElementById('assignmentModalTitle').textContent = isEdit ? '✏️ Edit Schedule' : '➕ Add Schedule';
+  document.getElementById('assignmentModalTitle').textContent = isEdit ? 'Edit Schedule' : 'Add Schedule';
   document.getElementById('editAssignmentId').value = id || '';
+
   const sel = document.getElementById('assignmentSupplementId');
-  sel.innerHTML = supplements.filter(s => s.status==='Active').map(s => `<option value="${s.supplementId}">${escapeHtml(s.name)}</option>`).join('');
+  sel.innerHTML = supplements
+    .filter(s => s.status === 'Active')
+    .map(s => `<option value="${s.supplementId}">${escapeHtml(s.name)}</option>`)
+    .join('');
+
   if (isEdit) {
-    const a = supplementAssignments.find(a => a.assignmentId===id);
+    const a = supplementAssignments.find(a => a.assignmentId === id);
     if (a) {
       sel.value = a.supplementId;
       document.getElementById('assignmentTimeSlot').value = a.timeSlot;
@@ -343,7 +678,7 @@ function openAssignmentModal(id = null) {
   } else {
     document.getElementById('assignmentTimeSlot').value = '';
     document.getElementById('assignmentNotes').value    = '';
-    renderDayCheckboxes('daysCheckboxes','Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday');
+    renderDayCheckboxes('daysCheckboxes', 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday');
   }
   openModal('assignmentModal');
 }
@@ -358,9 +693,12 @@ async function saveAssignment() {
   if (!days) { showToast('Please select at least one day', 'error'); return; }
   const isNew = !id;
   const newId = id || generateSupplementAssignmentId();
-  const obj = { assignmentId:newId, supplementId, timeSlot, days, notes };
+  const obj   = { assignmentId: newId, supplementId, timeSlot, days, notes };
   if (isNew) supplementAssignments.push(obj);
-  else { const i = supplementAssignments.findIndex(a => a.assignmentId===newId); if(i!==-1) supplementAssignments[i]=obj; }
+  else {
+    const i = supplementAssignments.findIndex(a => a.assignmentId === newId);
+    if (i !== -1) supplementAssignments[i] = obj;
+  }
   closeModal('assignmentModal');
   await saveAssignmentsToSheet();
   renderSchedule();
@@ -371,12 +709,15 @@ async function saveAssignment() {
 function openActionSheet(type, id) {
   actionSheetTarget = { type, id };
   let title = '';
-  if (type==='supplement') {
-    const s = supplements.find(s => s.supplementId===id);
-    title = s ? s.name : 'Supplement';
+  if (type === 'supplement') {
+    const s = supplements.find(s => s.supplementId === id);
+    title   = s ? s.name : 'Supplement';
   } else {
-    const a = supplementAssignments.find(a => a.assignmentId===id);
-    if (a) { const s = supplements.find(s => s.supplementId===a.supplementId); title = s ? `${s.name} · ${a.timeSlot}` : 'Schedule'; }
+    const a = supplementAssignments.find(a => a.assignmentId === id);
+    if (a) {
+      const s = supplements.find(s => s.supplementId === a.supplementId);
+      title   = s ? `${s.name} · ${a.timeSlot}` : 'Schedule';
+    }
   }
   document.getElementById('sheetTitle').textContent = title;
   openModal('actionSheet');
@@ -386,22 +727,25 @@ async function sheetEdit() {
   if (!actionSheetTarget) return;
   const { type, id } = actionSheetTarget;
   closeModal('actionSheet');
-  if (type==='supplement') openSupplementModal(id); else openAssignmentModal(id);
+  if (type === 'supplement') openSupplementModal(id);
+  else openAssignmentModal(id);
 }
 
 async function sheetDelete() {
   if (!actionSheetTarget) return;
   const { type, id } = actionSheetTarget;
   closeModal('actionSheet');
-  if (type==='supplement') {
+  if (type === 'supplement') {
     if (!confirm('Delete this supplement and all its schedules?')) return;
-    supplementAssignments = supplementAssignments.filter(a => a.supplementId!==id);
-    supplements = supplements.filter(s => s.supplementId!==id);
-    await saveSupplementsToSheet(); await saveAssignmentsToSheet();
-    renderSupplements(); renderSchedule();
+    supplementAssignments = supplementAssignments.filter(a => a.supplementId !== id);
+    supplements           = supplements.filter(s => s.supplementId !== id);
+    await saveSupplementsToSheet();
+    await saveAssignmentsToSheet();
+    renderSupplements();
+    renderSchedule();
     showToast('🗑️ Supplement deleted');
   } else {
-    supplementAssignments = supplementAssignments.filter(a => a.assignmentId!==id);
+    supplementAssignments = supplementAssignments.filter(a => a.assignmentId !== id);
     await saveAssignmentsToSheet();
     renderSchedule();
     showToast('🗑️ Schedule deleted');
@@ -413,16 +757,20 @@ async function syncAll() {
   const btn = document.getElementById('syncBtn');
   btn.classList.add('spinning');
   try {
-    await loadSupplements(); await loadAssignments();
-    renderSupplements(); renderSchedule();
+    await loadSupplements();
+    await loadAssignments();
+    renderSupplements();
+    renderSchedule();
     showToast('✅ Synced');
-  } catch(e) { showToast('❌ Sync failed','error'); }
+  } catch(e) {
+    showToast('❌ Sync failed', 'error');
+  }
   btn.classList.remove('spinning');
 }
 
 async function ensureSheets() {
   try {
-    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
+    const meta     = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
     const existing = meta.result.sheets.map(s => s.properties.title);
     for (const [name, headers] of [
       [SUPPLEMENTS_SHEET,        ['SupplementID','Name','Use For','Status']],
@@ -430,8 +778,16 @@ async function ensureSheets() {
       [SUPPLEMENTS_LOG_SHEET,    ['Date','TimeSlot','SupplementID','Supplement','Notes','Timestamp','Extra']]
     ]) {
       if (!existing.includes(name)) {
-        await gapi.client.sheets.spreadsheets.batchUpdate({ spreadsheetId, resource:{ requests:[{ addSheet:{properties:{title:name}} }] } });
-        await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId, range:`'${name}'!A1:${String.fromCharCode(64+headers.length)}1`, valueInputOption:'RAW', resource:{values:[headers]} });
+        await gapi.client.sheets.spreadsheets.batchUpdate({
+          spreadsheetId,
+          resource: { requests: [{ addSheet: { properties: { title: name } } }] }
+        });
+        await gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `'${name}'!A1:${String.fromCharCode(64 + headers.length)}1`,
+          valueInputOption: 'RAW',
+          resource: { values: [headers] }
+        });
       }
     }
   } catch(e) { console.warn(e); }
@@ -448,10 +804,10 @@ document.getElementById('syncBtn').addEventListener('click', syncAll);
 document.getElementById('sheetEditBtn').addEventListener('click',   sheetEdit);
 document.getElementById('sheetDeleteBtn').addEventListener('click', sheetDelete);
 
-// Status toggle
+// Status toggle in modal
 document.getElementById('suppStatusToggle').addEventListener('click', () => {
-  const toggle = document.getElementById('suppStatusToggle');
-  const input  = document.getElementById('suppStatusInput');
+  const toggle   = document.getElementById('suppStatusToggle');
+  const input    = document.getElementById('suppStatusInput');
   const isActive = toggle.classList.contains('active');
   toggle.classList.toggle('active', !isActive);
   toggle.classList.toggle('inactive', isActive);
@@ -463,38 +819,54 @@ document.addEventListener('click', e => {
   const toggleEl = e.target.closest('[data-toggle-supp]');
   if (toggleEl) { toggleSupplementStatus(toggleEl.dataset.toggleSupp); return; }
   const moreBtn = e.target.closest('[data-action-type]');
-  if (moreBtn && moreBtn.classList.contains('more-btn')) {
+  if (moreBtn && moreBtn.classList.contains('item-more-btn')) {
     e.stopPropagation();
     openActionSheet(moreBtn.dataset.actionType, moreBtn.dataset.actionId);
   }
 });
 
 ['supplementModal','assignmentModal'].forEach(id => {
-  document.getElementById(id).addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(id); });
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal(id);
+  });
 });
-document.getElementById('actionSheet').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal('actionSheet'); });
+document.getElementById('actionSheet').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal('actionSheet');
+});
 
 renderBottomNav('supplements');
 
+// ── Init ───────────────────────────────────────────────────
 async function initPage() {
   const timeout = setTimeout(() => {
     document.getElementById('loadingOverlay').style.display = 'none';
     showToast('⚠️ Connection slow. Please refresh.', 'error');
   }, 8000);
+
   try {
     await initPageAuth({
       onLoadLocal: (email, sheetId) => {
-        currentUserEmail = email; spreadsheetId = sheetId;
-        if (!spreadsheetId) { showToast('⚠️ No sheet found. Redirecting…','error'); setTimeout(()=>window.location.href='Home.html',2000); return; }
-        loadLocal(); renderSupplements(); renderSchedule();
+        currentUserEmail = email;
+        spreadsheetId    = sheetId;
+        if (!spreadsheetId) {
+          showToast('⚠️ No sheet found. Redirecting…', 'error');
+          setTimeout(() => window.location.href = 'Home.html', 2000);
+          return;
+        }
+        loadLocal();
+        renderSupplements();
+        renderSchedule();
       },
       onReady: async (sheetId, email) => {
         clearTimeout(timeout);
-        spreadsheetId = sheetId; currentUserEmail = email;
+        spreadsheetId    = sheetId;
+        currentUserEmail = email;
         await ensureUserSettingsSheet(spreadsheetId);
         await ensureSheets();
-        await loadSupplements(); await loadAssignments();
-        renderSupplements(); renderSchedule();
+        await loadSupplements();
+        await loadAssignments();
+        renderSupplements();
+        renderSchedule();
         document.getElementById('loadingOverlay').style.display = 'none';
       }
     });
@@ -502,8 +874,8 @@ async function initPage() {
     console.error(err);
     clearTimeout(timeout);
     document.getElementById('loadingOverlay').style.display = 'none';
-    showToast('❌ Failed to load. Please sign in again.','error');
-    setTimeout(()=>window.location.href='Home.html',2000);
+    showToast('❌ Failed to load. Please sign in again.', 'error');
+    setTimeout(() => window.location.href = 'Home.html', 2000);
   }
 }
 
