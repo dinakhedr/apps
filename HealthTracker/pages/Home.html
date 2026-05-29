@@ -11,20 +11,276 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Health Tracker · Home</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/styles.css">
   <script src="../assets/config.js"></script>
   <script src="../assets/utils.js"></script>
   <script src="../assets/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+    /* ── Home-specific: green top header ── */
+    body { padding-top: 0; background: #F7F6F3; }
+
+    .home-header {
+      background: #3D7C5E;
+      padding: 0 var(--page-pad);
+      padding-top: calc(18px + env(safe-area-inset-top, 0px));
+      padding-bottom: 18px;
+    }
+
+    .home-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+
+    .home-greeting {
+      color: rgba(255,255,255,0.65);
+      font-size: 12px;
+      font-weight: 400;
+      margin-bottom: 2px;
+    }
+
+    .home-name {
+      color: #fff;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+
+    .home-sync-line {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.55);
+      margin-top: 3px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 16px;
+    }
+    .home-sync-line.synced { color: rgba(255,255,255,0.65); }
+    .home-sync-line.warn   { color: #FAC775; }
+
+    .home-header-actions {
+      display: flex;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+
+    .home-icon-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: none; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .home-icon-btn:hover  { background: rgba(255,255,255,0.25); }
+    .home-icon-btn:active { transform: scale(0.93); }
+    .home-icon-btn.spinning { animation: spin 0.7s linear infinite; }
+
+    /* ── Date navigation ── */
+    .home-date-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+    }
+
+    .home-date-nav {
+      background: rgba(255,255,255,0.15);
+      border: none; color: #fff; border-radius: 8px;
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; cursor: pointer;
+    }
+    .home-date-nav:active { background: rgba(255,255,255,0.28); }
+
+    .home-date-label {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* ── Progress block inside header ── */
+    .home-prog-block {
+      background: rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-top: 14px;
+    }
+
+    .home-prog-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 7px;
+    }
+
+    .home-prog-title {
+      color: rgba(255,255,255,0.75);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .home-prog-pct {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .home-prog-track {
+      height: 7px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 9px;
+    }
+
+    .home-prog-fill {
+      height: 100%;
+      background: #fff;
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .home-prog-pills {
+      display: flex;
+      gap: 14px;
+    }
+
+    .home-prog-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .home-prog-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+    }
+
+    .home-prog-text {
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+    }
+    .home-prog-text strong { color: #fff; font-weight: 700; }
+
+    /* ── Body content ── */
+    .home-body {
+      padding: 0 var(--page-pad);
+      padding-bottom: calc(var(--nav-h) + 20px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ── Stat row ── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: var(--radius-md);
+      padding: 12px 13px;
+      border: 0.5px solid var(--border);
+    }
+
+    .stat-card-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 21px;
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1;
+    }
+    .stat-value span { font-size: 13px; color: var(--text-3); font-weight: 400; }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 3px;
+    }
+
+    /* ── Section label ── */
+    .home-sec-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 4px 0 7px;
+    }
+
+    /* ── Section card ── */
+    .home-card {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      border: 0.5px solid var(--border);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .home-card-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .home-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* thin mini progress bar under each card header */
+    .home-card-prog {
+      height: 3px;
+      background: var(--surface-3);
+    }
+    .home-card-prog-fill {
+      height: 100%;
+      transition: width 0.4s ease;
+    }
+    .home-card-prog-fill.green  { background: #3D7C5E; }
+    .home-card-prog-fill.purple { background: #534AB7; }
+    .home-card-prog-fill.amber  { background: #C2761A; }
+
+    .home-card-body { padding: 0 14px; }
+  </style>
 </head>
 <body>
 
 <!-- Loading Screen -->
 <div id="loadingScreen" class="screen">
   <div class="screen-box">
-    <span class="screen-icon">🔄</span>
+    <span class="screen-icon">🌿</span>
     <h2>Loading…</h2>
     <p>Connecting to your Google Drive</p>
     <div class="spinner"></div>
@@ -36,7 +292,7 @@
   <div class="screen-box">
     <span class="screen-icon">🧴💊</span>
     <h2>Health Tracker</h2>
-    <p>Sign in with Google to manage your health daily routine</p>
+    <p>Sign in with Google to manage your daily health routine</p>
     <div id="googleSignInButton" style="display:flex;justify-content:center;margin:4px 0"></div>
     <small>Your data stays in <strong>your</strong> Google Drive.<br>No one else can access it.</small>
   </div>
@@ -46,7 +302,7 @@
 <div id="setupScreen" class="screen" style="display:none">
   <div class="screen-box">
     <button class="screen-logout-btn" id="setupLogoutBtn" title="Logout">⏻</button>
-    <span class="screen-icon">🧴</span>
+    <span class="screen-icon">🌿</span>
     <h2>Welcome!</h2>
     <p>We'll create a private spreadsheet in your Google Drive to track your skincare and supplements.</p>
     <div class="info-box">📂 <b>Folder:</b> Health Tracker<br>📊 <b>Sheet:</b> My Health Log<br>🔒 Only you can access this</div>
@@ -70,70 +326,117 @@
 </div>
 
 <!-- Main App -->
-<div class="container" id="mainApp" style="display:none">
-  <div class="header">
-    <div>
-      <h1>🧴 Health Tracker</h1>
-      <p id="userEmailDisplay"></p>
+<div id="mainApp" style="display:none">
+
+  <!-- Green header -->
+  <div class="home-header">
+    <div class="home-header-top">
+      <div>
+        <div class="home-greeting" id="homeGreeting">Good morning 👋</div>
+        <div class="home-name" id="homeUserName">—</div>
+        <div class="home-sync-line" id="homeSyncLine">Connecting…</div>
+      </div>
+      <div class="home-header-actions">
+        <button class="home-icon-btn" id="manualSyncBtn" title="Sync">↻</button>
+        <button class="home-icon-btn danger" id="logoutBtn" title="Logout" style="background:rgba(239,68,68,0.22);color:#fca5a5;">⏻</button>
+      </div>
     </div>
-    <div class="header-actions">
-      <button class="hdr-icon-btn" id="manualSyncBtn" title="Sync">↻</button>
-      <button class="hdr-icon-btn danger" id="logoutBtn" title="Logout">⏻</button>
+
+    <!-- Date navigation -->
+    <div class="home-date-row">
+      <button class="home-date-nav" id="prevDateBtn">‹</button>
+      <span class="home-date-label" id="dateDisplay"></span>
+      <button class="home-date-nav" id="nextDateBtn">›</button>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="home-prog-block">
+      <div class="home-prog-top">
+        <span class="home-prog-title">Today's Progress</span>
+        <span class="home-prog-pct" id="overallProgressPct">0%</span>
+      </div>
+      <div class="home-prog-track">
+        <div class="home-prog-fill" id="overallProgressFill"></div>
+      </div>
+      <div class="home-prog-pills">
+        <div class="home-prog-pill">
+          <div class="home-prog-dot" style="background:#9FE1CB;"></div>
+          <span class="home-prog-text" id="skincareProgressPill"><strong>0/0</strong> Skincare</span>
+        </div>
+        <div class="home-prog-pill">
+          <div class="home-prog-dot" style="background:#FAC775;"></div>
+          <span class="home-prog-text" id="supplementsProgressPill"><strong>0/0</strong> Supplements</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Date navigation -->
-  <div class="date-nav">
-    <button class="hdr-icon-btn" id="prevDateBtn">←</button>
-    <h2 id="dateDisplay"></h2>
-    <button class="hdr-icon-btn" id="nextDateBtn">→</button>
-  </div>
+  <!-- Body -->
+  <div class="home-body">
 
-  <!-- KPI cards -->
-  <div class="kpi-row">
-    <div class="kpi-card skincare-card">
-      <div class="kpi-label">🧴 Skincare</div>
-      <div class="kpi-value" id="skincareProgress">0/0</div>
-      <div class="kpi-trend" id="skincareStreak"></div>
+    <!-- Stat cards -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <div class="stat-dot" style="background:#3D7C5E;"></div>
+          <div class="stat-label">Skincare</div>
+        </div>
+        <div class="stat-value" id="skincareProgress">0<span>/0</span></div>
+        <div class="stat-sub" id="skincareStreak"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <div class="stat-dot" style="background:#C2761A;"></div>
+          <div class="stat-label">Supplements</div>
+        </div>
+        <div class="stat-value" id="supplementsProgress">0<span>/0</span></div>
+        <div class="stat-sub" id="supplementsStreak"></div>
+      </div>
     </div>
-    <div class="kpi-card supplements-card">
-      <div class="kpi-label">💊 Supplements</div>
-      <div class="kpi-value" id="supplementsProgress">0/0</div>
-      <div class="kpi-trend" id="supplementsStreak"></div>
+
+    <!-- Morning Routine -->
+    <div class="home-sec-lbl">Morning Routine</div>
+    <div class="home-card">
+      <div class="home-card-hdr">
+        <div class="home-card-title">
+          <div class="icon-badge morning">🌅</div>
+          Morning
+        </div>
+        <span class="count-chip green" id="morningProgressText">0/0</span>
+      </div>
+      <div class="home-card-prog"><div class="home-card-prog-fill green" id="morningProgFill" style="width:0%"></div></div>
+      <div class="home-card-body" id="morningList"></div>
     </div>
-  </div>
 
-  <!-- Overall progress bar -->
-  <div class="progress-bar"><div class="progress-fill" id="overallProgressFill"></div></div>
-
-  <!-- Morning Routine -->
-  <div class="card">
-    <div class="section-header">
-      <div class="section-title"><span class="card-title-icon">🌅</span> Morning Routine</div>
-      <span style="font-size:12px;color:var(--text-2)" id="morningProgressText">0/0</span>
+    <!-- Evening Routine -->
+    <div class="home-sec-lbl">Evening Routine</div>
+    <div class="home-card">
+      <div class="home-card-hdr">
+        <div class="home-card-title">
+          <div class="icon-badge evening">🌙</div>
+          Evening
+        </div>
+        <span class="count-chip purple" id="eveningProgressText">0/0</span>
+      </div>
+      <div class="home-card-prog"><div class="home-card-prog-fill purple" id="eveningProgFill" style="width:0%"></div></div>
+      <div class="home-card-body" id="eveningList"></div>
     </div>
-    <div id="morningList"></div>
-  </div>
 
-  <!-- Evening Routine -->
-  <div class="card">
-    <div class="section-header">
-      <div class="section-title"><span class="card-title-icon">🌙</span> Evening Routine</div>
-      <span style="font-size:12px;color:var(--text-2)" id="eveningProgressText">0/0</span>
+    <!-- Supplements -->
+    <div class="home-sec-lbl">Supplements</div>
+    <div class="home-card">
+      <div class="home-card-hdr">
+        <div class="home-card-title">
+          <div class="icon-badge supps">💊</div>
+          Today's Supplements
+        </div>
+        <span class="count-chip amber" id="suppProgressText">0/0</span>
+      </div>
+      <div class="home-card-prog"><div class="home-card-prog-fill amber" id="suppProgFill" style="width:0%"></div></div>
+      <div class="home-card-body" id="suppList"></div>
     </div>
-    <div id="eveningList"></div>
-  </div>
 
-  <!-- Supplements -->
-  <div class="card">
-    <div class="section-header">
-      <div class="section-title"><span class="card-title-icon">💊</span> Supplements</div>
-      <span style="font-size:12px;color:var(--text-2)" id="suppProgressText">0/0</span>
-    </div>
-    <div id="suppList"></div>
   </div>
-
-  <div class="sync-strip" id="syncStatus">✅ Synced to Google Drive</div>
 </div>
 
 <div id="bottomNavMount"></div>
@@ -141,32 +444,47 @@
 
 <script>
 // ── State ──────────────────────────────────────────────────
-let currentUserEmail = null;
+let currentUserEmail   = null;
 let currentAccessToken = null;
-let spreadsheetId = null;
-let products = [];
-let assignments = [];
-let routineLogs = [];
-let supplementsList = [];
+let spreadsheetId      = null;
+let products           = [];
+let assignments        = [];
+let routineLogs        = [];
+let supplementsList    = [];
 let supplementAssignments = [];
-let supplementLogs = [];
-let currentDate = new Date();
+let supplementLogs     = [];
+let currentDate        = new Date();
+
+// ── Greeting ───────────────────────────────────────────────
+function setGreeting() {
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning 👋' : h < 17 ? 'Good afternoon 👋' : 'Good evening 👋';
+  document.getElementById('homeGreeting').textContent = greet;
+}
 
 // ── Local cache ────────────────────────────────────────────
 function saveLocal() {
   if (!currentUserEmail) return;
-  localStorage.setItem(`products_${currentUserEmail}`,      JSON.stringify(products));
-  localStorage.setItem(`assignments_${currentUserEmail}`,   JSON.stringify(assignments));
-  localStorage.setItem(`supplements_${currentUserEmail}`,   JSON.stringify(supplementsList));
+  localStorage.setItem(`products_${currentUserEmail}`,        JSON.stringify(products));
+  localStorage.setItem(`assignments_${currentUserEmail}`,     JSON.stringify(assignments));
+  localStorage.setItem(`supplements_${currentUserEmail}`,     JSON.stringify(supplementsList));
   localStorage.setItem(`suppAssignments_${currentUserEmail}`, JSON.stringify(supplementAssignments));
 }
 
 function loadLocal() {
   if (!currentUserEmail) return;
-  const p  = localStorage.getItem(`products_${currentUserEmail}`);      if (p)  products             = JSON.parse(p);
-  const a  = localStorage.getItem(`assignments_${currentUserEmail}`);   if (a)  assignments           = JSON.parse(a);
-  const s  = localStorage.getItem(`supplements_${currentUserEmail}`);   if (s)  supplementsList       = JSON.parse(s);
-  const sa = localStorage.getItem(`suppAssignments_${currentUserEmail}`); if (sa) supplementAssignments = JSON.parse(sa);
+  const p  = localStorage.getItem(`products_${currentUserEmail}`);         if (p)  products              = JSON.parse(p);
+  const a  = localStorage.getItem(`assignments_${currentUserEmail}`);      if (a)  assignments            = JSON.parse(a);
+  const s  = localStorage.getItem(`supplements_${currentUserEmail}`);      if (s)  supplementsList        = JSON.parse(s);
+  const sa = localStorage.getItem(`suppAssignments_${currentUserEmail}`);  if (sa) supplementAssignments  = JSON.parse(sa);
+}
+
+// ── Sync strip (under name in header) ─────────────────────
+function setHomeSyncLine(msg, type) {
+  const el = document.getElementById('homeSyncLine');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'home-sync-line' + (type === 'warn' ? ' warn' : ' synced');
 }
 
 // ── Date helpers ───────────────────────────────────────────
@@ -230,17 +548,13 @@ function render() {
   const productMap = new Map(products.map(p => [p.productId, p]));
   const suppMap    = new Map(supplementsList.map(s => [s.supplementId, s]));
 
-  // Today's completed routine steps
   const doneRoutine = new Set(
     routineLogs.filter(l => l.date === dateStr).map(l => `${l.phase}|${l.step}`)
   );
-
-  // Today's taken supplements
   const doneSupp = new Set(
     supplementLogs.filter(l => l.date === dateStr).map(l => l.supplementId)
   );
 
-  // Active assignments scheduled for today
   const todayAssignments = assignments.filter(a => {
     const p = productMap.get(a.productId);
     return p && p.status === 'Active' && a.days.split(',').map(d => d.trim()).includes(todayDay);
@@ -249,52 +563,67 @@ function render() {
   const morning = todayAssignments.filter(a => a.phase === 'Morning').sort((x,y) => x.step - y.step);
   const evening = todayAssignments.filter(a => a.phase === 'Evening').sort((x,y) => x.step - y.step);
 
-  // Active supplement assignments for today
   const todaySuppAssignments = supplementAssignments.filter(a => {
     const s = suppMap.get(a.supplementId);
     return s && s.status === 'Active' && a.days.split(',').map(d => d.trim()).includes(todayDay);
   }).sort((x,y) => getTimeValue(x.timeSlot) - getTimeValue(y.timeSlot));
 
   // KPI counts
-  const totalRoutine    = morning.length + evening.length;
+  const totalRoutine     = morning.length + evening.length;
   const completedRoutine = [...morning, ...evening].filter(a => doneRoutine.has(`${a.phase}|${a.step}`)).length;
-  const totalSupp       = todaySuppAssignments.length;
-  const completedSupp   = todaySuppAssignments.filter(a => doneSupp.has(a.supplementId)).length;
+  const totalSupp        = todaySuppAssignments.length;
+  const completedSupp    = todaySuppAssignments.filter(a => doneSupp.has(a.supplementId)).length;
+  const totalAll         = totalRoutine + totalSupp;
+  const doneAll          = completedRoutine + completedSupp;
+  const overallPct       = totalAll ? Math.round(doneAll / totalAll * 100) : 0;
 
-  document.getElementById('skincareProgress').textContent = `${completedRoutine}/${totalRoutine}`;
-  document.getElementById('skincareStreak').innerHTML = totalRoutine
-    ? `<span class="trend-badge">${Math.round(completedRoutine/totalRoutine*100)}% done</span>` : '';
+  // Overall progress
+  document.getElementById('overallProgressFill').style.width = overallPct + '%';
+  document.getElementById('overallProgressPct').textContent  = overallPct + '%';
 
-  document.getElementById('supplementsProgress').textContent = `${completedSupp}/${totalSupp}`;
-  document.getElementById('supplementsStreak').innerHTML = totalSupp
-    ? `<span class="trend-badge">${Math.round(completedSupp/totalSupp*100)}% taken</span>` : '';
+  // Pill text
+  document.getElementById('skincareProgressPill').innerHTML    = `<strong>${completedRoutine}/${totalRoutine}</strong> Skincare`;
+  document.getElementById('supplementsProgressPill').innerHTML = `<strong>${completedSupp}/${totalSupp}</strong> Supplements`;
 
-  const totalAll = totalRoutine + totalSupp;
-  const doneAll  = completedRoutine + completedSupp;
-  document.getElementById('overallProgressFill').style.width = totalAll ? (doneAll/totalAll*100)+'%' : '0%';
+  // Stat cards
+  document.getElementById('skincareProgress').innerHTML    = `${completedRoutine}<span>/${totalRoutine}</span>`;
+  document.getElementById('supplementsProgress').innerHTML = `${completedSupp}<span>/${totalSupp}</span>`;
 
-  // Render routine phases
+  const skinPct = totalRoutine ? Math.round(completedRoutine / totalRoutine * 100) : 0;
+  const suppPct = totalSupp    ? Math.round(completedSupp    / totalSupp    * 100) : 0;
+  document.getElementById('skincareStreak').textContent    = totalRoutine ? skinPct + '% done' : '—';
+  document.getElementById('supplementsStreak').textContent = totalSupp    ? suppPct + '% taken' : '—';
+
+  // Section mini progress bars
+  setMiniProg('morningProgFill',  morning.filter(a => doneRoutine.has(`${a.phase}|${a.step}`)).length, morning.length);
+  setMiniProg('eveningProgFill',  evening.filter(a => doneRoutine.has(`${a.phase}|${a.step}`)).length, evening.length);
+  setMiniProg('suppProgFill',     completedSupp, totalSupp);
+
+  // Render lists
   renderPhase('morningList', 'morningProgressText', morning, doneRoutine, productMap);
   renderPhase('eveningList', 'eveningProgressText', evening, doneRoutine, productMap);
-
-  // Render supplements
   renderSupplements('suppList', 'suppProgressText', todaySuppAssignments, doneSupp, suppMap);
 }
 
+function setMiniProg(fillId, done, total) {
+  const el = document.getElementById(fillId);
+  if (el) el.style.width = (total ? Math.round(done / total * 100) : 0) + '%';
+}
+
 function renderPhase(listId, countId, steps, doneSet, productMap) {
-  const el = document.getElementById(listId);
+  const el      = document.getElementById(listId);
   const counter = document.getElementById(countId);
   if (!steps.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:16px 0;">Nothing scheduled today</div>';
+    el.innerHTML = '<div class="empty-state-small">Nothing scheduled today</div>';
     if (counter) counter.textContent = '0/0';
     return;
   }
   const done = steps.filter(a => doneSet.has(`${a.phase}|${a.step}`)).length;
   if (counter) counter.textContent = `${done}/${steps.length}`;
   el.innerHTML = steps.map(a => {
-    const p = productMap.get(a.productId);
+    const p      = productMap.get(a.productId);
     const isDone = doneSet.has(`${a.phase}|${a.step}`);
-    const brand = p ? getBrandNameFromId(p.brandId) : '';
+    const brand  = p ? getBrandNameFromId(p.brandId) : '';
     return `<div class="step-item">
       <div class="step-check ${isDone ? 'completed' : ''}"
            onclick="toggleRoutineLog('${a.productId}','${a.phase}',${a.step},'${escapeHtml(p ? p.product : '')}')">
@@ -312,27 +641,27 @@ function renderPhase(listId, countId, steps, doneSet, productMap) {
 }
 
 function renderSupplements(listId, countId, suppAssigns, doneSet, suppMap) {
-  const el = document.getElementById(listId);
+  const el      = document.getElementById(listId);
   const counter = document.getElementById(countId);
   if (!suppAssigns.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:16px 0;">Nothing scheduled today</div>';
+    el.innerHTML = '<div class="empty-state-small">Nothing scheduled today</div>';
     if (counter) counter.textContent = '0/0';
     return;
   }
   const done = suppAssigns.filter(a => doneSet.has(a.supplementId)).length;
   if (counter) counter.textContent = `${done}/${suppAssigns.length}`;
   el.innerHTML = suppAssigns.map(a => {
-    const s = suppMap.get(a.supplementId);
+    const s      = suppMap.get(a.supplementId);
     const isDone = doneSet.has(a.supplementId);
     return `<div class="step-item">
-      <div class="step-check ${isDone ? 'completed' : ''}"
+      <div class="step-check ${isDone ? 'completed supp' : ''}"
            onclick="toggleSuppLog('${a.supplementId}','${escapeHtml(s ? s.name : '')}','${escapeHtml(a.timeSlot)}')">
         ${isDone ? '✓' : ''}
       </div>
       <div class="step-info">
         <div class="step-name">${escapeHtml(s ? s.name : 'Unknown')}</div>
         <div class="step-desc">
-          <span class="step-brand">🕒 ${escapeHtml(a.timeSlot)}</span>
+          <span style="color:var(--accent);font-weight:700;">🕒 ${escapeHtml(a.timeSlot)}</span>
           ${a.notes ? `<span>${escapeHtml(a.notes)}</span>` : ''}
           <span class="step-days-badge">${formatDays(a.days)}</span>
         </div>
@@ -359,7 +688,9 @@ async function toggleRoutineLog(productId, phase, step, productName) {
       const rows = res.result.values || [];
       const newRows = rows.filter(r => !(r[0]===dateStr && r[1]===productId && r[2]===phase && Math.round(Number(r[3]))===step));
       await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `'${ROUTINE_LOG_SHEET}'!A2:G` });
-      if (newRows.length) await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId, range: `'${ROUTINE_LOG_SHEET}'!A2`, valueInputOption: 'RAW', resource: { values: newRows } });
+      if (newRows.length) await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId, range: `'${ROUTINE_LOG_SHEET}'!A2`, valueInputOption: 'RAW', resource: { values: newRows }
+      });
       showToast('Marked incomplete');
     }
     await loadRoutineLogs();
@@ -383,7 +714,9 @@ async function toggleSuppLog(supplementId, supplementName, timeSlot) {
       const rows = res.result.values || [];
       const newRows = rows.filter(r => !(r[0]===dateStr && r[2]===supplementId));
       await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range: `'${SUPPLEMENTS_LOG_SHEET}'!A2:G` });
-      if (newRows.length) await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId, range: `'${SUPPLEMENTS_LOG_SHEET}'!A2`, valueInputOption: 'RAW', resource: { values: newRows } });
+      if (newRows.length) await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId, range: `'${SUPPLEMENTS_LOG_SHEET}'!A2`, valueInputOption: 'RAW', resource: { values: newRows }
+      });
       showToast('Marked not taken');
     }
     await loadSupplementLogs();
@@ -393,12 +726,12 @@ async function toggleSuppLog(supplementId, supplementName, timeSlot) {
 
 // ── Load all & render ──────────────────────────────────────
 async function loadAndRender() {
-  try { await loadProducts(); } catch(e) { console.warn(e); }
-  try { await loadAssignments(); } catch(e) { console.warn(e); }
-  try { await loadRoutineLogs(); } catch(e) { console.warn(e); }
-  try { await loadSupplementsList(); } catch(e) { console.warn(e); }
+  try { await loadProducts(); }             catch(e) { console.warn(e); }
+  try { await loadAssignments(); }          catch(e) { console.warn(e); }
+  try { await loadRoutineLogs(); }          catch(e) { console.warn(e); }
+  try { await loadSupplementsList(); }      catch(e) { console.warn(e); }
   try { await loadSupplementAssignments(); } catch(e) { console.warn(e); }
-  try { await loadSupplementLogs(); } catch(e) { console.warn(e); }
+  try { await loadSupplementLogs(); }       catch(e) { console.warn(e); }
   saveLocal();
   render();
 }
@@ -410,16 +743,19 @@ async function manualSync() {
   btn.classList.add('spinning');
   try {
     await loadAndRender();
-    setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
+    setHomeSyncLine('✅ Synced · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), 'synced');
     showToast('✅ Synced');
-  } catch(e) { showToast('❌ Sync failed', 'error'); }
+  } catch(e) {
+    setHomeSyncLine('⚠️ Sync failed', 'warn');
+    showToast('❌ Sync failed', 'error');
+  }
   btn.classList.remove('spinning');
 }
 
 // ── Ensure all sheets exist ────────────────────────────────
 async function ensureAllSheetsExist() {
   try {
-    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
+    const meta     = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
     const existing = meta.result.sheets.map(s => s.properties.title);
     const required = [
       { name: PRODUCTS_SHEET,           headers: ['ProductID','BrandID','Product','Use For','Status'] },
@@ -436,7 +772,7 @@ async function ensureAllSheetsExist() {
     for (const sheet of missing) {
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `'${sheet.name}'!A1:${String.fromCharCode(64+sheet.headers.length)}1`,
+        range: `'${sheet.name}'!A1:${String.fromCharCode(64 + sheet.headers.length)}1`,
         valueInputOption: 'RAW', resource: { values: [sheet.headers] }
       });
     }
@@ -485,11 +821,11 @@ async function createFolderAndSheet(isRecreate = false) {
 
     await gapi.client.sheets.spreadsheets.values.batchUpdate({ spreadsheetId, resource: { valueInputOption: 'RAW', data: [
       { range: `'${PRODUCTS_SHEET}'!A1:E1`,           values: [['ProductID','BrandID','Product','Use For','Status']] },
-      { range: `'${ROUTINE_SHEET}'!A1:E1`,             values: [['AssignmentID','ProductID','Phase','Step','Days']] },
-      { range: `'${ROUTINE_LOG_SHEET}'!A1:G1`,         values: [['Date','ProductID','Phase','Step','Product','Timestamp','Notes']] },
-      { range: `'${SUPPLEMENTS_SHEET}'!A1:D1`,         values: [['SupplementID','Name','Use For','Status']] },
-      { range: `'${SUPPLEMENT_ROUTINE_SHEET}'!A1:E1`,  values: [['AssignmentID','SupplementID','TimeSlot','Days','Notes']] },
-      { range: `'${SUPPLEMENTS_LOG_SHEET}'!A1:G1`,     values: [['Date','TimeSlot','SupplementID','Supplement','Notes','Timestamp','Extra']] }
+      { range: `'${ROUTINE_SHEET}'!A1:E1`,            values: [['AssignmentID','ProductID','Phase','Step','Days']] },
+      { range: `'${ROUTINE_LOG_SHEET}'!A1:G1`,        values: [['Date','ProductID','Phase','Step','Product','Timestamp','Notes']] },
+      { range: `'${SUPPLEMENTS_SHEET}'!A1:D1`,        values: [['SupplementID','Name','Use For','Status']] },
+      { range: `'${SUPPLEMENT_ROUTINE_SHEET}'!A1:E1`, values: [['AssignmentID','SupplementID','TimeSlot','Days','Notes']] },
+      { range: `'${SUPPLEMENTS_LOG_SHEET}'!A1:G1`,    values: [['Date','TimeSlot','SupplementID','Supplement','Notes','Timestamp','Extra']] }
     ]}});
 
     await ensureUserSettingsSheet(spreadsheetId);
@@ -497,9 +833,10 @@ async function createFolderAndSheet(isRecreate = false) {
     localStorage.setItem(`spreadsheet_id_${currentUserEmail}`, spreadsheetId);
 
     showScreen('mainApp');
+    setGreeting();
     renderDate();
     await loadAndRender();
-    setSyncStrip('✅ Synced to Google Drive', false);
+    setHomeSyncLine('✅ Synced · just now', 'synced');
     showToast('✅ Setup complete!');
   } catch(err) {
     console.error(err);
@@ -518,7 +855,7 @@ function showScreen(id) {
   });
 }
 
-// ── Auth flow ──────────────────────────────────────────────
+// ── Auth ───────────────────────────────────────────────────
 function createTokenClient(callback, silent = false) {
   const cfg = { client_id: CLIENT_ID, scope: SCOPES, callback };
   if (silent) cfg.prompt = '';
@@ -528,13 +865,13 @@ function createTokenClient(callback, silent = false) {
 function showTapScreen(onTap) {
   const box = document.querySelector('#loadingScreen .screen-box');
   box.innerHTML = `
-    <span class="screen-icon">🧴</span>
+    <span class="screen-icon">🌿</span>
     <h2>Welcome Back</h2>
     <p>Tap below to connect to your Google Drive</p>
     <button class="primary-btn" id="resumeBtn" style="margin-top:8px">Connect to Google Drive</button>`;
   showScreen('loadingScreen');
   document.getElementById('resumeBtn').addEventListener('click', () => {
-    box.innerHTML = `<span class="screen-icon">🔄</span><h2>Loading…</h2><p>Connecting to your Google Drive</p><div class="spinner"></div>`;
+    box.innerHTML = `<span class="screen-icon">🌿</span><h2>Loading…</h2><p>Connecting to your Google Drive</p><div class="spinner"></div>`;
     onTap();
   });
 }
@@ -547,7 +884,6 @@ async function onAccessTokenGranted(tokenResponse) {
   saveAccessToken(currentAccessToken);
   gapi.client.setToken({ access_token: currentAccessToken });
   showScreen('loadingScreen');
-
   loadLocal();
 
   const cachedSheetId = localStorage.getItem(`spreadsheet_id_${currentUserEmail}`);
@@ -557,11 +893,12 @@ async function onAccessTokenGranted(tokenResponse) {
       await ensureUserSettingsSheet(spreadsheetId);
       await ensureAllSheetsExist();
       await loadAndRender();
-      document.getElementById('userEmailDisplay').textContent = currentUserEmail;
+      document.getElementById('homeUserName').textContent = currentUserEmail.split('@')[0];
+      setGreeting();
       renderDate();
       showScreen('mainApp');
-      setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
-      showToast(`✅ Welcome back, ${currentUserEmail.split('@')[0]}!`);
+      setHomeSyncLine('✅ Synced · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), 'synced');
+      showToast(`✅ Welcome back!`);
       _setupRunning = false;
       return;
     } catch(e) { console.warn('Cached sheet failed', e); }
@@ -575,11 +912,12 @@ async function onAccessTokenGranted(tokenResponse) {
     await ensureUserSettingsSheet(spreadsheetId);
     await ensureAllSheetsExist();
     await loadAndRender();
-    document.getElementById('userEmailDisplay').textContent = currentUserEmail;
+    document.getElementById('homeUserName').textContent = currentUserEmail.split('@')[0];
+    setGreeting();
     renderDate();
     showScreen('mainApp');
-    setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
-    showToast(`✅ Welcome back, ${currentUserEmail.split('@')[0]}!`);
+    setHomeSyncLine('✅ Synced · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), 'synced');
+    showToast(`✅ Welcome back!`);
   } else {
     showScreen('setupScreen');
   }
@@ -603,8 +941,13 @@ async function checkLogin() {
   if (!currentUserEmail) { showScreen('loginScreen'); return; }
 
   loadLocal();
+  setGreeting();
   renderDate();
-  render(); // show cached data immediately
+  render();
+
+  // Show name from email immediately
+  document.getElementById('homeUserName').textContent = currentUserEmail.split('@')[0];
+  setHomeSyncLine('Connecting…', '');
 
   await initGapiClient();
 
@@ -618,9 +961,8 @@ async function checkLogin() {
       await ensureUserSettingsSheet(spreadsheetId);
       await ensureAllSheetsExist();
       await loadAndRender();
-      document.getElementById('userEmailDisplay').textContent = currentUserEmail;
       showScreen('mainApp');
-      setSyncStrip('✅ Last synced: ' + new Date().toLocaleTimeString(), false);
+      setHomeSyncLine('✅ Synced · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), 'synced');
       return;
     } catch(e) { clearAccessToken(); }
   }
