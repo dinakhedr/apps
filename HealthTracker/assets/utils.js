@@ -141,11 +141,9 @@ function showToast(msg, type = 'success') {
 
 // ── Bottom navigation ──────────────────────────────────────
 const NAV_TABS = [
-  { id: 'home',        label: 'Home',        icon: '🏠', href: 'Home.html'        },
-  { id: 'routine',     label: 'Routine',      icon: '🧴', href: 'Routine.html'     },
-  { id: 'supplements', label: 'Supplements',  icon: '💊', href: 'Supplements.html' },
-  { id: 'dashboard',   label: 'Dashboard',    icon: '📊', href: 'Dashboard.html'   },
-  { id: 'settings',    label: 'Settings',     icon: '⚙️', href: 'Settings.html'    }
+  { id: 'home',        label: 'Home',       icon: '🏠', href: 'Home.html'        },
+  { id: 'routine',     label: 'Routine',    icon: '🧴', href: 'Routine.html'     },
+  { id: 'supplements', label: 'Supplements', icon: '💊', href: 'Supplements.html' }
 ];
 
 function renderBottomNav(activePage, mountId = 'bottomNavMount') {
