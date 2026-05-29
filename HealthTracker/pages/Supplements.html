@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Supplements · Health Tracker</title>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
+  <link rel="icon" type="image/png" href="../images/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="../assets/config.js"></script>
+  <script src="../assets/utils.js"></script>
+  <script src="../assets/auth.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box"><div class="spinner"></div><p>Loading…</p></div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1>💊 Supplements</h1>
+    <div class="header-actions">
+      <button class="hdr-icon-btn" id="syncBtn" title="Sync">↻</button>
+      <button class="hdr-icon-btn" onclick="logout()">⏻</button>
+    </div>
+  </div>
+
+  <!-- Schedule -->
+  <div class="card">
+    <div class="card-header-flex">
+      <div class="card-title" style="margin-bottom:0">📌 My Schedule</div>
+      <button class="add-product-card-btn" id="addScheduleBtn">➕ Add Schedule</button>
+    </div>
+    <div id="scheduleContainer" style="margin-top:16px"></div>
+  </div>
+
+  <!-- All Supplements -->
+  <div class="products-management-card">
+    <div class="card-header-flex">
+      <h3 class="card-title-text">💊 All Supplements</h3>
+      <button class="add-product-card-btn" id="addSupplementBtn">➕ Add Supplement</button>
+    </div>
+    <div id="supplementsContainer"></div>
+  </div>
+</div>
+
+<div id="bottomNavMount"></div>
+<div class="toast" id="toast"></div>
+
+<!-- Supplement Modal -->
+<div class="modal-backdrop" id="supplementModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="suppModalTitle">➕ Add Supplement</div>
+    <input type="hidden" id="editSupplementId">
+    <div class="form-group">
+      <label>Supplement Name *</label>
+      <input type="text" id="suppName" placeholder="e.g. Vitamin D3">
+    </div>
+    <div class="form-group">
+      <label>Use For</label>
+      <div id="useForCheckboxes"></div>
+    </div>
+    <div class="form-group" style="flex-direction:row;align-items:center;gap:12px;">
+      <label style="margin-bottom:0">Active</label>
+      <div class="status-toggle active" id="suppStatusToggle"><div class="status-toggle-knob"></div></div>
+      <input type="hidden" id="suppStatusInput" value="Active">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelSuppBtn">Cancel</button>
+      <button class="btn-save" id="saveSuppBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assignment (Schedule) Modal -->
+<div class="modal-backdrop" id="assignmentModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="assignmentModalTitle">➕ Add Schedule</div>
+    <input type="hidden" id="editAssignmentId">
+    <div class="form-group">
+      <label>Supplement *</label>
+      <select id="assignmentSupplementId"></select>
+    </div>
+    <div class="form-group">
+      <label>Time *</label>
+      <input type="text" id="assignmentTimeSlot" list="timeOptions" placeholder="e.g. 9:00 AM">
+      <datalist id="timeOptions">
+        <option>8:00 AM</option><option>9:00 AM</option><option>10:00 AM</option>
+        <option>12:00 PM</option><option>1:00 PM</option><option>2:00 PM</option>
+        <option>4:00 PM</option><option>6:00 PM</option><option>8:00 PM</option>
+        <option>10:00 PM</option><option>Bedtime</option>
+      </datalist>
+    </div>
+    <div class="form-group">
+      <label>📅 Days</label>
+      <div id="daysCheckboxes"></div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="button" class="btn-cancel" style="flex:0;padding:6px 14px;font-size:12px;"
+                onclick="selectAllDays('daysCheckboxes')">All</button>
+        <button type="button" class="btn-cancel" style="flex:0;padding:6px 14px;font-size:12px;"
+                onclick="unselectAllDays('daysCheckboxes')">None</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <textarea id="assignmentNotes" rows="2" placeholder="Dosage, brand, etc."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelAssignmentBtn">Cancel</button>
+      <button class="btn-save" id="saveAssignmentBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Action Sheet -->
+<div class="sheet-backdrop" id="actionSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheetTitle">Options</div>
+    <button class="sheet-action" id="sheetEditBtn"><span class="sheet-action-icon">✏️</span>Edit</button>
+    <button class="sheet-action danger" id="sheetDeleteBtn"><span class="sheet-action-icon">🗑️</span>Delete</button>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────
+let spreadsheetId = null, currentUserEmail = null;
+let supplements = [], supplementAssignments = [];
+let actionSheetTarget = null;
+let sortableInstances = {};
+
+// ── Local cache ────────────────────────────────────────────
+function saveLocal() {
+  if (!currentUserEmail) return;
+  localStorage.setItem(`supplements_${currentUserEmail}`,     JSON.stringify(supplements));
+  localStorage.setItem(`suppAssignments_${currentUserEmail}`, JSON.stringify(supplementAssignments));
+}
+function loadLocal() {
+  if (!currentUserEmail) return;
+  const s  = localStorage.getItem(`supplements_${currentUserEmail}`);     if(s)  supplements           = JSON.parse(s);
+  const sa = localStorage.getItem(`suppAssignments_${currentUserEmail}`); if(sa) supplementAssignments = JSON.parse(sa);
+}
+
+// ── Sheet loaders ──────────────────────────────────────────
+async function loadSupplements() {
+  const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range:`'${SUPPLEMENTS_SHEET}'!A2:D` });
+  supplements = (res.result.values||[]).map(r => ({
+    supplementId:r[0]||'', name:r[1]||'', useFor:r[2]||'', status:r[3]||'Active'
+  })).filter(s => s.supplementId);
+  saveLocal();
+}
+
+async function loadAssignments() {
+  const res = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range:`'${SUPPLEMENT_ROUTINE_SHEET}'!A2:E` });
+  supplementAssignments = (res.result.values||[]).map(r => ({
+    assignmentId:r[0]||'', supplementId:r[1]||'', timeSlot:r[2]||'',
+    days: r[3] || 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday', notes:r[4]||''
+  })).filter(a => a.assignmentId);
+  saveLocal();
+}
+
+async function saveSupplementsToSheet() {
+  await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range:`'${SUPPLEMENTS_SHEET}'!A2:D` });
+  if (supplements.length) {
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId, range:`'${SUPPLEMENTS_SHEET}'!A2`, valueInputOption:'RAW',
+      resource:{ values: supplements.map(s => [s.supplementId,s.name,s.useFor,s.status]) }
+    });
+  }
+  saveLocal();
+}
+
+async function saveAssignmentsToSheet() {
+  await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId, range:`'${SUPPLEMENT_ROUTINE_SHEET}'!A2:E` });
+  if (supplementAssignments.length) {
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId, range:`'${SUPPLEMENT_ROUTINE_SHEET}'!A2`, valueInputOption:'RAW',
+      resource:{ values: supplementAssignments.map(a => [a.assignmentId,a.supplementId,a.timeSlot,a.days,a.notes]) }
+    });
+  }
+  saveLocal();
+}
+
+// ── Render schedule ────────────────────────────────────────
+function renderSchedule() {
+  const el = document.getElementById('scheduleContainer');
+  const suppMap = new Map(supplements.map(s => [s.supplementId, s]));
+  const valid = supplementAssignments.filter(a => suppMap.has(a.supplementId));
+
+  if (!valid.length) {
+    el.innerHTML = '<div class="empty-state-small">No schedule yet. Tap "Add Schedule" to start.</div>';
+    return;
+  }
+
+  const groups = {};
+  valid.forEach(a => { if (!groups[a.timeSlot]) groups[a.timeSlot] = []; groups[a.timeSlot].push(a); });
+
+  let html = '';
+  for (const slot of Object.keys(groups).sort((a,b) => getTimeValue(a)-getTimeValue(b))) {
+    html += `<div class="assignment-phase-container">
+      <div class="assignment-phase-title">🕒 ${escapeHtml(slot)}</div>
+      <div class="assignment-list" data-slot="${escapeHtml(slot)}">`;
+    for (const a of groups[slot]) {
+      const s = suppMap.get(a.supplementId);
+      if (!s) continue;
+      const inactive = s.status === 'Inactive';
+      html += `<div class="assignment-item-supp${inactive?' item-inactive':''}" data-id="${a.assignmentId}">
+        <div class="drag-handle">☰</div>
+        <div class="time-badge">${escapeHtml(a.timeSlot)}</div>
+        <div class="assignment-details-supp">
+          <div class="assignment-product-supp">${escapeHtml(s.name)}${inactive?'<span class="inactive-badge" style="margin-left:6px">Inactive</span>':''}</div>
+          ${s.useFor ? `<div class="assignment-use-for-supp">${escapeHtml(s.useFor)}</div>` : ''}
+          <div class="assignment-days-supp">📅 ${formatDays(a.days)}</div>
+          ${a.notes ? `<div class="assignment-days-supp">📝 ${escapeHtml(a.notes)}</div>` : ''}
+        </div>
+        <button class="more-btn" data-action-type="assignment" data-action-id="${a.assignmentId}">⋮</button>
+      </div>`;
+    }
+    html += `</div></div>`;
+  }
+  el.innerHTML = html;
+  initSortable();
+}
+
+function initSortable() {
+  Object.values(sortableInstances).forEach(s => s.destroy());
+  sortableInstances = {};
+  document.querySelectorAll('.assignment-list').forEach(list => {
+    const slot = list.dataset.slot;
+    sortableInstances[slot] = new Sortable(list, {
+      group:{ name:'suppSchedule', pull:true, put:true }, animation:200,
+      handle:'.drag-handle', onEnd: handleReorder
+    });
+  });
+}
+
+async function handleReorder() {
+  const newAssignments = [];
+  document.querySelectorAll('.assignment-list').forEach(list => {
+    const newSlot = list.dataset.slot;
+    list.querySelectorAll('.assignment-item-supp').forEach(el => {
+      const existing = supplementAssignments.find(a => a.assignmentId===el.dataset.id);
+      if (existing) newAssignments.push({ ...existing, timeSlot: newSlot });
+    });
+  });
+  supplementAssignments = newAssignments;
+  await saveAssignmentsToSheet();
+  showToast('✅ Order updated');
+  renderSchedule();
+}
+
+// ── Render supplements list ────────────────────────────────
+function renderSupplements() {
+  const el = document.getElementById('supplementsContainer');
+  if (!supplements.length) {
+    el.innerHTML = '<div class="empty-state">✨ No supplements yet. Tap "Add Supplement" to start.</div>';
+    return;
+  }
+  const sorted = [...supplements].sort((a,b) => a.name.localeCompare(b.name));
+  el.innerHTML = sorted.map(s => {
+    const statusClass = s.status==='Active' ? 'active' : 'inactive';
+    return `<div class="supplement-list-item">
+      <div class="supplement-info${s.status==='Inactive'?' item-inactive':''}">
+        <div class="supplement-name">${escapeHtml(s.name)}</div>
+        ${s.useFor ? `<div class="supplement-meta">${escapeHtml(s.useFor)}</div>` : ''}
+      </div>
+      <div class="status-toggle ${statusClass}" data-toggle-supp="${s.supplementId}"><div class="status-toggle-knob"></div></div>
+      <button class="more-btn" data-action-type="supplement" data-action-id="${s.supplementId}">⋮</button>
+    </div>`;
+  }).join('');
+}
+
+async function toggleSupplementStatus(id) {
+  const s = supplements.find(s => s.supplementId===id);
+  if (!s) return;
+  s.status = s.status==='Active' ? 'Inactive' : 'Active';
+  await saveSupplementsToSheet();
+  renderSupplements(); renderSchedule();
+  showToast(`Supplement ${s.status.toLowerCase()}`);
+}
+
+// ── Supplement modal ───────────────────────────────────────
+function openSupplementModal(id = null) {
+  const isEdit = !!id;
+  document.getElementById('suppModalTitle').textContent = isEdit ? '✏️ Edit Supplement' : '➕ Add Supplement';
+  document.getElementById('editSupplementId').value = id || '';
+  if (isEdit) {
+    const s = supplements.find(s => s.supplementId===id);
+    if (s) {
+      document.getElementById('suppName').value = s.name;
+      renderUseForCheckboxesGeneric('useForCheckboxes', USE_FOR_OPTIONS_SUPP, s.useFor||'');
+      setStatusToggle('suppStatusToggle','suppStatusInput', s.status);
+    }
+  } else {
+    document.getElementById('suppName').value = '';
+    renderUseForCheckboxesGeneric('useForCheckboxes', USE_FOR_OPTIONS_SUPP, '');
+    setStatusToggle('suppStatusToggle','suppStatusInput','Active');
+  }
+  openModal('supplementModal');
+}
+
+async function saveSupplement() {
+  const id     = document.getElementById('editSupplementId').value;
+  const name   = document.getElementById('suppName').value.trim();
+  const useFor = getSelectedUseForGeneric('useForCheckboxes');
+  const status = document.getElementById('suppStatusInput').value;
+  if (!name) { showToast('Name required', 'error'); return; }
+  const isNew = !id;
+  const newId = id || generateSupplementId();
+  const obj = { supplementId:newId, name, useFor, status };
+  if (isNew) supplements.push(obj);
+  else { const i = supplements.findIndex(s => s.supplementId===newId); if(i!==-1) supplements[i]=obj; }
+  closeModal('supplementModal');
+  await saveSupplementsToSheet();
+  renderSupplements(); renderSchedule();
+  showToast(isNew ? '✅ Supplement added' : '✅ Updated');
+}
+
+// ── Assignment (schedule) modal ────────────────────────────
+function openAssignmentModal(id = null) {
+  const isEdit = !!id;
+  document.getElementById('assignmentModalTitle').textContent = isEdit ? '✏️ Edit Schedule' : '➕ Add Schedule';
+  document.getElementById('editAssignmentId').value = id || '';
+  const sel = document.getElementById('assignmentSupplementId');
+  sel.innerHTML = supplements.filter(s => s.status==='Active').map(s => `<option value="${s.supplementId}">${escapeHtml(s.name)}</option>`).join('');
+  if (isEdit) {
+    const a = supplementAssignments.find(a => a.assignmentId===id);
+    if (a) {
+      sel.value = a.supplementId;
+      document.getElementById('assignmentTimeSlot').value = a.timeSlot;
+      document.getElementById('assignmentNotes').value    = a.notes;
+      renderDayCheckboxes('daysCheckboxes', a.days);
+    }
+  } else {
+    document.getElementById('assignmentTimeSlot').value = '';
+    document.getElementById('assignmentNotes').value    = '';
+    renderDayCheckboxes('daysCheckboxes','Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday');
+  }
+  openModal('assignmentModal');
+}
+
+async function saveAssignment() {
+  const id           = document.getElementById('editAssignmentId').value;
+  const supplementId = document.getElementById('assignmentSupplementId').value;
+  const timeSlot     = document.getElementById('assignmentTimeSlot').value.trim();
+  const notes        = document.getElementById('assignmentNotes').value.trim();
+  const days         = getSelectedDays('daysCheckboxes');
+  if (!supplementId || !timeSlot) { showToast('Supplement and Time required', 'error'); return; }
+  if (!days) { showToast('Please select at least one day', 'error'); return; }
+  const isNew = !id;
+  const newId = id || generateSupplementAssignmentId();
+  const obj = { assignmentId:newId, supplementId, timeSlot, days, notes };
+  if (isNew) supplementAssignments.push(obj);
+  else { const i = supplementAssignments.findIndex(a => a.assignmentId===newId); if(i!==-1) supplementAssignments[i]=obj; }
+  closeModal('assignmentModal');
+  await saveAssignmentsToSheet();
+  renderSchedule();
+  showToast(isNew ? '✅ Schedule added' : '✅ Updated');
+}
+
+// ── Action sheet ───────────────────────────────────────────
+function openActionSheet(type, id) {
+  actionSheetTarget = { type, id };
+  let title = '';
+  if (type==='supplement') {
+    const s = supplements.find(s => s.supplementId===id);
+    title = s ? s.name : 'Supplement';
+  } else {
+    const a = supplementAssignments.find(a => a.assignmentId===id);
+    if (a) { const s = supplements.find(s => s.supplementId===a.supplementId); title = s ? `${s.name} · ${a.timeSlot}` : 'Schedule'; }
+  }
+  document.getElementById('sheetTitle').textContent = title;
+  openModal('actionSheet');
+}
+
+async function sheetEdit() {
+  if (!actionSheetTarget) return;
+  const { type, id } = actionSheetTarget;
+  closeModal('actionSheet');
+  if (type==='supplement') openSupplementModal(id); else openAssignmentModal(id);
+}
+
+async function sheetDelete() {
+  if (!actionSheetTarget) return;
+  const { type, id } = actionSheetTarget;
+  closeModal('actionSheet');
+  if (type==='supplement') {
+    if (!confirm('Delete this supplement and all its schedules?')) return;
+    supplementAssignments = supplementAssignments.filter(a => a.supplementId!==id);
+    supplements = supplements.filter(s => s.supplementId!==id);
+    await saveSupplementsToSheet(); await saveAssignmentsToSheet();
+    renderSupplements(); renderSchedule();
+    showToast('🗑️ Supplement deleted');
+  } else {
+    supplementAssignments = supplementAssignments.filter(a => a.assignmentId!==id);
+    await saveAssignmentsToSheet();
+    renderSchedule();
+    showToast('🗑️ Schedule deleted');
+  }
+}
+
+// ── Sync ───────────────────────────────────────────────────
+async function syncAll() {
+  const btn = document.getElementById('syncBtn');
+  btn.classList.add('spinning');
+  try {
+    await loadSupplements(); await loadAssignments();
+    renderSupplements(); renderSchedule();
+    showToast('✅ Synced');
+  } catch(e) { showToast('❌ Sync failed','error'); }
+  btn.classList.remove('spinning');
+}
+
+async function ensureSheets() {
+  try {
+    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
+    const existing = meta.result.sheets.map(s => s.properties.title);
+    for (const [name, headers] of [
+      [SUPPLEMENTS_SHEET,        ['SupplementID','Name','Use For','Status']],
+      [SUPPLEMENT_ROUTINE_SHEET, ['AssignmentID','SupplementID','TimeSlot','Days','Notes']],
+      [SUPPLEMENTS_LOG_SHEET,    ['Date','TimeSlot','SupplementID','Supplement','Notes','Timestamp','Extra']]
+    ]) {
+      if (!existing.includes(name)) {
+        await gapi.client.sheets.spreadsheets.batchUpdate({ spreadsheetId, resource:{ requests:[{ addSheet:{properties:{title:name}} }] } });
+        await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId, range:`'${name}'!A1:${String.fromCharCode(64+headers.length)}1`, valueInputOption:'RAW', resource:{values:[headers]} });
+      }
+    }
+  } catch(e) { console.warn(e); }
+}
+
+// ── Wire events ────────────────────────────────────────────
+document.getElementById('addScheduleBtn').addEventListener('click',   () => openAssignmentModal());
+document.getElementById('addSupplementBtn').addEventListener('click', () => openSupplementModal());
+document.getElementById('cancelSuppBtn').addEventListener('click',       () => closeModal('supplementModal'));
+document.getElementById('saveSuppBtn').addEventListener('click',         saveSupplement);
+document.getElementById('cancelAssignmentBtn').addEventListener('click', () => closeModal('assignmentModal'));
+document.getElementById('saveAssignmentBtn').addEventListener('click',   saveAssignment);
+document.getElementById('syncBtn').addEventListener('click', syncAll);
+document.getElementById('sheetEditBtn').addEventListener('click',   sheetEdit);
+document.getElementById('sheetDeleteBtn').addEventListener('click', sheetDelete);
+
+// Status toggle
+document.getElementById('suppStatusToggle').addEventListener('click', () => {
+  const toggle = document.getElementById('suppStatusToggle');
+  const input  = document.getElementById('suppStatusInput');
+  const isActive = toggle.classList.contains('active');
+  toggle.classList.toggle('active', !isActive);
+  toggle.classList.toggle('inactive', isActive);
+  input.value = isActive ? 'Inactive' : 'Active';
+});
+
+// Delegated clicks
+document.addEventListener('click', e => {
+  const toggleEl = e.target.closest('[data-toggle-supp]');
+  if (toggleEl) { toggleSupplementStatus(toggleEl.dataset.toggleSupp); return; }
+  const moreBtn = e.target.closest('[data-action-type]');
+  if (moreBtn && moreBtn.classList.contains('more-btn')) {
+    e.stopPropagation();
+    openActionSheet(moreBtn.dataset.actionType, moreBtn.dataset.actionId);
+  }
+});
+
+['supplementModal','assignmentModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(id); });
+});
+document.getElementById('actionSheet').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal('actionSheet'); });
+
+renderBottomNav('supplements');
+
+async function initPage() {
+  const timeout = setTimeout(() => {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    showToast('⚠️ Connection slow. Please refresh.', 'error');
+  }, 8000);
+  try {
+    await initPageAuth({
+      onLoadLocal: (email, sheetId) => {
+        currentUserEmail = email; spreadsheetId = sheetId;
+        if (!spreadsheetId) { showToast('⚠️ No sheet found. Redirecting…','error'); setTimeout(()=>window.location.href='Home.html',2000); return; }
+        loadLocal(); renderSupplements(); renderSchedule();
+      },
+      onReady: async (sheetId, email) => {
+        clearTimeout(timeout);
+        spreadsheetId = sheetId; currentUserEmail = email;
+        await ensureUserSettingsSheet(spreadsheetId);
+        await ensureSheets();
+        await loadSupplements(); await loadAssignments();
+        renderSupplements(); renderSchedule();
+        document.getElementById('loadingOverlay').style.display = 'none';
+      }
+    });
+  } catch(err) {
+    console.error(err);
+    clearTimeout(timeout);
+    document.getElementById('loadingOverlay').style.display = 'none';
+    showToast('❌ Failed to load. Please sign in again.','error');
+    setTimeout(()=>window.location.href='Home.html',2000);
+  }
+}
+
+initPage();
+</script>
+</body>
+</html>
