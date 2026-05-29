@@ -893,7 +893,7 @@ async function onAccessTokenGranted(tokenResponse) {
       await ensureUserSettingsSheet(spreadsheetId);
       await ensureAllSheetsExist();
       await loadAndRender();
-      document.getElementById('homeUserName').textContent = currentUserEmail.split('@')[0];
+      document.getElementById('homeUserName').textContent = getUserNameFromToken(localStorage.getItem('google_token')) || currentUserEmail.split('@')[0];
       setGreeting();
       renderDate();
       showScreen('mainApp');
@@ -912,7 +912,7 @@ async function onAccessTokenGranted(tokenResponse) {
     await ensureUserSettingsSheet(spreadsheetId);
     await ensureAllSheetsExist();
     await loadAndRender();
-    document.getElementById('homeUserName').textContent = currentUserEmail.split('@')[0];
+    document.getElementById('homeUserName').textContent = getUserNameFromToken(localStorage.getItem('google_token')) || currentUserEmail.split('@')[0];
     setGreeting();
     renderDate();
     showScreen('mainApp');
@@ -946,7 +946,7 @@ async function checkLogin() {
   render();
 
   // Show name from email immediately
-  document.getElementById('homeUserName').textContent = currentUserEmail.split('@')[0];
+  document.getElementById('homeUserName').textContent = getUserNameFromToken(localStorage.getItem('google_token')) || currentUserEmail.split('@')[0];
   setHomeSyncLine('Connecting…', '');
 
   await initGapiClient();
