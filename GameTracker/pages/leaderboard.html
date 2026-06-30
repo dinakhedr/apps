@@ -8,7 +8,7 @@
   <link rel="manifest" href="../manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="../images/icon.png">
   <link rel="icon" type="image/png" href="../images/icon.png">
-  <title>Leaderboard</title>
+  <title>All-Time Leaderboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="../assets/styles.css">
   <script src="../assets/utils.js"></script>
@@ -26,17 +26,13 @@
 
   <div class="header" style="justify-content:flex-start; gap:14px">
     <button class="back-btn" onclick="history.back()">←</button>
-    <h1>📊 Leaderboard</h1>
+    <h1>📊 All-Time Leaderboard</h1>
   </div>
 
   <!-- Filter card -->
   <div class="filter-card">
     <div class="filter-row">
-      <div class="form-group">
-        <label>Month</label>
-        <input type="month" id="monthPicker">
-      </div>
-      <div class="form-group">
+      <div class="form-group" style="flex:1">
         <label>Game</label>
         <select id="gameSelect"></select>
       </div>
@@ -48,17 +44,14 @@
 
 <script>
   /* ════════════════════════════
-     LOAD LEADERBOARD — single batchGetSheets for all data
+     LOAD LEADERBOARD — single batchGetSheets for all data, all-time
   ════════════════════════════ */
   async function loadLeaderboard() {
     const gameId = document.getElementById('gameSelect').value;
-    const month  = document.getElementById('monthPicker').value;
     const area   = document.getElementById('boardsArea');
-    if (!gameId || !month) { area.innerHTML = ''; return; }
+    if (!gameId) { area.innerHTML = ''; return; }
 
     area.innerHTML = `<div style="text-align:center;padding:30px"><div class="spinner"></div></div>`;
-
-    const [year, monthNum] = month.split('-');
 
     // All 5 sheets in one API call
     const sheets = await batchGetSheets([
@@ -69,16 +62,13 @@
 
     const closedSessions = sessions.filter(s =>
       s.GameID === gameId &&
-      s.Status === 'Closed' &&
-      s.Date && s.Date.startsWith(`${year}-${monthNum}`)
+      s.Status === 'Closed'
     );
 
     if (!closedSessions.length) {
-      const d = new Date(`${year}-${monthNum}-01`);
-      const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       area.innerHTML = `<div class="card">
         <div class="empty-state"><span class="empty-icon">📭</span>
-        <p>No closed sessions for ${label}.</p></div></div>`;
+        <p>No closed sessions yet for this game.</p></div></div>`;
       return;
     }
 
@@ -183,10 +173,8 @@
         gameSelect.innerHTML = games.map(g =>
           `<option value="${g.GameID}">${escapeHtml(g.GameName)}</option>`
         ).join('');
-        document.getElementById('monthPicker').value = new Date().toISOString().slice(0, 7);
 
         gameSelect.addEventListener('change', loadLeaderboard);
-        document.getElementById('monthPicker').addEventListener('change', loadLeaderboard);
         await loadLeaderboard();
       }
     });
