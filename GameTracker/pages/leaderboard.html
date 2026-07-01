@@ -72,30 +72,43 @@
       return;
     }
 
-    /* ── Individual scores ── */
+/* ── Individual scores ── */
     const playerScores = {};
+    const playerGames  = {};
     for (const sess of closedSessions.filter(s => s.Type === 'Individual')) {
-      for (const r of roundsInd.filter(r => r.SessionID === sess.SessionID)) {
+      const sessionRounds  = roundsInd.filter(r => r.SessionID === sess.SessionID);
+      const sessionPlayers = new Set();
+      for (const r of sessionRounds) {
         for (let i = 1; i <= 4; i++) {
           const pid = r[`Player${i}_ID`];
-          if (pid) playerScores[pid] = (playerScores[pid] || 0) + parseFloat(r[`Points${i}`] || 0);
+          if (pid) {
+            playerScores[pid] = (playerScores[pid] || 0) + parseFloat(r[`Points${i}`] || 0);
+            sessionPlayers.add(pid);
+          }
         }
       }
+      sessionPlayers.forEach(pid => playerGames[pid] = (playerGames[pid] || 0) + 1);
     }
 
     /* ── Team scores ── */
     const teamScores = {};
+    const teamGames  = {};
     for (const sess of closedSessions.filter(s => s.Type === 'Team')) {
-      for (const r of roundsTeam.filter(r => r.SessionID === sess.SessionID)) {
+      const sessionRounds = roundsTeam.filter(r => r.SessionID === sess.SessionID);
+      const sessionTeams  = new Set();
+      for (const r of sessionRounds) {
         teamScores[r.TeamA_ID] = (teamScores[r.TeamA_ID] || 0) + parseFloat(r.PointsA || 0);
         teamScores[r.TeamB_ID] = (teamScores[r.TeamB_ID] || 0) + parseFloat(r.PointsB || 0);
+        sessionTeams.add(r.TeamA_ID);
+        sessionTeams.add(r.TeamB_ID);
       }
+      sessionTeams.forEach(tid => teamGames[tid] = (teamGames[tid] || 0) + 1);
     }
 
-    const playerBoard = Object.entries(playerScores)
+const playerBoard = Object.entries(playerScores)
       .map(([id, pts]) => {
         const p = players.find(pl => pl.PlayerID === id);
-        return { name: p?.PlayerName || id, icon: p?.Icon || '🧑', bg: p?.BG || '#f3f4f6', points: pts };
+        return { name: p?.PlayerName || id, icon: p?.Icon || '🧑', bg: p?.BG || '#f3f4f6', games: playerGames[id] || 0, points: pts };
       })
       .sort((a, b) => a.points - b.points);
 
@@ -105,7 +118,7 @@
         const memberNames = (t?.PlayerIDs || '').split(',')
           .map(pid => players.find(p => p.PlayerID === pid.trim())?.PlayerName || null)
           .filter(Boolean).join(' · ');
-        return { name: t?.TeamName || id, icon: t?.Icon || '🏅', bg: t?.BG || '#fef3c7', members: memberNames, points: pts };
+        return { name: t?.TeamName || id, icon: t?.Icon || '🏅', bg: t?.BG || '#fef3c7', members: memberNames, games: teamGames[id] || 0, points: pts };
       })
       .sort((a, b) => a.points - b.points);
 
@@ -113,13 +126,14 @@
     const badgeClass = i => i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
     const minPts = arr => arr.length ? arr[0].points : null;
 
-    function renderPlayerRow(item, i) {
+function renderPlayerRow(item, i) {
       const isWinner = item.points === minPts(playerBoard);
       return `
         <div class="rank-row">
           <div class="rank-badge ${badgeClass(i)}">${i + 1}</div>
           <div class="rank-pip" style="background:${item.bg}">${item.icon}</div>
           <div class="rank-name">${escapeHtml(item.name)}</div>
+          <div class="rank-games">${item.games} games</div>
           <div class="rank-pts${isWinner?' winner':''}">${item.points} pts</div>
         </div>`;
     }
@@ -134,6 +148,7 @@
             <div>${escapeHtml(item.name)}</div>
             ${item.members ? `<div style="font-size:11px;color:var(--text-3);font-weight:500;margin-top:1px">${escapeHtml(item.members)}</div>` : ''}
           </div>
+          <div class="rank-games">${item.games} games</div>
           <div class="rank-pts${isWinner?' winner':''}">${item.points} pts</div>
         </div>`;
     }
