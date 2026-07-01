@@ -526,7 +526,12 @@ function getPaidSumForInstallment(instId) {
 
 function getRemaining(inst) {
   const paid = getPaidSumForInstallment(inst.id);
-  return Math.max(0, inst.totalAmount - paid);
+  // Round to the nearest cent first — repeated floating-point division/subtraction
+  // (totalAmount / monthsCount, then remaining - amountPaid each payment) can leave
+  // a razor-thin positive residue (e.g. 0.0000000004) that displays as "EGP 0.00"
+  // but fails the `<= 0` check below, so a fully-paid installment never flips to 'completed'.
+  const rounded = Math.round((inst.totalAmount - paid) * 100) / 100;
+  return Math.max(0, rounded);
 }
 
 function getPaidMonthsCount(instId) {
@@ -898,7 +903,10 @@ function getDueLabel(inst) {
 }
 
 function isDueThisMonth(inst) {
-  if (getStatus(inst) === 'completed') return false;
+  // Note: we intentionally do NOT exclude completed installments here.
+  // If this month falls within the installment's schedule window, it should still
+  // show in "This Month" (renderInstRow already displays "✅ Completed" for it) —
+  // it just shouldn't offer a Pay button anymore.
   const now = new Date();
   const start = getStartDate(inst);
   const end = getEndDate(inst);
@@ -942,9 +950,7 @@ function renderAll() {
   // ── Update Upcoming tab button label dynamically ──
   document.getElementById('upcomingTabBtn').textContent = `⏳ ${nextMonthName}`;
 
-  const currentItems = installments.filter(i =>
-    isDueThisMonth(i) && getStatus(i) === 'active'
-  );
+  const currentItems = installments.filter(i => isDueThisMonth(i));
 
   const upcomingEntries = [];
   installments.forEach(inst => {
